@@ -1,0 +1,7 @@
+[
+    {"id": "V001", "lpState": "TX", "lpNumber": "XYZ123", "ownerId": "P001", "property": "PROP001", "color": "Red", "makeModel": "Toyota Camry"},
+    {"id": "V002", "lpState": "CA", "lpNumber": "ABC456", "ownerId": "P002", "property": "PROP002", "color": "Blue", "makeModel": "Ford F150"},
+    {"id": "V003", "lpState": "TX", "lpNumber": "DEF789", "ownerId": "P003", "property": "PROP003", "color": "Green", "makeModel": "Honda Civic"},
+    {"id": "V004", "lpState": "FL", "lpNumber": "GHI012", "ownerId": "P004", "property": "PROP004", "color": "Black", "makeModel": "Chevy Tahoe"},
+    {"id": "V005", "lpState": "TX", "lpNumber": "JKL345", "ownerId": "P005", "property": "PROP005", "color": "White", "makeModel": "Dodge Charger"}
+]
