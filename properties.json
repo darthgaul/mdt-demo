@@ -1,0 +1,7 @@
+[
+    {"id": "PROP001", "address": "123 Demo St", "apt": "Apt 4B", "notes": "Gated entry"},
+    {"id": "PROP002", "address": "456 Sample Rd", "apt": "", "notes": "Parking lot"},
+    {"id": "PROP003", "address": "789 Test Ave", "apt": "Apt 2C", "notes": "Near park"},
+    {"id": "PROP004", "address": "101 Fake Ln", "apt": "Apt 3A", "notes": "Quiet area"},
+    {"id": "PROP005", "address": "555 Mock Blvd", "apt": "", "notes": "High traffic"}
+]
