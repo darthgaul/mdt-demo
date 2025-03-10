@@ -5,7 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Demo</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #1a1a1a; color: #fff; margin: 20px; }
+        body { font-family: Arial, sans-serif; background-color: #1a1a1a; color: #fff; margin: 0; padding: 20px; }
+        nav { margin-bottom: 20px; }
+        nav a { color: #fff; margin-right: 15px; text-decoration: none; }
+        nav a:hover { text-decoration: underline; }
         input, button { margin: 5px; padding: 5px; }
         table { border-collapse: collapse; width: 100%; margin-top: 20px; }
         th, td { border: 1px solid #fff; padding: 8px; text-align: left; }
@@ -15,29 +18,84 @@
         .hostile { background-color: #FF0000; color: #fff; }
         .unknown { background-color: #808080; color: #fff; }
         .ctn { font-weight: bold; }
+        .section { margin-top: 30px; }
     </style>
 </head>
 <body>
-    <h2>MDT Search Demo</h2>
-    <input type="text" id="searchInput" placeholder="Enter Name or ID">
-    <button onclick="search()">Search</button>
-    <div id="results"></div>
+    <h2>MDT Dashboard</h2>
+    <nav>
+        <a href="#dashboard" onclick="showSection('dashboard')">Dashboard</a>
+        <a href="#properties" onclick="showSection('properties')">Properties</a>
+        <a href="#people" onclick="showSection('people')">People</a>
+        <a href="#dispatch" onclick="showSection('dispatch')">Dispatch</a>
+    </nav>
+
+    <div id="dashboard" class="section">
+        <h3>Active Dispatches</h3>
+        <div id="dispatchSummary"></div>
+    </div>
+
+    <div id="properties" class="section" style="display: none;">
+        <h3>Properties</h3>
+        <div id="propertiesList"></div>
+    </div>
+
+    <div id="people" class="section" style="display: none;">
+        <h3>People Search</h3>
+        <input type="text" id="searchInput" placeholder="Enter Name or ID">
+        <button onclick="searchPeople()">Search</button>
+        <div id="peopleResults"></div>
+    </div>
+
+    <div id="dispatch" class="section" style="display: none;">
+        <h3>Dispatch Log</h3>
+        <div id="dispatchList"></div>
+    </div>
 
     <script>
-        fetch('people.json')
-            .then(response => response.json())
-            .then(data => window.people = data);
+        // Load data
+        let peopleData, propertiesData, dispatchData;
+        Promise.all([
+            fetch('people.json').then(res => res.json()).then(data => peopleData = data),
+            fetch('properties.json').then(res => res.json()).then(data => propertiesData = data),
+            fetch('dispatch.json').then(res => res.json()).then(data => dispatchData = data)
+        ]).then(() => {
+            loadDashboard();
+            loadProperties();
+            loadDispatch();
+        });
 
-        function search() {
+        // Show/hide sections
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.style.display = section.id === sectionId ? 'block' : 'none';
+            });
+        }
+
+        // Dashboard summary
+        function loadDashboard() {
+            const pending = dispatchData.filter(d => d.status === 'Pending').length;
+            document.getElementById('dispatchSummary').innerHTML = `Pending Dispatches: ${pending}`;
+        }
+
+        // Properties list
+        function loadProperties() {
+            let html = '<table><tr><th>ID</th><th>Address</th><th>Apt</th><th>Notes</th></tr>';
+            propertiesData.forEach(prop => {
+                html += `<tr><td>${prop.id}</td><td>${prop.address}</td><td>${prop.apt}</td><td>${prop.notes}</td></tr>`;
+            });
+            html += '</table>';
+            document.getElementById('propertiesList').innerHTML = html;
+        }
+
+        // People search
+        function searchPeople() {
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const resultsDiv = document.getElementById('results');
-            const filtered = people.filter(person => 
+            const filtered = peopleData.filter(person => 
                 person.id.toLowerCase().includes(query) || 
                 person.name.toLowerCase().includes(query)
             );
-
-            let html = '<table>';
-            html += '<tr><th>ID</th><th>Name</th><th>DoB</th><th>Type</th><th>Property</th><th>Behavior</th></tr>';
+            let html = '<table><tr><th>ID</th><th>Name</th><th>DoB</th><th>Type</th><th>Property</th><th>Behavior</th></tr>';
             if (filtered.length > 0) {
                 filtered.forEach(person => {
                     const behaviorClass = person.behavior.toLowerCase();
@@ -55,8 +113,21 @@
                 html += '<tr><td colspan="6">No results found</td></tr>';
             }
             html += '</table>';
-            resultsDiv.innerHTML = html;
+            document.getElementById('peopleResults').innerHTML = html;
         }
+
+        // Dispatch list
+        function loadDispatch() {
+            let html = '<table><tr><th>ID</th><th>Date/Time</th><th>Caller</th><th>Property</th><th>Issue</th><th>Status</th></tr>';
+            dispatchData.forEach(disp => {
+                html += `<tr><td>${disp.id}</td><td>${disp.dateTime}</td><td>${disp.caller}</td><td>${disp.property}</td><td>${disp.issue}</td><td>${disp.status}</td></tr>`;
+            });
+            html += '</table>';
+            document.getElementById('dispatchList').innerHTML = html;
+        }
+
+        // Show dashboard by default
+        showSection('dashboard');
     </script>
 </body>
 </html>
