@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDT Demo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            margin: 20px;
+        }
+        input, button {
+            margin: 5px;
+            padding: 5px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #fff;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h2>MDT Search Demo</h2>
+    <input type="text" id="searchInput" placeholder="Enter Name or ID">
+    <button onclick="search()">Search</button>
+    <div id="results"></div>
+
+    <script src="data.js"></script>
+    <script>
+        function search() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const resultsDiv = document.getElementById('results');
+            const filtered = people.filter(person => 
+                person.id.toLowerCase().includes(query) || 
+                person.name.toLowerCase().includes(query)
+            );
+
+            let html = '<table>';
+            html += '<tr><th>ID</th><th>Name</th><th>DoB</th><th>Type</th><th>Property</th><th>Behavior</th></tr>';
+            if (filtered.length > 0) {
+                filtered.forEach(person => {
+                    html += '<tr>';
+                    html += `<td>${person.id}</td>`;
+                    html += `<td>${person.name}</td>`;
+                    html += `<td>${person.dob}</td>`;
+                    html += `<td>${person.type}</td>`;
+                    html += `<td>${person.property}</td>`;
+                    html += `<td>${person.behavior}</td>`;
+                    html += '</tr>';
+                });
+            } else {
+                html += '<tr><td colspan="6">No results found</td></tr>';
+            }
+            html += '</table>';
+            resultsDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
