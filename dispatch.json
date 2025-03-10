@@ -1,0 +1,7 @@
+[
+    {"id": "D001", "dateTime": "2025-03-09T14:30:00Z", "caller": "Jane Smith", "property": "PROP001", "issue": "Broken window", "status": "Pending"},
+    {"id": "D002", "dateTime": "2025-03-09T15:00:00Z", "caller": "Unknown", "property": "PROP002", "issue": "Suspicious activity", "status": "Pending"},
+    {"id": "D003", "dateTime": "2025-03-10T09:15:00Z", "caller": "Mike Brown", "property": "PROP004", "issue": "Noise complaint", "status": "Assigned"},
+    {"id": "D004", "dateTime": "2025-03-10T11:00:00Z", "caller": "Sara Jones", "property": "PROP005", "issue": "Vandalism", "status": "Completed"},
+    {"id": "D005", "dateTime": "2025-03-10T13:30:00Z", "caller": "Unknown", "property": "PROP003", "issue": "Trespass attempt", "status": "Cancelled"}
+]
