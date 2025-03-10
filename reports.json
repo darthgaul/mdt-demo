@@ -1,0 +1,7 @@
+[
+    {"id": "R001", "dateTime": "2025-03-09T14:00:00Z", "personId": "P002", "property": "PROP002", "type": "Trespass Incident", "narrative": "John Doe trespassed again"},
+    {"id": "R002", "dateTime": "2025-03-09T14:45:00Z", "personId": "P001", "property": "PROP001", "type": "Physical Asset Check", "narrative": "Mailbox secure"},
+    {"id": "R003", "dateTime": "2025-03-10T09:30:00Z", "personId": "P004", "property": "PROP004", "type": "Noise Incident", "narrative": "Loud music reported"},
+    {"id": "R004", "dateTime": "2025-03-10T11:15:00Z", "personId": "P005", "property": "PROP005", "type": "Vandalism", "narrative": "Graffiti on mailbox"},
+    {"id": "R005", "dateTime": "2025-03-10T13:00:00Z", "personId": "P006", "property": "PROP003", "type": "Trespass Incident", "narrative": "Tom Clark returned, CTN issued"}
+]
