@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MDT Demo</title>
+    <title>Security Patrol MDT</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #1a1a1a; color: #fff; margin: 0; padding: 20px; }
         nav { margin-bottom: 20px; }
@@ -14,141 +14,152 @@
         th, td { border: 1px solid #fff; padding: 8px; text-align: left; }
         th { background-color: #333; }
         .ctn-active { background-color: #FF0000; }
-        .ctn-active .name, .ctn-active .behavior { color: #fff; } /* White text on red rows */
+        .ctn-active .name, .ctn-active .behavior { color: #fff; }
+        .staff-text { color: #00FF00; }
         .friendly-text { color: #00FF00; }
         .cautious-text { color: #FFFF00; }
         .hostile-text { color: #FF0000; }
         .unknown-text { color: #808080; }
         .section { margin-top: 30px; display: none; }
         .active { display: block; }
-        .ctn-icon { margin-left: 5px; }
+        .login-section { display: block; }
+        .dark-mode-toggle { float: right; }
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext { visibility: hidden; width: 120px; background-color: #555; color: #fff; text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -60px; }
+        .tooltip:hover .tooltiptext { visibility: visible; }
     </style>
 </head>
 <body>
-    <h2>MDT Dashboard</h2>
-    <nav>
-        <a href="#dashboard" onclick="showSection('dashboard')">Dashboard</a>
-        <a href="#properties" onclick="showSection('properties')">Properties</a>
-        <a href="#people" onclick="showSection('people')">People</a>
-        <a href="#dispatch" onclick="showSection('dispatch')">Dispatch</a>
-    </nav>
-
-    <div id="dashboard" class="section">
-        <h3>Active Dispatches</h3>
-        <div id="dispatchSummary"></div>
+    <div id="login" class="login-section">
+        <h2>Officer Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="login()">Login</button>
     </div>
 
-    <div id="properties" class="section">
-        <h3>Properties</h3>
-        <div id="propertiesList"></div>
-    </div>
+    <div id="mdt" style="display: none;">
+        <h2>Security Patrol MDT</h2>
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+        <nav>
+            <a href="#dashboard" onclick="showSection('dashboard')">Dashboard</a>
+            <a href="#properties" onclick="showSection('properties')">Properties</a>
+            <a href="#people" onclick="showSection('people')">People</a>
+            <a href="#dispatch" onclick="showSection('dispatch')">Dispatch</a>
+            <a href="#reports" onclick="showSection('reports')">Reports</a>
+            <a href="#calendar" onclick="showSection('calendar')">Calendar</a>
+        </nav>
 
-    <div id="people" class="section active">
-        <h3>People Search</h3>
-        <input type="text" id="searchInput" placeholder="Enter Name or ID">
-        <button onclick="searchPeople()">Search</button>
-        <div id="peopleResults"></div>
-    </div>
+        <div id="dashboard" class="section active">
+            <h3>Dashboard</h3>
+            <p>Active Dispatches: <span id="activeDispatches">0</span></p>
+            <p>Recent Alerts: <span id="recentAlerts">None</span></p>
+        </div>
 
-    <div id="dispatch" class="section">
-        <h3>Dispatch Log</h3>
-        <div id="dispatchList"></div>
+        <div id="properties" class="section">
+            <h3>Properties</h3>
+            <div id="propertiesList"></div>
+            <input type="text" id="propertyNote" placeholder="Add Note">
+            <button onclick="addPropertyNote()">Add Note</button>
+        </div>
+
+        <div id="people" class="section">
+            <h3>People Search <span class="tooltip">[?]<span class="tooltiptext">Search by Name or ID</span></span></h3>
+            <input type="text" id="searchInput" placeholder="Enter Name or ID">
+            <button onclick="searchPeople()">Search</button>
+            <div id="peopleResults"></div>
+        </div>
+
+        <div id="dispatch" class="section">
+            <h3>Dispatch Log</h3>
+            <div id="dispatchList"></div>
+        </div>
+
+        <div id="reports" class="section">
+            <h3>Incident Reports</h3>
+            <form id="reportForm" onsubmit="submitReport(event)">
+                <input type="text" name="type" placeholder="Incident Type" required>
+                <input type="text" name="narrative" placeholder="Narrative" required>
+                <input type="file" name="photo" accept="image/*">
+                <button type="submit">Submit Report</button>
+            </form>
+            <div id="reportList"></div>
+        </div>
+
+        <div id="calendar" class="section">
+            <h3>Calendar</h3>
+            <p>Upcoming patrols and events (placeholder)</p>
+        </div>
     </div>
 
     <script>
-        // Global data variables
-        let peopleData = [];
-        let propertiesData = [];
-        let dispatchData = [];
+        // Sample data (replace with actual JSON loading in a real implementation)
+        const peopleData = [
+            {"id": "P001", "name": "Jane Smith", "dob": "1990-01-15", "type": "Staff", "property": "PROP001", "behavior": "Friendly", "ctn": "N"},
+            {"id": "P002", "name": "John Doe", "dob": "1985-03-22", "type": "Visitor", "property": "PROP002", "behavior": "Hostile", "ctn": "Y"},
+            // ... Add remaining 48 entries here ...
+        ];
+        const dispatchData = [
+            {"id": "D001", "datetime": "2023-10-01 14:30", "caller": "Resident", "property": "PROP002", "issue": "Suspicious Activity", "status": "Pending"},
+            {"id": "D002", "datetime": "2023-10-01 15:00", "caller": "Staff", "property": "PROP004", "issue": "Noise Complaint", "status": "Assigned"}
+        ];
 
-        // Load data with error handling
-        Promise.all([
-            fetch('people.json')
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-                    return res.json();
-                })
-                .catch(err => { console.error('People fetch error:', err); return []; }),
-            fetch('properties.json')
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-                    return res.json();
-                })
-                .catch(err => { console.error('Properties fetch error:', err); return []; }),
-            fetch('dispatch.json')
-                .then(res => {
-                    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
-                    return res.json();
-                })
-                .catch(err => { console.error('Dispatch fetch error:', err); return []; })
-        ]).then(([people, properties, dispatch]) => {
-            console.log('Data loaded successfully:', { people, properties, dispatch });
-            peopleData = people || [];
-            propertiesData = properties || [];
-            dispatchData = dispatch || [];
-            loadDashboard();
-            loadProperties();
-            loadDispatch();
-        }).catch(err => console.error('Promise.all error:', err));
+        // Login system
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            if (username === 'officer' && password === 'password') {
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('mdt').style.display = 'block';
+                loadDashboard();
+                loadDispatch();
+            } else {
+                alert('Invalid credentials');
+            }
+        }
+
+        // Dark mode toggle
+        function toggleDarkMode() {
+            document.body.classList.toggle('light-mode');
+            if (document.body.classList.contains('light-mode')) {
+                document.body.style.backgroundColor = '#fff';
+                document.body.style.color = '#000';
+                document.querySelectorAll('th').forEach(th => th.style.backgroundColor = '#ddd');
+            } else {
+                document.body.style.backgroundColor = '#1a1a1a';
+                document.body.style.color = '#fff';
+                document.querySelectorAll('th').forEach(th => th.style.backgroundColor = '#333');
+            }
+        }
 
         // Show/hide sections
         function showSection(sectionId) {
-            console.log('Showing section:', sectionId);
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.remove('active');
-            });
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
         }
 
-        // Dashboard summary
+        // Load dashboard
         function loadDashboard() {
-            const pending = dispatchData.filter(d => d.status === 'Pending').length;
-            document.getElementById('dispatchSummary').innerHTML = `Pending Dispatches: ${pending}`;
-        }
-
-        // Properties list
-        function loadProperties() {
-            let html = '<table><tr><th>ID</th><th>Address</th><th>Apt</th><th>Notes</th></tr>';
-            propertiesData.forEach(prop => {
-                html += `<tr><td>${prop.id}</td><td>${prop.address}</td><td>${prop.apt}</td><td>${prop.notes}</td></tr>`;
-            });
-            html += '</table>';
-            document.getElementById('propertiesList').innerHTML = html;
+            const activeCount = dispatchData.filter(d => d.status !== 'Completed').length;
+            document.getElementById('activeDispatches').textContent = activeCount;
+            document.getElementById('recentAlerts').textContent = 'CTN near PROP002 detected';
         }
 
         // People search
         function searchPeople() {
-            console.log('Search button clicked');
-            if (!peopleData || peopleData.length === 0) {
-                document.getElementById('peopleResults').innerHTML = 'No people data loaded. Check console for errors.';
-                console.log('People data:', peopleData);
-                return;
-            }
             const query = document.getElementById('searchInput').value.toLowerCase();
-            console.log('Search query:', query);
             const filtered = peopleData.filter(person => 
                 person.id.toLowerCase().includes(query) || 
                 person.name.toLowerCase().includes(query)
             );
-            console.log('Filtered results:', filtered);
-
             let html = '<table><tr><th>ID</th><th>Name</th><th>DoB</th><th>Type</th><th>Property</th><th>Behavior</th><th>CTN</th></tr>';
             if (filtered.length > 0) {
                 filtered.forEach(person => {
                     const behaviorClass = person.behavior.toLowerCase() + '-text';
                     const ctnClass = person.ctn === 'Y' ? 'ctn-active' : '';
-                    const nameText = person.ctn === 'Y' ? `<span class="name">${person.name} <span class="ctn-icon">⚠️</span></span>` : `<span class="${behaviorClass}">${person.name}</span>`;
-                    const behaviorText = person.ctn === 'Y' ? `<span class="behavior">${person.behavior}</span>` : `<span class="${behaviorClass}">${person.behavior}</span>`;
-
+                    const nameText = person.type === 'Staff' ? `<span class="staff-text">${person.name}</span>` : person.name;
                     html += `<tr class="${ctnClass}">`;
-                    html += `<td>${person.id}</td>`;
-                    html += `<td>${nameText}</td>`;
-                    html += `<td>${person.dob}</td>`;
-                    html += `<td>${person.type}</td>`;
-                    html += `<td>${person.property}</td>`;
-                    html += `<td>${behaviorText}</td>`;
-                    html += `<td>${person.ctn}</td>`;
-                    html += `</tr>`;
+                    html += `<td>${person.id}</td><td>${nameText}</td><td>${person.dob}</td><td>${person.type}</td><td>${person.property}</td>`;
+                    html += `<td class="${behaviorClass}">${person.behavior}</td><td>${person.ctn}</td></tr>`;
                 });
             } else {
                 html += '<tr><td colspan="7">No results found</td></tr>';
@@ -157,14 +168,39 @@
             document.getElementById('peopleResults').innerHTML = html;
         }
 
-        // Dispatch list
+        // Load dispatch log
         function loadDispatch() {
-            let html = '<table><tr><th>ID</th><th>Date/Time</th><th>Caller</th><th>Property</th><th>Issue</th><th>Status</th></tr>';
-            dispatchData.forEach(disp => {
-                html += `<tr><td>${disp.id}</td><td>${disp.dateTime}</td><td>${disp.caller}</td><td>${disp.property}</td><td>${disp.issue}</td><td>${disp.status}</td></tr>`;
+            let html = '<table><tr><th>ID</th><th>Date/Time</th><th>Caller</th><th>Property</th><th>Issue</th><th>Status</th><th>Action</th></tr>';
+            dispatchData.forEach(call => {
+                html += `<tr><td>${call.id}</td><td>${call.datetime}</td><td>${call.caller}</td><td>${call.property}</td><td>${call.issue}</td><td>${call.status}</td>`;
+                html += `<td><button onclick="updateStatus('${call.id}', 'In Progress')">In Progress</button> <button onclick="updateStatus('${call.id}', 'Completed')">Complete</button></td></tr>`;
             });
             html += '</table>';
             document.getElementById('dispatchList').innerHTML = html;
+        }
+
+        // Update dispatch status
+        function updateStatus(id, status) {
+            const call = dispatchData.find(d => d.id === id);
+            call.status = status;
+            loadDispatch();
+            loadDashboard();
+        }
+
+        // Submit report (placeholder)
+        function submitReport(event) {
+            event.preventDefault();
+            const form = document.getElementById('reportForm');
+            const type = form.type.value;
+            const narrative = form.narrative.value;
+            alert(`Report Submitted: ${type} - ${narrative}`);
+            form.reset();
+        }
+
+        // Add property note (placeholder)
+        function addPropertyNote() {
+            const note = document.getElementById('propertyNote').value;
+            alert(`Note Added: ${note}`);
         }
     </script>
 </body>
