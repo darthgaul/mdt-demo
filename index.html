@@ -34,7 +34,7 @@
         <a href="#dispatch" onclick="showSection('dispatch')">Dispatch</a>
     </nav>
 
-    <div id="dashboard" class="section">
+    <div id="dashboard" class="section active">
         <h3>Active Dispatches</h3>
         <div id="dispatchSummary"></div>
     </div>
@@ -44,7 +44,7 @@
         <div id="propertiesList"></div>
     </div>
 
-    <div id="people" class="section active">
+    <div id="people" class="section">
         <h3>People Search</h3>
         <input type="text" id="searchInput" placeholder="Enter Name or ID">
         <button onclick="searchPeople()">Search</button>
@@ -83,7 +83,9 @@
         // Show/hide sections
         function showSection(sectionId) {
             console.log('Showing section:', sectionId);
-            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
             document.getElementById(sectionId).classList.add('active');
         }
 
@@ -96,7 +98,7 @@
 
         // Properties list
         function loadProperties() {
-しました。            let html = '<table><tr><th>ID</th><th>Address</th><th>Apt</th><th>Notes</th></tr>';
+            let html = '<table><tr><th>ID</th><th>Address</th><th>Apt</th><th>Notes</th></tr>';
             propertiesData.forEach(prop => {
                 html += `<tr><td>${prop.id}</td><td>${prop.address}</td><td>${prop.apt}</td><td>${prop.notes}</td></tr>`;
             });
