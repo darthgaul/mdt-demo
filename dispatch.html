@@ -14,6 +14,8 @@
         <a href="people.html" class="hover:underline">People</a>
         <a href="dispatch.html" class="text-blue-400 font-semibold">Dispatch</a>
         <a href="reports.html" class="hover:underline">Reports</a>
+        <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
+        <a href="map.html" class="hover:underline">Map</a>
     </nav>
 
     <h3 class="text-xl font-semibold mb-2">Dispatch Log</h3>
@@ -21,6 +23,10 @@
 
     <script src="scripts.js"></script>
     <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) window.location.href = 'login.html';
+        if (user.group !== 'Managers') document.getElementById('managerLink').style.display = 'none';
+
         loadData(() => {
             let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Caller</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Assigned</th><th class="p-2 bg-gray-700">Actions</th></tr>';
             if (dispatchData.length === 0) {
@@ -44,7 +50,7 @@
             const dispatch = dispatchData.find(d => d.id === id);
             if (dispatch) {
                 dispatch.status = status;
-                location.reload(); // Simple refresh for now
+                location.reload();
             }
         }
 
