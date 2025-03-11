@@ -9,7 +9,7 @@
         nav { margin-bottom: 20px; }
         nav a { color: #fff; margin-right: 15px; text-decoration: none; }
         nav a:hover { text-decoration: underline; }
-        input, button { margin: 5px; padding: 5px; }
+        input, button, select { margin: 5px; padding: 5px; }
         table { border-collapse: collapse; width: 100%; margin-top: 20px; }
         th, td { border: 1px solid #fff; padding: 8px; text-align: left; }
         th { background-color: #333; }
@@ -23,48 +23,37 @@
         .section { margin-top: 30px; display: none; }
         .active { display: block; }
         .ctn-icon { margin-left: 5px; }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div id="login" class="section active">
-        <h2>MDT Login</h2>
-        <input type="text" id="username" placeholder="Username">
-        <input type="password" id="password" placeholder="Password">
-        <button onclick="login()">Login</button>
-        <p id="loginError" style="color: red;"></p>
+    <h2>MDT Dashboard</h2>
+    <nav>
+        <a href="#dashboard" onclick="showSection('dashboard')">Dashboard</a>
+        <a href="#properties" onclick="showSection('properties')">Properties</a>
+        <a href="#people" onclick="showSection('people')">People</a>
+        <a href="#dispatch" onclick="showSection('dispatch')">Dispatch</a>
+    </nav>
+
+    <div id="dashboard" class="section">
+        <h3>Active Dispatches</h3>
+        <div id="dispatchSummary"></div>
     </div>
 
-    <div id="mdt" class="section hidden">
-        <h2>MDT Dashboard - <span id="userRole"></span></h2>
-        <nav id="navMenu">
-            <a href="#dashboard" onclick="showSection('dashboard')" id="navDashboard">Dashboard</a>
-            <a href="#properties" onclick="showSection('properties')" id="navProperties">Properties</a>
-            <a href="#people" onclick="showSection('people')" id="navPeople">People</a>
-            <a href="#dispatch" onclick="showSection('dispatch')" id="navDispatch">Dispatch</a>
-        </nav>
+    <div id="properties" class="section">
+        <h3>Properties</h3>
+        <div id="propertiesList"></div>
+    </div>
 
-        <div id="dashboard" class="section active">
-            <h3>Active Dispatches</h3>
-            <div id="dispatchSummary"></div>
-        </div>
+    <div id="people" class="section active">
+        <h3>People Search</h3>
+        <input type="text" id="searchInput" placeholder="Enter Name or ID">
+        <button onclick="searchPeople()">Search</button>
+        <div id="peopleResults"></div>
+    </div>
 
-        <div id="properties" class="section">
-            <h3>Properties</h3>
-            <div id="propertiesList"></div>
-        </div>
-
-        <div id="people" class="section">
-            <h3>People Search</h3>
-            <input type="text" id="searchInput" placeholder="Enter Name or ID">
-            <button onclick="searchPeople()">Search</button>
-            <div id="peopleResults"></div>
-        </div>
-
-        <div id="dispatch" class="section">
-            <h3>Dispatch Log</h3>
-            <div id="dispatchList"></div>
-        </div>
+    <div id="dispatch" class="section">
+        <h3>Dispatch Log</h3>
+        <div id="dispatchList"></div>
     </div>
 
     <script>
@@ -72,103 +61,43 @@
         let peopleData = [];
         let propertiesData = [];
         let dispatchData = [];
-        let usersData = [];
-        let currentUser = null;
+
+        // Placeholder officer list (for assignments)
+        const officers = ['Patrol1', 'Patrol2', 'Patrol3', 'Static1', 'Static2'];
 
         // Load data with error handling
         Promise.all([
             fetch('people.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('People fetch error:', err); return []; }),
             fetch('properties.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('Properties fetch error:', err); return []; }),
-            fetch('dispatch.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('Dispatch fetch error:', err); return []; }),
-            fetch('users.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('Users fetch error:', err); return []; })
-        ]).then(([people, properties, dispatch, users]) => {
-            console.log('Data loaded successfully:', { people, properties, dispatch, users });
+            fetch('dispatch.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('Dispatch fetch error:', err); return []; })
+        ]).then(([people, properties, dispatch]) => {
+            console.log('Data loaded successfully:', { people, properties, dispatch });
             peopleData = people || [];
             propertiesData = properties || [];
             dispatchData = dispatch || [];
-            usersData = users || [];
+            loadDashboard();
+            loadProperties();
+            loadDispatch();
         }).catch(err => console.error('Promise.all error:', err));
-
-        // Login function
-        function login() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const user = usersData.find(u => u.username === username && u.password === password);
-            if (user) {
-                currentUser = user;
-                document.getElementById('login').classList.remove('active');
-                document.getElementById('mdt').classList.remove('hidden');
-                document.getElementById('userRole').textContent = `${user.username} (${user.group})`;
-                adjustUIForUserGroup(user.group, user.property);
-                loadDashboard();
-                loadProperties();
-                loadDispatch();
-            } else {
-                document.getElementById('loginError').textContent = 'Invalid username or password';
-            }
-        }
-
-        // Adjust UI based on usergroup
-        function adjustUIForUserGroup(group, assignedProperty) {
-            const navDashboard = document.getElementById('navDashboard');
-            const navProperties = document.getElementById('navProperties');
-            const navPeople = document.getElementById('navPeople');
-            const navDispatch = document.getElementById('navDispatch');
-
-            switch (group) {
-                case 'Managers':
-                    // Full access, no changes needed
-                    break;
-                case 'Supervisors':
-                    // All sections, but limited editing (handled in functions)
-                    break;
-                case 'Dispatchers':
-                    navProperties.classList.add('hidden');
-                    navPeople.classList.add('hidden');
-                    showSection('dispatch');
-                    break;
-                case 'Patrol Officers':
-                    // Full read access, limited dispatch editing
-                    break;
-                case 'Static-Site Officers':
-                    navDashboard.classList.add('hidden');
-                    navDispatch.classList.add('hidden');
-                    showSection('properties');
-                    break;
-            }
-        }
 
         // Show/hide sections
         function showSection(sectionId) {
-            if (!currentUser) return;
-            const allowedSections = {
-                'Managers': ['dashboard', 'properties', 'people', 'dispatch'],
-                'Supervisors': ['dashboard', 'properties', 'people', 'dispatch'],
-                'Dispatchers': ['dashboard', 'dispatch'],
-                'Patrol Officers': ['dashboard', 'properties', 'people', 'dispatch'],
-                'Static-Site Officers': ['properties', 'people']
-            };
-            if (allowedSections[currentUser.group].includes(sectionId)) {
-                console.log('Showing section:', sectionId);
-                document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
-                document.getElementById(sectionId).classList.add('active');
-            }
+            console.log('Showing section:', sectionId);
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
         }
 
         // Dashboard summary
         function loadDashboard() {
             const pending = dispatchData.filter(d => d.status === 'Pending').length;
-            document.getElementById('dispatchSummary').innerHTML = `Pending Dispatches: ${pending}`;
+            const inProgress = dispatchData.filter(d => d.status === 'In Progress').length;
+            document.getElementById('dispatchSummary').innerHTML = `Pending: ${pending} | In Progress: ${inProgress}`;
         }
 
         // Properties list
         function loadProperties() {
-            let filteredProperties = propertiesData;
-            if (currentUser.group === 'Static-Site Officers') {
-                filteredProperties = propertiesData.filter(prop => prop.id === currentUser.property);
-            }
-            let html = '<table><tr><th>ID</th><th>Address</th><th>Apt</th><th>Notes</th></tr>';
-            filteredProperties.forEach(prop => {
+しました。            let html = '<table><tr><th>ID</th><th>Address</th><th>Apt</th><th>Notes</th></tr>';
+            propertiesData.forEach(prop => {
                 html += `<tr><td>${prop.id}</td><td>${prop.address}</td><td>${prop.apt}</td><td>${prop.notes}</td></tr>`;
             });
             html += '</table>';
@@ -185,11 +114,7 @@
             }
             const query = document.getElementById('searchInput').value.toLowerCase();
             console.log('Search query:', query);
-            let filtered = peopleData;
-            if (currentUser.group === 'Static-Site Officers') {
-                filtered = peopleData.filter(person => person.property === currentUser.property);
-            }
-            filtered = filtered.filter(person => 
+            const filtered = peopleData.filter(person => 
                 person.id.toLowerCase().includes(query) || 
                 person.name.toLowerCase().includes(query)
             );
@@ -221,22 +146,45 @@
             document.getElementById('peopleResults').innerHTML = html;
         }
 
-        // Dispatch list (placeholder if dispatch.json is missing)
+        // Dispatch list with status updates and assignments
         function loadDispatch() {
-            let html = '<table><tr><th>ID</th><th>Date/Time</th><th>Caller</th><th>Property</th><th>Issue</th><th>Status</th></tr>';
+            let html = '<table><tr><th>ID</th><th>Date/Time</th><th>Caller</th><th>Property</th><th>Issue</th><th>Status</th><th>Assigned</th><th>Actions</th></tr>';
             if (dispatchData.length === 0) {
-                html += '<tr><td colspan="6">No dispatch data available</td></tr>';
+                html += '<tr><td colspan="8">No dispatch data available</td></tr>';
             } else {
-                let filteredDispatch = dispatchData;
-                if (currentUser.group === 'Patrol Officers') {
-                    filteredDispatch = dispatchData.filter(d => d.assignedOfficer === currentUser.username || !d.assignedOfficer);
-                }
-                filteredDispatch.forEach(disp => {
-                    html += `<tr><td>${disp.id}</td><td>${disp.dateTime}</td><td>${disp.caller}</td><td>${disp.property}</td><td>${disp.issue}</td><td>${disp.status}</td></tr>`;
+                dispatchData.forEach(disp => {
+                    html += `<tr><td>${disp.id}</td><td>${disp.dateTime}</td><td>${disp.caller}</td><td>${disp.property}</td><td>${disp.issue}</td><td>${disp.status}</td>`;
+                    html += `<td><select onchange="assignOfficer('${disp.id}', this.value)"><option value="">Unassigned</option>`;
+                    officers.forEach(officer => {
+                        html += `<option value="${officer}" ${disp.assignedOfficer === officer ? 'selected' : ''}>${officer}</option>`;
+                    });
+                    html += `</select></td>`;
+                    html += `<td><button onclick="updateStatus('${disp.id}', 'Assigned')">Assign</button> <button onclick="updateStatus('${disp.id}', 'In Progress')">In Progress</button> <button onclick="updateStatus('${disp.id}', 'Completed')">Complete</button></td></tr>`;
                 });
             }
             html += '</table>';
             document.getElementById('dispatchList').innerHTML = html;
+        }
+
+        // Update dispatch status
+        function updateStatus(id, status) {
+            const dispatch = dispatchData.find(d => d.id === id);
+            if (dispatch) {
+                dispatch.status = status;
+                loadDispatch();
+                loadDashboard();
+            }
+        }
+
+        // Assign officer to dispatch
+        function assignOfficer(id, officer) {
+            const dispatch = dispatchData.find(d => d.id === id);
+            if (dispatch) {
+                dispatch.assignedOfficer = officer || undefined;
+                if (officer && dispatch.status === 'Pending') dispatch.status = 'Assigned';
+                loadDispatch();
+                loadDashboard();
+            }
         }
     </script>
 </body>
