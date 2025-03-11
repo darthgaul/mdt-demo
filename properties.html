@@ -14,7 +14,8 @@
         <a href="people.html" class="hover:underline">People</a>
         <a href="dispatch.html" class="hover:underline">Dispatch</a>
         <a href="reports.html" class="hover:underline">Reports</a>
-        <a href="manager.html" class="hover:underline">Manager</a>
+        <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
+        <a href="map.html" class="hover:underline">Map</a>
     </nav>
 
     <h3 class="text-xl font-semibold mb-2">Properties</h3>
@@ -22,10 +23,19 @@
 
     <script src="scripts.js"></script>
     <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) window.location.href = 'login.html';
+        if (user.group !== 'Managers') document.getElementById('managerLink').style.display = 'none';
+
         loadData(() => {
+            console.log('Loading properties...');
             const customProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
+            console.log('Custom properties from localStorage:', customProperties);
             customProperties.forEach(prop => {
-                if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
+                if (!propertiesData.some(p => p.id === prop.id)) {
+                    propertiesData.push(prop);
+                    console.log(`Added custom property: ${prop.id}`);
+                }
             });
 
             let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Property Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Apt</th><th class="p-2 bg-gray-700">Min. Hits</th><th class="p-2 bg-gray-700">Notes</th></tr>';
@@ -35,6 +45,7 @@
             });
             html += '</table>';
             document.getElementById('propertiesList').innerHTML = html;
+            console.log('Properties loaded:', propertiesData);
         });
     </script>
 </body>
