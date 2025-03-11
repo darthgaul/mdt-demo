@@ -3,31 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MDT Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>MDT Login</title>
+    <link href="/dist/output.css" rel="stylesheet"> <!-- Compiled Tailwind -->
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-6">
-    <h2 class="text-2xl font-bold mb-4">MDT Dashboard</h2>
-    <nav class="flex space-x-4 mb-6">
-        <a href="index.html" class="text-blue-400 font-semibold">Dashboard</a>
-        <a href="properties.html" class="hover:underline">Properties</a>
-        <a href="people.html" class="hover:underline">People</a>
-        <a href="dispatch.html" class="hover:underline">Dispatch</a>
-        <a href="reports.html" class="hover:underline">Reports</a>
-        <a href="manager.html" class="hover:underline">Manager</a>
-        <a href="map.html" class="hover:underline">Map</a>
-    </nav>
-
-    <h3 class="text-xl font-semibold mb-2">Active Dispatches</h3>
-    <div id="dispatchSummary" class="bg-gray-800 p-4 rounded-lg"></div>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+    <div class="bg-gray-800 p-6 rounded-lg w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-4 text-center">MDT Login</h2>
+        <input type="text" id="username" placeholder="Username" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
+        <input type="password" id="password" placeholder="Password" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
+        <button onclick="login()" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded w-full">Login</button>
+        <p id="loginError" class="text-red-500 mt-2 text-center"></p>
+    </div>
 
     <script src="scripts.js"></script>
     <script>
-        loadData(() => {
-            const pending = dispatchData.filter(d => d.status === 'Pending').length;
-            const inProgress = dispatchData.filter(d => d.status === 'In Progress').length;
-            document.getElementById('dispatchSummary').innerHTML = `Pending: ${pending} | In Progress: ${inProgress}`;
-        });
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const user = usersData.find(u => u.username === username && u.password === password);
+            if (user) {
+                localStorage.setItem('user', JSON.stringify(user));
+                window.location.href = 'index.html';
+            } else {
+                document.getElementById('loginError').textContent = 'Invalid username or password';
+            }
+        }
+
+        fetch('users.json').then(res => res.json()).then(data => {
+            window.usersData = data;
+        }).catch(err => console.error('Users fetch error:', err));
     </script>
 </body>
 </html>
