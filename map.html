@@ -17,7 +17,7 @@
         <a href="people.html" class="hover:underline">People</a>
         <a href="dispatch.html" class="hover:underline">Dispatch</a>
         <a href="reports.html" class="hover:underline">Reports</a>
-        <a href="manager.html" class="hover:underline">Manager</a>
+        <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
         <a href="map.html" class="text-blue-400 font-semibold">Map</a>
     </nav>
 
@@ -28,6 +28,10 @@
     <script src="scripts.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDcaYshVKliKeSBOQws4uso0JKPnLP476s&callback=initMap" async defer></script>
     <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) window.location.href = 'login.html';
+        if (user.group !== 'Managers') document.getElementById('managerLink').style.display = 'none';
+
         function initMap() {
             console.log('initMap called');
             loadData(() => {
@@ -76,13 +80,6 @@
                 }
             });
         }
-
-        // Fallback if Google Maps fails to load
-        window.addEventListener('error', (e) => {
-            if (e.message.includes('Google Maps')) {
-                document.getElementById('mapError').innerHTML = 'Failed to load Google Maps. Check API key or network.';
-            }
-        });
     </script>
 </body>
 </html>
