@@ -1,0 +1,22 @@
+[
+    {"id": "E001", "name": "Officer Alex Reed", "group": "Officer"},
+    {"id": "E002", "name": "Officer Bella Cruz", "group": "Officer"},
+    {"id": "E003", "name": "Officer Chris Dunn", "group": "Officer"},
+    {"id": "E004", "name": "Officer Dana Ellis", "group": "Officer"},
+    {"id": "E005", "name": "Officer Evan Ford", "group": "Officer"},
+    {"id": "E006", "name": "Officer Fiona Gray", "group": "Officer"},
+    {"id": "E007", "name": "Officer Greg Hale", "group": "Officer"},
+    {"id": "E008", "name": "Officer Hana Ito", "group": "Officer"},
+    {"id": "E009", "name": "Officer Ian James", "group": "Officer"},
+    {"id": "E010", "name": "Officer Jada Kim", "group": "Officer"},
+    {"id": "E011", "name": "Officer Kyle Lane", "group": "Officer"},
+    {"id": "E012", "name": "Officer Lila Moss", "group": "Officer"},
+    {"id": "E013", "name": "Officer Mike Nash", "group": "Officer"},
+    {"id": "E014", "name": "Officer Nina Ortiz", "group": "Officer"},
+    {"id": "E015", "name": "Officer Owen Park", "group": "Officer"},
+    {"id": "E016", "name": "Officer Pia Quinn", "group": "Officer"},
+    {"id": "E017", "name": "Officer Ray Silva", "group": "Officer"},
+    {"id": "E018", "name": "Officer Sara Tate", "group": "Officer"},
+    {"id": "E019", "name": "Supervisor Tom Vega", "group": "Supervisor"},
+    {"id": "E020", "name": "Supervisor Uma West", "group": "Supervisor"}
+]
