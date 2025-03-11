@@ -17,9 +17,16 @@ function loadData(callback) {
         usersData = users || [];
         employeesData = employees || [];
 
-        // Load persisted dispatch from localStorage
         const storedDispatch = JSON.parse(localStorage.getItem('dispatchData') || '[]');
         if (storedDispatch.length) dispatchData = storedDispatch;
+
+        const storedProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
+        storedProperties.forEach(prop => {
+            if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
+        });
+
+        const storedReports = JSON.parse(localStorage.getItem('reportsData') || '[]');
+        if (storedReports.length) reportsData = storedReports;
 
         if (callback) callback();
     }).catch(err => console.error('Promise.all error:', err));
@@ -27,4 +34,17 @@ function loadData(callback) {
 
 function saveDispatch() {
     localStorage.setItem('dispatchData', JSON.stringify(dispatchData));
+}
+
+function saveReports() {
+    localStorage.setItem('reportsData', JSON.stringify(reportsData));
+}
+
+function calculateElapsed(dateTime) {
+    const now = new Date();
+    const callTime = new Date(dateTime);
+    const diffMs = now - callTime;
+    const minutes = Math.floor(diffMs / 60000);
+    const seconds = Math.floor((diffMs % 60000) / 1000);
+    return { minutes, seconds, totalMs: diffMs };
 }
