@@ -6,12 +6,13 @@
     <title>MDT Reports</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .dark-mode { background-color: #f3f4f6; color: #1f2937; }
+        .dark-mode { background-color: #f3f4f6; color: #374151; }
         .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
         .dark-mode .bg-gray-700 { background-color: #d1d5db; }
         .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
-        tr:hover { background-color: rgba(255, 255, 255, 0.1); }
+        tr:hover { background-color: rgba(0, 0, 0, 0.1); }
         @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
+        .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-6">
@@ -31,6 +32,11 @@
             <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
         </div>
     </nav>
+
+    <div class="tips">
+        <h4 class="text-lg font-semibold">Tips</h4>
+        <p>Submit a report (e.g., Person ID: "P001", Property: "PROP001", Type: "Trespass"). View all reports or filter by person via People page links.</p>
+    </div>
 
     <h3 class="text-xl font-semibold mb-2">Submit Report</h3>
     <form id="reportForm" class="bg-gray-800 p-4 rounded-lg mb-4 shadow" onsubmit="submitReport(event)">
