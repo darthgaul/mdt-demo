@@ -18,7 +18,8 @@
         .hostile { background-color: #FF0000; color: #fff; }
         .unknown { background-color: #808080; color: #fff; }
         .ctn { font-weight: bold; }
-        .section { margin-top: 30px; }
+        .section { margin-top: 30px; display: none; }
+        .active { display: block; }
     </style>
 </head>
 <body>
@@ -35,19 +36,19 @@
         <div id="dispatchSummary"></div>
     </div>
 
-    <div id="properties" class="section" style="display: none;">
+    <div id="properties" class="section">
         <h3>Properties</h3>
         <div id="propertiesList"></div>
     </div>
 
-    <div id="people" class="section" style="display: none;">
+    <div id="people" class="section active">
         <h3>People Search</h3>
         <input type="text" id="searchInput" placeholder="Enter Name or ID">
         <button onclick="searchPeople()">Search</button>
         <div id="peopleResults"></div>
     </div>
 
-    <div id="dispatch" class="section" style="display: none;">
+    <div id="dispatch" class="section">
         <h3>Dispatch Log</h3>
         <div id="dispatchList"></div>
     </div>
@@ -75,9 +76,11 @@
 
         // Show/hide sections
         function showSection(sectionId) {
+            console.log('Showing section:', sectionId);
             document.querySelectorAll('.section').forEach(section => {
-                section.style.display = section.id === sectionId ? 'block' : 'none';
+                section.classList.remove('active');
             });
+            document.getElementById(sectionId).classList.add('active');
         }
 
         // Dashboard summary
@@ -98,13 +101,14 @@
 
         // People search
         function searchPeople() {
-            console.log('Search triggered');
+            console.log('Search button clicked');
             if (!peopleData.length) {
                 document.getElementById('peopleResults').innerHTML = 'Data not loaded yet. Please wait.';
+                console.log('No people data available');
                 return;
             }
             const query = document.getElementById('searchInput').value.toLowerCase();
-            console.log('Query:', query);
+            console.log('Search query:', query);
             const filtered = peopleData.filter(person => 
                 person.id.toLowerCase().includes(query) || 
                 person.name.toLowerCase().includes(query)
@@ -141,9 +145,6 @@
             html += '</table>';
             document.getElementById('dispatchList').innerHTML = html;
         }
-
-        // Show dashboard by default
-        showSection('dashboard');
     </script>
 </body>
 </html>
