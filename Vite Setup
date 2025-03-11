@@ -1,0 +1,5 @@
+npm init vite@latest mdt-demo -- --template vanilla
+cd mdt-demo
+npm install
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
