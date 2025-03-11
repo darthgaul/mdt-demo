@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDT Login</title>
+    <link href="/dist/output.css" rel="stylesheet"> <!-- Compiled Tailwind -->
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+    <div class="bg-gray-800 p-6 rounded-lg w-full max-w-md">
+        <h2 class="text-2xl font-bold mb-4 text-center">MDT Login</h2>
+        <input type="text" id="username" placeholder="Username" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
+        <input type="password" id="password" placeholder="Password" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
+        <button onclick="login()" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded w-full">Login</button>
+        <p id="loginError" class="text-red-500 mt-2 text-center"></p>
+    </div>
+
+    <script src="scripts.js"></script>
+    <script>
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const user = usersData.find(u => u.username === username && u.password === password);
+            if (user) {
+                localStorage.setItem('user', JSON.stringify(user));
+                window.location.href = 'index.html';
+            } else {
+                document.getElementById('loginError').textContent = 'Invalid username or password';
+            }
+        }
+
+        fetch('users.json').then(res => res.json()).then(data => {
+            window.usersData = data;
+        }).catch(err => console.error('Users fetch error:', err));
+    </script>
+</body>
+</html>
