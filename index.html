@@ -53,17 +53,25 @@
     </div>
 
     <script>
-        // Load data
-        let peopleData, propertiesData, dispatchData;
+        // Global data variables
+        let peopleData = [];
+        let propertiesData = [];
+        let dispatchData = [];
+
+        // Load data with error handling
         Promise.all([
-            fetch('people.json').then(res => res.json()).then(data => peopleData = data),
-            fetch('properties.json').then(res => res.json()).then(data => propertiesData = data),
-            fetch('dispatch.json').then(res => res.json()).then(data => dispatchData = data)
-        ]).then(() => {
+            fetch('people.json').then(res => res.json()).catch(err => { console.error('People fetch error:', err); return []; }),
+            fetch('properties.json').then(res => res.json()).catch(err => { console.error('Properties fetch error:', err); return []; }),
+            fetch('dispatch.json').then(res => res.json()).catch(err => { console.error('Dispatch fetch error:', err); return []; })
+        ]).then(([people, properties, dispatch]) => {
+            console.log('Data loaded:', { people, properties, dispatch });
+            peopleData = people;
+            propertiesData = properties;
+            dispatchData = dispatch;
             loadDashboard();
             loadProperties();
             loadDispatch();
-        });
+        }).catch(err => console.error('Promise.all error:', err));
 
         // Show/hide sections
         function showSection(sectionId) {
@@ -90,11 +98,19 @@
 
         // People search
         function searchPeople() {
+            console.log('Search triggered');
+            if (!peopleData.length) {
+                document.getElementById('peopleResults').innerHTML = 'Data not loaded yet. Please wait.';
+                return;
+            }
             const query = document.getElementById('searchInput').value.toLowerCase();
+            console.log('Query:', query);
             const filtered = peopleData.filter(person => 
                 person.id.toLowerCase().includes(query) || 
                 person.name.toLowerCase().includes(query)
             );
+            console.log('Filtered results:', filtered);
+
             let html = '<table><tr><th>ID</th><th>Name</th><th>DoB</th><th>Type</th><th>Property</th><th>Behavior</th></tr>';
             if (filtered.length > 0) {
                 filtered.forEach(person => {
