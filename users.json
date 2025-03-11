@@ -2,5 +2,7 @@
     {"username": "manager1", "password": "mgrpass", "group": "Managers"},
     {"username": "supervisor1", "password": "suppass", "group": "Supervisors"},
     {"username": "dispatch1", "password": "dispass", "group": "Dispatchers"},
-    {"username": "officer1", "password": "offpass", "group": "Officers"}
+    {"username": "officer1", "password": "offpass", "group": "Officers"},
+    {"username": "Officer Alex Reed", "password": "alex123", "group": "Officers"},
+    {"username": "Officer Bella Cruz", "password": "bella123", "group": "Officers"}
 ]
