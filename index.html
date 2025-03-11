@@ -13,13 +13,14 @@
         table { border-collapse: collapse; width: 100%; margin-top: 20px; }
         th, td { border: 1px solid #fff; padding: 8px; text-align: left; }
         th { background-color: #333; }
-        .friendly { background-color: #00FF00; color: #000; }
-        .cautious { background-color: #FFFF00; color: #000; }
-        .hostile { background-color: #FF0000; color: #fff; }
-        .unknown { background-color: #808080; color: #fff; }
-        .ctn { font-weight: bold; }
+        .ctn-active { background-color: #FF0000; }
+        .friendly-text { color: #00FF00; }
+        .cautious-text { color: #FFFF00; }
+        .hostile-text { color: #FF0000; }
+        .unknown-text { color: #808080; }
         .section { margin-top: 30px; display: none; }
         .active { display: block; }
+        .ctn-link { cursor: pointer; text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -61,14 +62,29 @@
 
         // Load data with error handling
         Promise.all([
-            fetch('people.json').then(res => res.json()).catch(err => { console.error('People fetch error:', err); return []; }),
-            fetch('properties.json').then(res => res.json()).catch(err => { console.error('Properties fetch error:', err); return []; }),
-            fetch('dispatch.json').then(res => res.json()).catch(err => { console.error('Dispatch fetch error:', err); return []; })
+            fetch('people.json')
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+                    return res.json();
+                })
+                .catch(err => { console.error('People fetch error:', err); return []; }),
+            fetch('properties.json')
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+                    return res.json();
+                })
+                .catch(err => { console.error('Properties fetch error:', err); return []; }),
+            fetch('dispatch.json')
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP error! Status: ${res.status}`);
+                    return res.json();
+                })
+                .catch(err => { console.error('Dispatch fetch error:', err); return []; })
         ]).then(([people, properties, dispatch]) => {
-            console.log('Data loaded:', { people, properties, dispatch });
-            peopleData = people;
-            propertiesData = properties;
-            dispatchData = dispatch;
+            console.log('Data loaded successfully:', { people, properties, dispatch });
+            peopleData = people || [];
+            propertiesData = properties || [];
+            dispatchData = dispatch || [];
             loadDashboard();
             loadProperties();
             loadDispatch();
@@ -92,8 +108,8 @@
         // Properties list
         function loadProperties() {
             let html = '<table><tr><th>ID</th><th>Address</th><th>Apt</th><th>Notes</th></tr>';
-            propertiesData.forEach(prop => {
-                html += `<tr><td>${prop.id}</td><td>${prop.address}</td><td>${prop.apt}</td><td>${prop.notes}</td></tr>`;
+            propertiesData.forEach(propBruh => {
+                html += `<tr><td>${propBruh.id}</td><td>${propBruh.address}</td><td>${propBruh.apt}</td><td>${propBruh.notes}</td></tr>`;
             });
             html += '</table>';
             document.getElementById('propertiesList').innerHTML = html;
@@ -102,9 +118,9 @@
         // People search
         function searchPeople() {
             console.log('Search button clicked');
-            if (!peopleData.length) {
-                document.getElementById('peopleResults').innerHTML = 'Data not loaded yet. Please wait.';
-                console.log('No people data available');
+            if (!peopleData || peopleData.length === 0) {
+                document.getElementById('peopleResults').innerHTML = 'No people data loaded. Check console for errors.';
+                console.log('People data:', peopleData);
                 return;
             }
             const query = document.getElementById('searchInput').value.toLowerCase();
@@ -115,25 +131,33 @@
             );
             console.log('Filtered results:', filtered);
 
-            let html = '<table><tr><th>ID</th><th>Name</th><th>DoB</th><th>Type</th><th>Property</th><th>Behavior</th></tr>';
+            let html = '<table><tr><th>ID</th><th>Name</th><th>DoB</th><th>Type</th><th>Property</th><th>Behavior</th><th>CTN</th></tr>';
             if (filtered.length > 0) {
                 filtered.forEach(person => {
-                    const behaviorClass = person.behavior.toLowerCase();
-                    const ctnClass = person.type.includes('CTN') ? 'ctn' : '';
-                    html += `<tr class="${behaviorClass}">`;
+                    const behaviorClass = person.behavior.toLowerCase() + '-text';
+                    const ctnClass = person.ctn === 'Y' ? 'ctn-active' : '';
+                    html += `<tr class="${ctnClass}">`;
                     html += `<td>${person.id}</td>`;
-                    html += `<td>${person.name}</td>`;
+                    html += `<td class="${behaviorClass}">${person.name}</td>`;
                     html += `<td>${person.dob}</td>`;
-                    html += `<td class="${ctnClass}">${person.type}</td>`;
+                    html += `<td>${person.type}</td>`;
                     html += `<td>${person.property}</td>`;
-                    html += `<td>${person.behavior}</td>`;
+                    html += `<td class="${behaviorClass}">${person.behavior}</td>`;
+                    html += `<td>${person.ctn === 'Y' ? '<span class="ctn-link" onclick="showCTNReport(\'' + person.id + '\')">Y</span>' : 'N'}</td>`;
                     html += '</tr>';
                 });
             } else {
-                html += '<tr><td colspan="6">No results found</td></tr>';
+                html += '<tr><td colspan="7">No results found</td></tr>';
             }
             html += '</table>';
             document.getElementById('peopleResults').innerHTML = html;
+        }
+
+        // Placeholder for CTN report linking
+        function showCTNReport(personId) {
+            console.log('Show CTN report for person:', personId);
+            alert('CTN report for ' + personId + ' coming soon!'); // Placeholder
+            // Future: Load report from reports.json based on personId
         }
 
         // Dispatch list
