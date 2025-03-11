@@ -5,62 +5,131 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Dispatch</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .dark-mode { background-color: #f3f4f6; color: #1f2937; }
+        .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
+        .dark-mode .bg-gray-700 { background-color: #d1d5db; }
+        .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
+        tr:hover { background-color: rgba(255, 255, 255, 0.1); }
+        @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
+    </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-6">
-    <h2 class="text-2xl font-bold mb-4">MDT Dispatch</h2>
-    <nav class="flex space-x-4 mb-6">
-        <a href="index.html" class="hover:underline">Dashboard</a>
-        <a href="properties.html" class="hover:underline">Properties</a>
-        <a href="people.html" class="hover:underline">People</a>
-        <a href="dispatch.html" class="text-blue-400 font-semibold">Dispatch</a>
-        <a href="reports.html" class="hover:underline">Reports</a>
-        <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
-        <a href="map.html" class="hover:underline">Map</a>
+    <nav class="sticky-nav flex justify-between items-center mb-6 p-4 bg-gray-900 rounded-lg shadow">
+        <div class="flex space-x-4">
+            <a href="index.html" class="hover:underline">Dashboard</a>
+            <a href="properties.html" class="hover:underline">Properties</a>
+            <a href="people.html" class="hover:underline">People</a>
+            <a href="dispatch.html" class="text-blue-400 font-semibold">Dispatch</a>
+            <a href="reports.html" class="hover:underline">Reports</a>
+            <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
+            <a href="map.html" class="hover:underline">Map</a>
+        </div>
+        <div class="flex space-x-4 items-center">
+            <span id="userInfo" class="text-sm"></span>
+            <button id="darkModeToggle" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm shadow">Toggle Light Mode</button>
+            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
+        </div>
     </nav>
 
-    <h3 class="text-xl font-semibold mb-2">Dispatch Log</h3>
-    <div id="dispatchList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto"></div>
+    <h3 class="text-xl font-semibold mb-2">Dispatch Hub</h3>
+    <div class="flex space-x-4 mb-4">
+        <button onclick="showTab('active')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Active</button>
+        <button onclick="showTab('history')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">History</button>
+    </div>
+    <div id="dispatchList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
+
+    <div id="alert" class="fixed top-4 right-4 bg-green-600 text-white p-4 rounded shadow hidden"></div>
 
     <script src="scripts.js"></script>
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) window.location.href = 'login.html';
-        if (user.group !== 'Managers') document.getElementById('managerLink').style.display = 'none';
+        if (user.group !== 'Managers' && user.group !== 'Supervisors' && user.group !== 'Dispatchers') document.getElementById('managerLink').style.display = 'none';
+        document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
 
-        loadData(() => {
-            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Caller</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Assigned</th><th class="p-2 bg-gray-700">Actions</th></tr>';
-            if (dispatchData.length === 0) {
-                html += '<tr><td colspan="8" class="p-2 text-center">No dispatch data available</td></tr>';
+        loadData(() => showTab('active'));
+
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.getElementById('darkModeToggle');
+            btn.textContent = document.body.classList.contains('dark-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        });
+
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkModeToggle').textContent = 'Toggle Dark Mode';
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        function showTab(tab) {
+            const isDispatcherOrAbove = ['Managers', 'Supervisors', 'Dispatchers'].includes(user.group);
+            const active = dispatchData.filter(d => d.status !== 'Completed').slice(0, 10);
+            const history = dispatchData.filter(d => d.status === 'Completed');
+
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Caller</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Assigned</th>';
+            if (isDispatcherOrAbove) html += '<th class="p-2 bg-gray-700">Actions</th>';
+            html += '</tr>';
+
+            const data = tab === 'active' ? active : history;
+            if (!data.length) {
+                html += `<tr><td colspan="${isDispatcherOrAbove ? 8 : 7}" class="p-2 text-center">No ${tab} dispatches</td></tr>`;
             } else {
-                dispatchData.forEach(disp => {
-                    html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.dateTime}</td><td class="p-2">${disp.caller}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.issue}</td><td class="p-2">${disp.status}</td>`;
-                    html += `<td class="p-2"><select onchange="assignOfficer('${disp.id}', this.value)" class="bg-gray-700 text-white p-1 rounded"><option value="">Unassigned</option>`;
-                    officers.forEach(officer => {
-                        html += `<option value="${officer}" ${disp.assignedOfficer === officer ? 'selected' : ''}>${officer}</option>`;
+                data.forEach(disp => {
+                    const statusColor = { Pending: 'yellow-500', Assigned: 'blue-500', 'In Progress': 'orange-500', Completed: 'green-500' }[disp.status];
+                    html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.dateTime}</td><td class="p-2">${disp.caller}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.issue}</td><td class="p-2 text-${statusColor}">${disp.status}</td>`;
+                    html += `<td class="p-2"><select onchange="assignOfficer('${disp.id}', this.value)" class="bg-gray-700 text-white p-1 rounded ${!isDispatcherOrAbove && disp.assignedOfficer !== user.username ? 'cursor-not-allowed' : ''}" ${!isDispatcherOrAbove && disp.assignedOfficer !== user.username ? 'disabled' : ''}><option value="">Unassigned</option>`;
+                    employeesData.forEach(emp => {
+                        html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`;
                     });
                     html += `</select></td>`;
-                    html += `<td class="p-2 space-x-2"><button onclick="updateStatus('${disp.id}', 'Assigned')" class="bg-blue-600 hover:bg-blue-700 text-white p-1 rounded text-sm">Assign</button> <button onclick="updateStatus('${disp.id}', 'In Progress')" class="bg-yellow-600 hover:bg-yellow-700 text-white p-1 rounded text-sm">In Progress</button> <button onclick="updateStatus('${disp.id}', 'Completed')" class="bg-green-600 hover:bg-green-700 text-white p-1 rounded text-sm">Complete</button></td></tr>`;
+                    if (isDispatcherOrAbove) {
+                        html += `<td class="p-2 space-x-2">`;
+                        if (disp.status !== 'Completed') {
+                            html += `<button onclick="updateStatus('${disp.id}', 'Assigned')" class="bg-blue-600 hover:bg-blue-700 text-white p-1 rounded text-sm shadow">Assign</button>`;
+                            html += `<button onclick="updateStatus('${disp.id}', 'In Progress')" class="bg-orange-600 hover:bg-orange-700 text-white p-1 rounded text-sm shadow">In Progress</button>`;
+                            html += `<button onclick="updateStatus('${disp.id}', 'Completed')" class="bg-green-600 hover:bg-green-700 text-white p-1 rounded text-sm shadow">Complete</button>`;
+                        }
+                        html += `</td>`;
+                    }
+                    html += `</tr>`;
                 });
             }
             html += '</table>';
             document.getElementById('dispatchList').innerHTML = html;
-        });
+        }
 
         function updateStatus(id, status) {
             const dispatch = dispatchData.find(d => d.id === id);
             if (dispatch) {
                 dispatch.status = status;
-                location.reload();
+                saveDispatch();
+                showTab('active');
+                showAlert(`Dispatch ${id} updated to ${status}`);
             }
         }
 
         function assignOfficer(id, officer) {
             const dispatch = dispatchData.find(d => d.id === id);
             if (dispatch) {
-                dispatch.assignedOfficer = officer || undefined;
+                dispatch.assignedOfficer = officer || '';
                 if (officer && dispatch.status === 'Pending') dispatch.status = 'Assigned';
-                location.reload();
+                saveDispatch();
+                showTab('active');
+                showAlert(`Dispatch ${id} assigned to ${officer || 'Unassigned'}`);
             }
+        }
+
+        function showAlert(message) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.classList.remove('hidden');
+            setTimeout(() => alert.classList.add('hidden'), 3000);
         }
     </script>
 </body>
