@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDT Map</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #map { height: 500px; width: 100%; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-6">
+    <h2 class="text-2xl font-bold mb-4">MDT Map</h2>
+    <nav class="flex space-x-4 mb-6">
+        <a href="index.html" class="hover:underline">Dashboard</a>
+        <a href="properties.html" class="hover:underline">Properties</a>
+        <a href="people.html" class="hover:underline">People</a>
+        <a href="dispatch.html" class="hover:underline">Dispatch</a>
+        <a href="reports.html" class="hover:underline">Reports</a>
+        <a href="manager.html" class="hover:underline">Manager</a>
+        <a href="map.html" class="text-blue-400 font-semibold">Map</a>
+    </nav>
+
+    <h3 class="text-xl font-semibold mb-2">Property Map</h3>
+    <div id="map" class="bg-gray-800 rounded-lg"></div>
+
+    <script src="scripts.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+    <script>
+        function initMap() {
+            loadData(() => {
+                const map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 12,
+                    center: { lat: 30.2672, lng: -97.7431 } // Austin, TX center
+                });
+
+                const propertiesToMap = propertiesData.filter(prop => 
+                    ['PROP001', 'PROP002', 'PROP003'].includes(prop.id)
+                );
+
+                const markers = [
+                    { id: 'PROP001', lat: 30.2710, lng: -97.7500, name: 'Axel Apartments', address: '123 Demo St, Austin, TX 78701' },
+                    { id: 'PROP002', lat: 30.2650, lng: -97.7400, name: 'Briarwood Estates', address: '456 Sample Rd, Austin, TX 78702' },
+                    { id: 'PROP003', lat: 30.2600, lng: -97.7300, name: 'Cedar Heights', address: '789 Test Ave, Austin, TX 78703' }
+                ];
+
+                markers.forEach(marker => {
+                    const mapMarker = new google.maps.Marker({
+                        position: { lat: marker.lat, lng: marker.lng },
+                        map: map,
+                        title: marker.name
+                    });
+
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `
+                            <div class="p-2">
+                                <h4 class="font-bold">${marker.name}</h4>
+                                <p>${marker.address}</p>
+                                <a href="${marker.id.toLowerCase()}.html" class="text-blue-400 underline">View Details</a>
+                            </div>
+                        `
+                    });
+
+                    mapMarker.addListener('click', () => {
+                        infoWindow.open(map, mapMarker);
+                    });
+                });
+            });
+        }
+    </script>
+</body>
+</html>
