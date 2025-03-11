@@ -14,6 +14,7 @@
         <a href="people.html" class="hover:underline">People</a>
         <a href="dispatch.html" class="hover:underline">Dispatch</a>
         <a href="reports.html" class="hover:underline">Reports</a>
+        <a href="manager.html" class="hover:underline">Manager</a>
     </nav>
 
     <h3 class="text-xl font-semibold mb-2">Properties</h3>
@@ -22,6 +23,11 @@
     <script src="scripts.js"></script>
     <script>
         loadData(() => {
+            const customProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
+            customProperties.forEach(prop => {
+                if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
+            });
+
             let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Property Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Apt</th><th class="p-2 bg-gray-700">Min. Hits</th><th class="p-2 bg-gray-700">Notes</th></tr>';
             propertiesData.forEach(prop => {
                 const link = (prop.id === 'PROP001' || prop.id === 'PROP002' || prop.id === 'PROP003') ? `<a href="${prop.id.toLowerCase()}.html" class="underline">${prop.propertyName}</a>` : prop.propertyName;
