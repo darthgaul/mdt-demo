@@ -12,6 +12,7 @@
         .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
         tr:hover { background-color: rgba(0, 0, 0, 0.1); }
         @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
+        .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-6">
@@ -31,6 +32,11 @@
             <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
         </div>
     </nav>
+
+    <div class="tips">
+        <h4 class="text-lg font-semibold">Tips</h4>
+        <p>Overview: See your dispatches or team status. Route: Start your patrol route (Officers/Supervisors only).</p>
+    </div>
 
     <div class="flex space-x-4 mb-4">
         <button onclick="showTab('overview')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Overview</button>
