@@ -15,6 +15,7 @@
         <a href="dispatch.html" class="hover:underline">Dispatch</a>
         <a href="reports.html" class="hover:underline">Reports</a>
         <a href="manager.html" class="text-blue-400 font-semibold">Manager</a>
+        <a href="map.html" class="hover:underline">Map</a>
     </nav>
 
     <h3 class="text-xl font-semibold mb-2">Add New Property</h3>
@@ -26,11 +27,22 @@
         <textarea name="notes" placeholder="Notes" class="bg-gray-700 text-white p-2 rounded w-full mb-2" rows="3"></textarea>
         <input type="text" name="emergencyContact" placeholder="Emergency Contact (e.g., Manager - (512) 555-0101)" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
         <input type="text" name="accessCode" placeholder="Access Code" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded">Add Property</button>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded w-full">Add Property</button>
     </form>
 
     <script src="scripts.js"></script>
     <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || user.group !== 'Managers') window.location.href = 'index.html';
+
+        loadData(() => {
+            const customProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
+            console.log('Loaded custom properties:', customProperties);
+            customProperties.forEach(prop => {
+                if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
+            });
+        });
+
         function addProperty(event) {
             event.preventDefault();
             const form = document.getElementById('propertyForm');
@@ -47,17 +59,11 @@
                 accessCode: form.accessCode.value
             };
             propertiesData.push(newProperty);
-            localStorage.setItem('customProperties', JSON.stringify(propertiesData.filter(p => parseInt(p.id.replace('PROP', '')) > 50)));
+            const customProperties = propertiesData.filter(p => parseInt(p.id.replace('PROP', '')) > 50);
+            localStorage.setItem('customProperties', JSON.stringify(customProperties));
             form.reset();
-            alert(`Property ${newId} added! Visible in Properties until refresh.`);
+            alert(`Property ${newId} added! Check Properties page.`);
         }
-
-        loadData(() => {
-            const customProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
-            customProperties.forEach(prop => {
-                if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
-            });
-        });
     </script>
 </body>
 </html>
