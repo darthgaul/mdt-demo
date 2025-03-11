@@ -11,15 +11,13 @@
         <h2 class="text-3xl font-bold mb-6 text-center text-blue-400">MDT Login</h2>
         <input type="text" id="username" placeholder="Username" class="bg-gray-700 text-white p-3 rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
         <input type="password" id="password" placeholder="Password" class="bg-gray-700 text-white p-3 rounded w-full mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button onclick="login()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded w-full font-semibold">Login</button>
+        <button onclick="login()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded w-full font-semibold shadow">Login</button>
         <p id="loginError" class="text-red-500 mt-4 text-center"></p>
     </div>
 
     <script src="scripts.js"></script>
     <script>
-        fetch('users.json').then(res => res.json()).then(data => {
-            window.usersData = data;
-        }).catch(err => console.error('Users fetch error:', err));
+        loadData(() => {});
 
         function login() {
             const username = document.getElementById('username').value;
