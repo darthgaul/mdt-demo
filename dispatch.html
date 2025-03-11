@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDT Dispatch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-6">
+    <h2 class="text-2xl font-bold mb-4">MDT Dispatch</h2>
+    <nav class="flex space-x-4 mb-6">
+        <a href="index.html" class="hover:underline">Dashboard</a>
+        <a href="properties.html" class="hover:underline">Properties</a>
+        <a href="people.html" class="hover:underline">People</a>
+        <a href="dispatch.html" class="text-blue-400 font-semibold">Dispatch</a>
+        <a href="reports.html" class="hover:underline">Reports</a>
+    </nav>
+
+    <h3 class="text-xl font-semibold mb-2">Dispatch Log</h3>
+    <div id="dispatchList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto"></div>
+
+    <script src="scripts.js"></script>
+    <script>
+        loadData(() => {
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Caller</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Assigned</th><th class="p-2 bg-gray-700">Actions</th></tr>';
+            if (dispatchData.length === 0) {
+                html += '<tr><td colspan="8" class="p-2 text-center">No dispatch data available</td></tr>';
+            } else {
+                dispatchData.forEach(disp => {
+                    html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.dateTime}</td><td class="p-2">${disp.caller}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.issue}</td><td class="p-2">${disp.status}</td>`;
+                    html += `<td class="p-2"><select onchange="assignOfficer('${disp.id}', this.value)" class="bg-gray-700 text-white p-1 rounded"><option value="">Unassigned</option>`;
+                    officers.forEach(officer => {
+                        html += `<option value="${officer}" ${disp.assignedOfficer === officer ? 'selected' : ''}>${officer}</option>`;
+                    });
+                    html += `</select></td>`;
+                    html += `<td class="p-2 space-x-2"><button onclick="updateStatus('${disp.id}', 'Assigned')" class="bg-blue-600 hover:bg-blue-700 text-white p-1 rounded text-sm">Assign</button> <button onclick="updateStatus('${disp.id}', 'In Progress')" class="bg-yellow-600 hover:bg-yellow-700 text-white p-1 rounded text-sm">In Progress</button> <button onclick="updateStatus('${disp.id}', 'Completed')" class="bg-green-600 hover:bg-green-700 text-white p-1 rounded text-sm">Complete</button></td></tr>`;
+                });
+            }
+            html += '</table>';
+            document.getElementById('dispatchList').innerHTML = html;
+        });
+
+        function updateStatus(id, status) {
+            const dispatch = dispatchData.find(d => d.id === id);
+            if (dispatch) {
+                dispatch.status = status;
+                location.reload(); // Simple refresh for now
+            }
+        }
+
+        function assignOfficer(id, officer) {
+            const dispatch = dispatchData.find(d => d.id === id);
+            if (dispatch) {
+                dispatch.assignedOfficer = officer || undefined;
+                if (officer && dispatch.status === 'Pending') dispatch.status = 'Assigned';
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
