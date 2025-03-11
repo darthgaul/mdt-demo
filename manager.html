@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDT Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-6">
+    <h2 class="text-2xl font-bold mb-4">MDT Manager</h2>
+    <nav class="flex space-x-4 mb-6">
+        <a href="index.html" class="hover:underline">Dashboard</a>
+        <a href="properties.html" class="hover:underline">Properties</a>
+        <a href="people.html" class="hover:underline">People</a>
+        <a href="dispatch.html" class="hover:underline">Dispatch</a>
+        <a href="reports.html" class="hover:underline">Reports</a>
+        <a href="manager.html" class="text-blue-400 font-semibold">Manager</a>
+    </nav>
+
+    <h3 class="text-xl font-semibold mb-2">Add New Property</h3>
+    <form id="propertyForm" class="bg-gray-800 p-4 rounded-lg mb-4" onsubmit="addProperty(event)">
+        <input type="text" name="propertyName" placeholder="Property Name" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
+        <input type="text" name="address" placeholder="Address (e.g., 123 Demo St, Austin, TX 78701)" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
+        <input type="text" name="apt" placeholder="Apartment (optional)" class="bg-gray-700 text-white p-2 rounded w-full mb-2">
+        <input type="number" name="minHits" placeholder="Minimum Hits (1-4)" min="1" max="4" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
+        <textarea name="notes" placeholder="Notes" class="bg-gray-700 text-white p-2 rounded w-full mb-2" rows="3"></textarea>
+        <input type="text" name="emergencyContact" placeholder="Emergency Contact (e.g., Manager - (512) 555-0101)" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
+        <input type="text" name="accessCode" placeholder="Access Code" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded">Add Property</button>
+    </form>
+
+    <script src="scripts.js"></script>
+    <script>
+        function addProperty(event) {
+            event.preventDefault();
+            const form = document.getElementById('propertyForm');
+            const lastId = propertiesData.length > 0 ? parseInt(propertiesData[propertiesData.length - 1].id.replace('PROP', '')) : 50;
+            const newId = `PROP${(lastId + 1).toString().padStart(3, '0')}`;
+            const newProperty = {
+                id: newId,
+                propertyName: form.propertyName.value,
+                address: form.address.value,
+                apt: form.apt.value || '',
+                minHits: parseInt(form.minHits.value),
+                notes: form.notes.value || '',
+                emergencyContact: form.emergencyContact.value,
+                accessCode: form.accessCode.value
+            };
+            propertiesData.push(newProperty);
+            localStorage.setItem('customProperties', JSON.stringify(propertiesData.filter(p => parseInt(p.id.replace('PROP', '')) > 50)));
+            form.reset();
+            alert(`Property ${newId} added! Visible in Properties until refresh.`);
+        }
+
+        loadData(() => {
+            const customProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
+            customProperties.forEach(prop => {
+                if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
+            });
+        });
+    </script>
+</body>
+</html>
