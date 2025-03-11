@@ -40,6 +40,10 @@ function saveReports() {
     localStorage.setItem('reportsData', JSON.stringify(reportsData));
 }
 
+function saveProperties() {
+    localStorage.setItem('customProperties', JSON.stringify(propertiesData.filter(p => parseInt(p.id.replace('PROP', '')) > 50)));
+}
+
 function calculateElapsed(dateTime) {
     const now = new Date();
     const callTime = new Date(dateTime);
