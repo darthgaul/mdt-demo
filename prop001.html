@@ -5,18 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT - Axel Apartments</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .dark-mode { background-color: #f3f4f6; color: #374151; }
+        .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
+        .dark-mode .bg-gray-700 { background-color: #d1d5db; }
+        .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
+        tr:hover { background-color: rgba(0, 0, 0, 0.1); }
+        @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
+        #propMap { height: 300px; width: 100%; }
+    </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-6">
-    <h2 class="text-2xl font-bold mb-4">MDT - Axel Apartments (PROP001)</h2>
-    <nav class="flex space-x-4 mb-6">
-        <a href="index.html" class="hover:underline">Dashboard</a>
-        <a href="properties.html" class="text-blue-400 font-semibold">Properties</a>
-        <a href="people.html" class="hover:underline">People</a>
-        <a href="dispatch.html" class="hover:underline">Dispatch</a>
-        <a href="reports.html" class="hover:underline">Reports</a>
+    <nav class="sticky-nav flex justify-between items-center mb-6 p-4 bg-gray-900 rounded-lg shadow">
+        <div class="flex space-x-4">
+            <a href="index.html" class="hover:underline">Dashboard</a>
+            <a href="properties.html" class="text-blue-400 font-semibold">Properties</a>
+            <a href="people.html" class="hover:underline">People</a>
+            <a href="dispatch.html" class="hover:underline">Dispatch</a>
+            <a href="reports.html" class="hover:underline">Reports</a>
+            <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
+            <a href="map.html" class="hover:underline">Map</a>
+        </div>
+        <div class="flex space-x-4 items-center">
+            <span id="userInfo" class="text-sm"></span>
+            <button id="darkModeToggle" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm shadow">Toggle Light Mode</button>
+            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
+        </div>
     </nav>
 
-    <div class="bg-gray-800 p-4 rounded-lg mb-4">
+    <div class="bg-gray-800 p-4 rounded-lg mb-4 shadow">
         <p><strong>Name:</strong> Axel Apartments</p>
         <p><strong>Address:</strong> 123 Demo St, Austin, TX 78701</p>
         <p><strong>Apartment:</strong> Apt 4B</p>
@@ -25,42 +42,74 @@
         <p><strong>Emergency Contact:</strong> Manager - (512) 555-0101</p>
         <p><strong>Access Code:</strong> 1234</p>
     </div>
+    <div id="propMap" class="bg-gray-800 rounded-lg mb-4"></div>
 
     <h3 class="text-xl font-semibold mb-2">Associated People</h3>
-    <div id="peopleList" class="bg-gray-800 p-4 rounded-lg mb-4 overflow-x-auto"></div>
+    <div id="peopleList" class="bg-gray-800 p-4 rounded-lg mb-4 overflow-x-auto shadow"></div>
 
     <h3 class="text-xl font-semibold mb-2">Recent Dispatches</h3>
-    <div id="dispatchList" class="bg-gray-800 p-4 rounded-lg mb-4 overflow-x-auto"></div>
+    <div id="dispatchList" class="bg-gray-800 p-4 rounded-lg mb-4 overflow-x-auto shadow"></div>
 
     <h3 class="text-xl font-semibold mb-2">Recent Reports</h3>
-    <div id="reportList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto"></div>
+    <div id="reportList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
 
     <script src="scripts.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDcaYshVKliKeSBOQws4uso0JKPnLP476s&callback=initPropMap" async defer></script>
     <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) window.location.href = 'login.html';
+        if (user.group !== 'Managers' && user.group !== 'Supervisors' && user.group !== 'Dispatchers') document.getElementById('managerLink').style.display = 'none';
+        document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
+
         loadData(() => {
             const propId = 'PROP001';
-
-            // People
             const people = peopleData.filter(p => p.property === propId);
             let peopleHtml = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Status</th></tr>';
             people.forEach(p => peopleHtml += `<tr><td class="p-2">${p.id}</td><td class="p-2">${p.name}</td><td class="p-2">${p.status}</td></tr>`);
             peopleHtml += '</table>';
             document.getElementById('peopleList').innerHTML = peopleHtml;
 
-            // Dispatches
             const dispatches = dispatchData.filter(d => d.property === propId).slice(0, 5);
             let dispatchHtml = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Issue</th></tr>';
             dispatches.forEach(d => dispatchHtml += `<tr><td class="p-2">${d.id}</td><td class="p-2">${d.dateTime}</td><td class="p-2">${d.issue}</td></tr>`);
             dispatchHtml += '</table>';
             document.getElementById('dispatchList').innerHTML = dispatchHtml;
 
-            // Reports
             const reports = reportsData.filter(r => r.property === propId).slice(0, 5);
             let reportHtml = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Type</th></tr>';
             reports.forEach(r => reportHtml += `<tr><td class="p-2">${r.id}</td><td class="p-2">${r.dateTime}</td><td class="p-2">${r.type}</td></tr>`);
             reportHtml += '</table>';
             document.getElementById('reportList').innerHTML = reportHtml;
         });
+
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.getElementById('darkModeToggle');
+            btn.textContent = document.body.classList.contains('dark-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        });
+
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkModeToggle').textContent = 'Toggle Dark Mode';
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
+        function initPropMap() {
+            const map = new google.maps.Map(document.getElementById('propMap'), {
+                zoom: 15,
+                center: { lat: 30.2710, lng: -97.7500 }
+            });
+            new google.maps.Marker({
+                position: { lat: 30.2710, lng: -97.7500 },
+                map: map,
+                title: 'Axel Apartments'
+            });
+        }
     </script>
 </body>
 </html>
