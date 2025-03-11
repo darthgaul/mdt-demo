@@ -4,12 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Dashboard</title>
-    <link href="/dist/output.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .dark-mode { background-color: #f3f4f6; color: #1f2937; }
+        .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
+        .dark-mode .bg-gray-700 { background-color: #d1d5db; }
+    </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-6">
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-2xl font-bold">MDT Dashboard</h2>
-        <button id="darkModeToggle" class="bg-gray-700 p-2 rounded">Toggle Dark Mode</button>
+        <button id="darkModeToggle" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm">Toggle Light Mode</button>
     </div>
     <nav class="flex space-x-4 mb-6">
         <a href="index.html" class="text-blue-400 font-semibold">Dashboard</a>
@@ -37,10 +42,9 @@
         });
 
         document.getElementById('darkModeToggle').addEventListener('click', () => {
-            document.body.classList.toggle('bg-gray-100');
-            document.body.classList.toggle('text-gray-900');
-            document.body.classList.toggle('bg-gray-900');
-            document.body.classList.toggle('text-white');
+            document.body.classList.toggle('dark-mode');
+            const btn = document.getElementById('darkModeToggle');
+            btn.textContent = document.body.classList.contains('dark-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
         });
     </script>
 </body>
