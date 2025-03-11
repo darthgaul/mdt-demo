@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDT - Axel Apartments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-6">
+    <h2 class="text-2xl font-bold mb-4">MDT - Axel Apartments (PROP001)</h2>
+    <nav class="flex space-x-4 mb-6">
+        <a href="index.html" class="hover:underline">Dashboard</a>
+        <a href="properties.html" class="text-blue-400 font-semibold">Properties</a>
+        <a href="people.html" class="hover:underline">People</a>
+        <a href="dispatch.html" class="hover:underline">Dispatch</a>
+        <a href="reports.html" class="hover:underline">Reports</a>
+    </nav>
+
+    <div class="bg-gray-800 p-4 rounded-lg mb-4">
+        <p><strong>Name:</strong> Axel Apartments</p>
+        <p><strong>Address:</strong> 123 Demo St, Austin, TX 78701</p>
+        <p><strong>Apartment:</strong> Apt 4B</p>
+        <p><strong>Minimum Hits:</strong> 2</p>
+        <p><strong>Notes:</strong> Gated entry, security cameras</p>
+        <p><strong>Emergency Contact:</strong> Manager - (512) 555-0101</p>
+        <p><strong>Access Code:</strong> 1234</p>
+    </div>
+
+    <h3 class="text-xl font-semibold mb-2">Associated People</h3>
+    <div id="peopleList" class="bg-gray-800 p-4 rounded-lg mb-4 overflow-x-auto"></div>
+
+    <h3 class="text-xl font-semibold mb-2">Recent Dispatches</h3>
+    <div id="dispatchList" class="bg-gray-800 p-4 rounded-lg mb-4 overflow-x-auto"></div>
+
+    <h3 class="text-xl font-semibold mb-2">Recent Reports</h3>
+    <div id="reportList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto"></div>
+
+    <script src="scripts.js"></script>
+    <script>
+        loadData(() => {
+            const propId = 'PROP001';
+
+            // People
+            const people = peopleData.filter(p => p.property === propId);
+            let peopleHtml = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Status</th></tr>';
+            people.forEach(p => peopleHtml += `<tr><td class="p-2">${p.id}</td><td class="p-2">${p.name}</td><td class="p-2">${p.status}</td></tr>`);
+            peopleHtml += '</table>';
+            document.getElementById('peopleList').innerHTML = peopleHtml;
+
+            // Dispatches
+            const dispatches = dispatchData.filter(d => d.property === propId).slice(0, 5);
+            let dispatchHtml = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Issue</th></tr>';
+            dispatches.forEach(d => dispatchHtml += `<tr><td class="p-2">${d.id}</td><td class="p-2">${d.dateTime}</td><td class="p-2">${d.issue}</td></tr>`);
+            dispatchHtml += '</table>';
+            document.getElementById('dispatchList').innerHTML = dispatchHtml;
+
+            // Reports
+            const reports = reportsData.filter(r => r.property === propId).slice(0, 5);
+            let reportHtml = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Type</th></tr>';
+            reports.forEach(r => reportHtml += `<tr><td class="p-2">${r.id}</td><td class="p-2">${r.dateTime}</td><td class="p-2">${r.type}</td></tr>`);
+            reportHtml += '</table>';
+            document.getElementById('reportList').innerHTML = reportHtml;
+        });
+    </script>
+</body>
+</html>
