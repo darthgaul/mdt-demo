@@ -20,6 +20,7 @@
         .unknown-text { color: #6b7280; }
         .vctw-highlight { background-color: rgba(245, 158, 11, 0.5); }
         .ctn-icon { margin-left: 5px; }
+        .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-6">
@@ -39,6 +40,11 @@
             <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
         </div>
     </nav>
+
+    <div class="tips">
+        <h4 class="text-lg font-semibold">Tips</h4>
+        <p>Search by Name (e.g., "John Doe"), ID (e.g., "P001"), or use filters (e.g., CTN Status: "CTN Issued", Property: "PROP001"). List is empty until you search.</p>
+    </div>
 
     <h3 class="text-xl font-semibold mb-2">People Search</h3>
     <div class="bg-gray-800 p-4 rounded-lg mb-4 shadow">
@@ -84,6 +90,11 @@
             const ctn = document.getElementById('ctnFilter').value;
             const behavior = document.getElementById('behaviorFilter').value;
             const property = document.getElementById('propertyFilter').value.toUpperCase();
+
+            if (!simple && !ctn && !behavior && !property) {
+                document.getElementById('peopleResults').innerHTML = '<p class="text-center">Enter search criteria above to see results.</p>';
+                return;
+            }
 
             const filtered = peopleData.filter(person => {
                 const matchesSimple = !simple || person.id.toLowerCase().includes(simple) || person.name.toLowerCase().includes(simple);
