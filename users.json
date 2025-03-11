@@ -1,0 +1,12 @@
+[
+    {"username": "manager1", "password": "mgrpass", "group": "Managers"},
+    {"username": "supervisor1", "password": "suppass", "group": "Supervisors"},
+    {"username": "dispatcher1", "password": "disppass", "group": "Dispatchers"},
+    {"username": "patrol1", "password": "patpass", "group": "Patrol Officers"},
+    {"username": "static1", "password": "statpass", "group": "Static-Site Officers", "property": "PROP001"},
+    {"username": "manager2", "password": "mgrpass2", "group": "Managers"},
+    {"username": "supervisor2", "password": "suppass2", "group": "Supervisors"},
+    {"username": "dispatcher2", "password": "disppass2", "group": "Dispatchers"},
+    {"username": "patrol2", "password": "patpass2", "group": "Patrol Officers"},
+    {"username": "static2", "password": "statpass2", "group": "Static-Site Officers", "property": "PROP002"}
+]
