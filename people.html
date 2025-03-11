@@ -6,6 +6,12 @@
     <title>MDT People</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        .dark-mode { background-color: #f3f4f6; color: #1f2937; }
+        .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
+        .dark-mode .bg-gray-700 { background-color: #d1d5db; }
+        .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
+        tr:hover { background-color: rgba(255, 255, 255, 0.1); }
+        @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
         .ctn-active { background-color: rgba(239, 68, 68, 0.5); }
         .ctn-active .name, .ctn-active .behavior { color: #fff; }
         .friendly-text { color: #22c55e; }
@@ -17,57 +23,83 @@
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-6">
-    <h2 class="text-2xl font-bold mb-4">MDT People</h2>
-    <nav class="flex space-x-4 mb-6">
-        <a href="index.html" class="hover:underline">Dashboard</a>
-        <a href="properties.html" class="hover:underline">Properties</a>
-        <a href="people.html" class="text-blue-400 font-semibold">People</a>
-        <a href="dispatch.html" class="hover:underline">Dispatch</a>
-        <a href="reports.html" class="hover:underline">Reports</a>
-        <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
-        <a href="map.html" class="hover:underline">Map</a>
+    <nav class="sticky-nav flex justify-between items-center mb-6 p-4 bg-gray-900 rounded-lg shadow">
+        <div class="flex space-x-4">
+            <a href="index.html" class="hover:underline">Dashboard</a>
+            <a href="properties.html" class="hover:underline">Properties</a>
+            <a href="people.html" class="text-blue-400 font-semibold">People</a>
+            <a href="dispatch.html" class="hover:underline">Dispatch</a>
+            <a href="reports.html" class="hover:underline">Reports</a>
+            <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
+            <a href="map.html" class="hover:underline">Map</a>
+        </div>
+        <div class="flex space-x-4 items-center">
+            <span id="userInfo" class="text-sm"></span>
+            <button id="darkModeToggle" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm shadow">Toggle Light Mode</button>
+            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
+        </div>
     </nav>
 
     <h3 class="text-xl font-semibold mb-2">People Search</h3>
-    <div class="flex space-x-2 mb-4">
-        <input type="text" id="searchInput" placeholder="Enter Name or ID" class="bg-gray-700 text-white p-2 rounded w-full max-w-md">
-        <button onclick="searchPeople()" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded">Search</button>
+    <div class="bg-gray-800 p-4 rounded-lg mb-4">
+        <input type="text" id="simpleSearch" placeholder="Name or ID" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/3 mb-2">
+        <div class="flex flex-wrap gap-2">
+            <select id="ctnFilter" class="bg-gray-700 text-white p-2 rounded"><option value="">CTN Status</option><option value="N/A">N/A</option><option value="CTN Issued">CTN Issued</option><option value="VCTW">VCTW</option></select>
+            <select id="behaviorFilter" class="bg-gray-700 text-white p-2 rounded"><option value="">Behavior</option><option value="Friendly">Friendly</option><option value="Cautious">Cautious</option><option value="Hostile">Hostile</option><option value="Unknown">Unknown</option></select>
+            <input type="text" id="propertyFilter" placeholder="Property ID" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/4">
+            <button onclick="searchPeople()" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded shadow">Search</button>
+        </div>
     </div>
-    <div id="peopleResults" class="bg-gray-800 p-4 rounded-lg overflow-x-auto"></div>
+    <div id="peopleResults" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
 
     <script src="scripts.js"></script>
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) window.location.href = 'login.html';
-        if (user.group !== 'Managers') document.getElementById('managerLink').style.display = 'none';
+        if (user.group !== 'Managers' && user.group !== 'Supervisors' && user.group !== 'Dispatchers') document.getElementById('managerLink').style.display = 'none';
+        document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
 
         loadData(() => searchPeople());
 
+        document.getElementById('darkModeToggle').addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.getElementById('darkModeToggle');
+            btn.textContent = document.body.classList.contains('dark-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        });
+
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkModeToggle').textContent = 'Toggle Dark Mode';
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = 'login.html';
+        }
+
         function searchPeople() {
-            console.log('Search button clicked');
-            if (!peopleData || peopleData.length === 0) {
-                document.getElementById('peopleResults').innerHTML = '<p class="text-red-500">No people data loaded. Check console for errors.</p>';
-                console.log('People data:', peopleData);
-                return;
-            }
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            console.log('Search query:', query);
-            const filtered = peopleData.filter(person => 
-                person.id.toLowerCase().includes(query) || 
-                person.name.toLowerCase().includes(query)
-            );
-            console.log('Filtered results:', filtered);
+            const simple = document.getElementById('simpleSearch').value.toLowerCase();
+            const ctn = document.getElementById('ctnFilter').value;
+            const behavior = document.getElementById('behaviorFilter').value;
+            const property = document.getElementById('propertyFilter').value.toUpperCase();
+
+            const filtered = peopleData.filter(person => {
+                const matchesSimple = !simple || person.id.toLowerCase().includes(simple) || person.name.toLowerCase().includes(simple);
+                const matchesCtn = !ctn || person.ctnStatus === ctn;
+                const matchesBehavior = !behavior || person.behavior === behavior;
+                const matchesProperty = !property || person.property === property;
+                return matchesSimple && matchesCtn && matchesBehavior && matchesProperty;
+            });
 
             let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">DoB</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Behavior</th><th class="p-2 bg-gray-700">CTN Status</th></tr>';
-            if (filtered.length > 0) {
+            if (filtered.length) {
                 filtered.forEach(person => {
                     const behaviorClass = person.behavior.toLowerCase() + '-text';
                     const ctnClass = person.ctnStatus === 'CTN Issued' ? 'ctn-active' : (person.ctnStatus === 'VCTW' ? 'vctw-highlight' : '');
                     const hasReports = reportsData.some(r => r.personId === person.id);
                     const nameText = hasReports ? `<a href="reports.html?personId=${person.id}" class="underline">${person.name}${person.ctnStatus !== 'N/A' ? ' <span class="ctn-icon">⚠️</span>' : ''}</a>` : person.name;
-                    const behaviorText = `<span class="${behaviorClass}">${person.behavior}</span>`;
-
-                    html += `<tr class="${ctnClass}"><td class="p-2">${person.id}</td><td class="p-2">${nameText}</td><td class="p-2">${person.dob}</td><td class="p-2">${person.status}</td><td class="p-2">${person.property}</td><td class="p-2">${behaviorText}</td><td class="p-2">${person.ctnStatus}</td></tr>`;
+                    html += `<tr class="${ctnClass}"><td class="p-2">${person.id}</td><td class="p-2">${nameText}</td><td class="p-2">${person.dob}</td><td class="p-2">${person.status}</td><td class="p-2">${person.property}</td><td class="p-2"><span class="${behaviorClass}">${person.behavior}</span></td><td class="p-2">${person.ctnStatus}</td></tr>`;
                 });
             } else {
                 html += '<tr><td colspan="7" class="p-2 text-center">No results found</td></tr>';
