@@ -6,11 +6,11 @@
     <title>MDT Dispatch</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .dark-mode { background-color: #f3f4f6; color: #1f2937; }
+        .dark-mode { background-color: #f3f4f6; color: #374151; }
         .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
         .dark-mode .bg-gray-700 { background-color: #d1d5db; }
         .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
-        tr:hover { background-color: rgba(255, 255, 255, 0.1); }
+        tr:hover { background-color: rgba(0, 0, 0, 0.1); }
         @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
     </style>
 </head>
@@ -72,17 +72,20 @@
             const active = dispatchData.filter(d => d.status !== 'Completed').slice(0, 10);
             const history = dispatchData.filter(d => d.status === 'Completed');
 
-            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Caller</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Assigned</th>';
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Elapsed</th><th class="p-2 bg-gray-700">Caller</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Assigned</th>';
             if (isDispatcherOrAbove) html += '<th class="p-2 bg-gray-700">Actions</th>';
             html += '</tr>';
 
             const data = tab === 'active' ? active : history;
             if (!data.length) {
-                html += `<tr><td colspan="${isDispatcherOrAbove ? 8 : 7}" class="p-2 text-center">No ${tab} dispatches</td></tr>`;
+                html += `<tr><td colspan="${isDispatcherOrAbove ? 9 : 8}" class="p-2 text-center">No ${tab} dispatches</td></tr>`;
             } else {
                 data.forEach(disp => {
+                    const elapsed = calculateElapsed(disp.dateTime);
+                    const elapsedText = `${elapsed.minutes}m ${elapsed.seconds}s`;
+                    const elapsedClass = elapsed.minutes >= 15 && tab === 'active' ? 'text-red-500' : '';
                     const statusColor = { Pending: 'yellow-500', Assigned: 'blue-500', 'In Progress': 'orange-500', Completed: 'green-500' }[disp.status];
-                    html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.dateTime}</td><td class="p-2">${disp.caller}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.issue}</td><td class="p-2 text-${statusColor}">${disp.status}</td>`;
+                    html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.dateTime}</td><td class="p-2 ${elapsedClass}">${elapsedText}</td><td class="p-2">${disp.caller}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.issue}</td><td class="p-2 text-${statusColor}">${disp.status}</td>`;
                     html += `<td class="p-2"><select onchange="assignOfficer('${disp.id}', this.value)" class="bg-gray-700 text-white p-1 rounded ${!isDispatcherOrAbove && disp.assignedOfficer !== user.username ? 'cursor-not-allowed' : ''}" ${!isDispatcherOrAbove && disp.assignedOfficer !== user.username ? 'disabled' : ''}><option value="">Unassigned</option>`;
                     employeesData.forEach(emp => {
                         html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`;
@@ -101,7 +104,16 @@
                 });
             }
             html += '</table>';
+            if (isDispatcherOrAbove && tab === 'active') {
+                html += '<h4 class="text-lg font-semibold mt-4">Officer Availability</h4><div class="grid grid-cols-2 sm:grid-cols-4 gap-2">';
+                employeesData.forEach(emp => {
+                    const isOnline = usersData.some(u => u.username === emp.name);
+                    html += `<div class="bg-gray-700 p-2 rounded shadow"><p class="${isOnline ? 'text-green-500' : 'text-red-500'}">${emp.name}</p><p>${emp.route}</p></div>`;
+                });
+                html += '</div>';
+            }
             document.getElementById('dispatchList').innerHTML = html;
+            if (tab === 'active') setInterval(() => showTab('active'), 1000); // Live update
         }
 
         function updateStatus(id, status) {
