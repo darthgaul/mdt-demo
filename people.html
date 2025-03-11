@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDT People</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .ctn-active { background-color: #ef4444; }
+        .ctn-active .name, .ctn-active .behavior { color: #fff; }
+        .staff-text { color: #22c55e; }
+        .friendly-text { color: #22c55e; }
+        .cautious-text { color: #eab308; }
+        .hostile-text { color: #ef4444; }
+        .unknown-text { color: #6b7280; }
+        .ctn-icon { margin-left: 5px; }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-6">
+    <h2 class="text-2xl font-bold mb-4">MDT People</h2>
+    <nav class="flex space-x-4 mb-6">
+        <a href="index.html" class="hover:underline">Dashboard</a>
+        <a href="properties.html" class="hover:underline">Properties</a>
+        <a href="people.html" class="text-blue-400 font-semibold">People</a>
+        <a href="dispatch.html" class="hover:underline">Dispatch</a>
+        <a href="reports.html" class="hover:underline">Reports</a>
+    </nav>
+
+    <h3 class="text-xl font-semibold mb-2">People Search</h3>
+    <div class="flex space-x-2 mb-4">
+        <input type="text" id="searchInput" placeholder="Enter Name or ID" class="bg-gray-700 text-white p-2 rounded w-full max-w-md">
+        <button onclick="searchPeople()" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded">Search</button>
+    </div>
+    <div id="peopleResults" class="bg-gray-800 p-4 rounded-lg overflow-x-auto"></div>
+
+    <script src="scripts.js"></script>
+    <script>
+        loadData(() => searchPeople());
+
+        function searchPeople() {
+            console.log('Search button clicked');
+            if (!peopleData || peopleData.length === 0) {
+                document.getElementById('peopleResults').innerHTML = '<p class="text-red-500">No people data loaded. Check console for errors.</p>';
+                console.log('People data:', peopleData);
+                return;
+            }
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            console.log('Search query:', query);
+            const filtered = peopleData.filter(person => 
+                person.id.toLowerCase().includes(query) || 
+                person.name.toLowerCase().includes(query)
+            );
+            console.log('Filtered results:', filtered);
+
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">DoB</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Behavior</th><th class="p-2 bg-gray-700">CTN</th></tr>';
+            if (filtered.length > 0) {
+                filtered.forEach(person => {
+                    const behaviorClass = person.behavior.toLowerCase() + '-text';
+                    const ctnClass = person.ctn === 'Y' ? 'ctn-active' : '';
+                    const nameText = person.ctn === 'Y' ? `<span class="name">${person.name} <span class="ctn-icon">⚠️</span></span>` : 
+                        (person.type === 'Staff' ? `<span class="staff-text">${person.name}</span>` : person.name);
+                    const behaviorText = person.ctn === 'Y' ? `<span class="behavior">${person.behavior}</span>` : `<span class="${behaviorClass}">${person.behavior}</span>`;
+                    const ctnLink = person.ctn === 'Y' ? `<a href="reports.html?personId=${person.id}" class="underline">Y</a>` : 'N';
+
+                    html += `<tr class="${ctnClass}"><td class="p-2">${person.id}</td><td class="p-2">${nameText}</td><td class="p-2">${person.dob}</td><td class="p-2">${person.type}</td><td class="p-2">${person.property}</td><td class="p-2">${behaviorText}</td><td class="p-2">${ctnLink}</td></tr>`;
+                });
+            } else {
+                html += '<tr><td colspan="7" class="p-2 text-center">No results found</td></tr>';
+            }
+            html += '</table>';
+            document.getElementById('peopleResults').innerHTML = html;
+        }
+    </script>
+</body>
+</html>
