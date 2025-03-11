@@ -1,4 +1,6 @@
 [
     {"username": "manager1", "password": "mgrpass", "group": "Managers"},
-    {"username": "patrol1", "password": "patpass", "group": "Officers"}
+    {"username": "supervisor1", "password": "suppass", "group": "Supervisors"},
+    {"username": "dispatch1", "password": "dispass", "group": "Dispatchers"},
+    {"username": "officer1", "password": "offpass", "group": "Officers"}
 ]
