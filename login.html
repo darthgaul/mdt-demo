@@ -5,12 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .dark-mode { background-color: #f3f4f6; color: #1f2937; }
-        .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
-        .dark-mode .bg-gray-700 { background-color: #d1d5db; }
-        .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-    </style>
+<style>
+    .dark-mode { background-color: #f3f4f6; color: #1f2937; }
+    .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
+    .dark-mode .bg-gray-700 { background-color: #d1d5db; }
+    .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
+    tr:hover { background-color: rgba(0, 0, 0, 0.1); }
+    @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
+    .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
+</style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
     <div class="w-full max-w-md">
