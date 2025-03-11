@@ -6,11 +6,11 @@
     <title>MDT Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .dark-mode { background-color: #f3f4f6; color: #1f2937; }
+        .dark-mode { background-color: #f3f4f6; color: #374151; }
         .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
         .dark-mode .bg-gray-700 { background-color: #d1d5db; }
         .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
-        tr:hover { background-color: rgba(255, 255, 255, 0.1); }
+        tr:hover { background-color: rgba(0, 0, 0, 0.1); }
         @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
     </style>
 </head>
@@ -56,7 +56,10 @@
         </select>
         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded w-full shadow">Add User</button>
     </form>
-    <div id="userList" class="bg-gray-800 p-4 rounded-lg shadow"></div>
+    <div id="userList" class="bg-gray-800 p-4 rounded-lg mb-4 shadow"></div>
+
+    <h3 class="text-xl font-semibold mb-2">Manage Properties</h3>
+    <div id="propertyList" class="bg-gray-800 p-4 rounded-lg shadow"></div>
 
     <div id="alert" class="fixed top-4 right-4 bg-green-600 text-white p-4 rounded shadow hidden"></div>
 
@@ -68,6 +71,7 @@
 
         loadData(() => {
             loadUsers();
+            loadProperties();
             const customProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
             customProperties.forEach(prop => {
                 if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
@@ -103,11 +107,13 @@
                 minHits: parseInt(form.minHits.value),
                 notes: form.notes.value || '',
                 emergencyContact: form.emergencyContact.value,
-                accessCode: form.accessCode.value
+                accessCode: form.accessCode.value,
+                suspended: false
             };
             propertiesData.push(newProperty);
             localStorage.setItem('customProperties', JSON.stringify(propertiesData.filter(p => parseInt(p.id.replace('PROP', '')) > 50)));
             form.reset();
+            loadProperties();
             showAlert(`Property ${newId} added!`);
         }
 
@@ -140,6 +146,23 @@
             localStorage.setItem('usersData', JSON.stringify(usersData));
             loadUsers();
             showAlert(`User ${username} deleted!`);
+        }
+
+        function loadProperties() {
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
+            propertiesData.forEach(prop => {
+                html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.suspended ? 'Suspended' : 'Active'}</td><td class="p-2"><button onclick="toggleSuspend('${prop.id}')" class="bg-${prop.suspended ? 'green' : 'red'}-600 hover:bg-${prop.suspended ? 'green' : 'red'}-700 text-white p-1 rounded text-sm shadow">${prop.suspended ? 'Activate' : 'Suspend'}</button></td></tr>`;
+            });
+            html += '</table>';
+            document.getElementById('propertyList').innerHTML = html;
+        }
+
+        function toggleSuspend(id) {
+            const prop = propertiesData.find(p => p.id === id);
+            prop.suspended = !prop.suspended;
+            localStorage.setItem('customProperties', JSON.stringify(propertiesData.filter(p => parseInt(p.id.replace('PROP', '')) > 50)));
+            loadProperties();
+            showAlert(`Property ${prop.propertyName} ${prop.suspended ? 'suspended' : 'activated'}!`);
         }
 
         function showAlert(message) {
