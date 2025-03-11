@@ -23,50 +23,66 @@
 
     <h3 class="text-xl font-semibold mb-2">Property Map</h3>
     <div id="map" class="bg-gray-800 rounded-lg"></div>
+    <div id="mapError" class="text-red-500 mt-2"></div>
 
     <script src="scripts.js"></script>
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDcaYshVKliKeSBOQws4uso0JKPnLP476s&callback=initMap" async defer></script>
     <script>
         function initMap() {
+            console.log('initMap called');
             loadData(() => {
-                const map = new google.maps.Map(document.getElementById('map'), {
-                    zoom: 12,
-                    center: { lat: 30.2672, lng: -97.7431 } // Austin, TX center
-                });
-
-                const propertiesToMap = propertiesData.filter(prop => 
-                    ['PROP001', 'PROP002', 'PROP003'].includes(prop.id)
-                );
-
-                const markers = [
-                    { id: 'PROP001', lat: 30.2710, lng: -97.7500, name: 'Axel Apartments', address: '123 Demo St, Austin, TX 78701' },
-                    { id: 'PROP002', lat: 30.2650, lng: -97.7400, name: 'Briarwood Estates', address: '456 Sample Rd, Austin, TX 78702' },
-                    { id: 'PROP003', lat: 30.2600, lng: -97.7300, name: 'Cedar Heights', address: '789 Test Ave, Austin, TX 78703' }
-                ];
-
-                markers.forEach(marker => {
-                    const mapMarker = new google.maps.Marker({
-                        position: { lat: marker.lat, lng: marker.lng },
-                        map: map,
-                        title: marker.name
+                console.log('Data loaded, initializing map');
+                try {
+                    const map = new google.maps.Map(document.getElementById('map'), {
+                        zoom: 12,
+                        center: { lat: 30.2672, lng: -97.7431 } // Austin, TX center
                     });
 
-                    const infoWindow = new google.maps.InfoWindow({
-                        content: `
-                            <div class="p-2">
-                                <h4 class="font-bold">${marker.name}</h4>
-                                <p>${marker.address}</p>
-                                <a href="${marker.id.toLowerCase()}.html" class="text-blue-400 underline">View Details</a>
-                            </div>
-                        `
-                    });
+                    const propertiesToMap = propertiesData.filter(prop => 
+                        ['PROP001', 'PROP002', 'PROP003'].includes(prop.id)
+                    );
 
-                    mapMarker.addListener('click', () => {
-                        infoWindow.open(map, mapMarker);
+                    const markers = [
+                        { id: 'PROP001', lat: 30.2710, lng: -97.7500, name: 'Axel Apartments', address: '123 Demo St, Austin, TX 78701' },
+                        { id: 'PROP002', lat: 30.2650, lng: -97.7400, name: 'Briarwood Estates', address: '456 Sample Rd, Austin, TX 78702' },
+                        { id: 'PROP003', lat: 30.2600, lng: -97.7300, name: 'Cedar Heights', address: '789 Test Ave, Austin, TX 78703' }
+                    ];
+
+                    markers.forEach(marker => {
+                        const mapMarker = new google.maps.Marker({
+                            position: { lat: marker.lat, lng: marker.lng },
+                            map: map,
+                            title: marker.name
+                        });
+
+                        const infoWindow = new google.maps.InfoWindow({
+                            content: `
+                                <div class="p-2">
+                                    <h4 class="font-bold">${marker.name}</h4>
+                                    <p>${marker.address}</p>
+                                    <a href="${marker.id.toLowerCase()}.html" class="text-blue-400 underline">View Details</a>
+                                </div>
+                            `
+                        });
+
+                        mapMarker.addListener('click', () => {
+                            infoWindow.open(map, mapMarker);
+                        });
                     });
-                });
+                    console.log('Map initialized with markers');
+                } catch (error) {
+                    document.getElementById('mapError').innerHTML = 'Map failed to load: ' + error.message;
+                    console.error('Map error:', error);
+                }
             });
         }
+
+        // Fallback if Google Maps fails to load
+        window.addEventListener('error', (e) => {
+            if (e.message.includes('Google Maps')) {
+                document.getElementById('mapError').innerHTML = 'Failed to load Google Maps. Check API key or network.';
+            }
+        });
     </script>
 </body>
 </html>
