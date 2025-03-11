@@ -6,13 +6,13 @@
     <title>MDT People</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .ctn-active { background-color: #ef4444; }
+        .ctn-active { background-color: rgba(239, 68, 68, 0.5); }
         .ctn-active .name, .ctn-active .behavior { color: #fff; }
         .friendly-text { color: #22c55e; }
         .cautious-text { color: #eab308; }
         .hostile-text { color: #ef4444; }
         .unknown-text { color: #6b7280; }
-        .vctw-highlight { background-color: #f59e0b; }
+        .vctw-highlight { background-color: rgba(245, 158, 11, 0.5); }
         .ctn-icon { margin-left: 5px; }
     </style>
 </head>
@@ -24,6 +24,8 @@
         <a href="people.html" class="text-blue-400 font-semibold">People</a>
         <a href="dispatch.html" class="hover:underline">Dispatch</a>
         <a href="reports.html" class="hover:underline">Reports</a>
+        <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
+        <a href="map.html" class="hover:underline">Map</a>
     </nav>
 
     <h3 class="text-xl font-semibold mb-2">People Search</h3>
@@ -35,6 +37,10 @@
 
     <script src="scripts.js"></script>
     <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) window.location.href = 'login.html';
+        if (user.group !== 'Managers') document.getElementById('managerLink').style.display = 'none';
+
         loadData(() => searchPeople());
 
         function searchPeople() {
@@ -56,7 +62,7 @@
             if (filtered.length > 0) {
                 filtered.forEach(person => {
                     const behaviorClass = person.behavior.toLowerCase() + '-text';
-                    const ctnClass = person.ctnStatus === 'CTN Issued' ? 'ctn-active bg-opacity-50' : (person.ctnStatus === 'VCTW' ? 'vctw-highlight bg-opacity-50' : '');
+                    const ctnClass = person.ctnStatus === 'CTN Issued' ? 'ctn-active' : (person.ctnStatus === 'VCTW' ? 'vctw-highlight' : '');
                     const hasReports = reportsData.some(r => r.personId === person.id);
                     const nameText = hasReports ? `<a href="reports.html?personId=${person.id}" class="underline">${person.name}${person.ctnStatus !== 'N/A' ? ' <span class="ctn-icon">⚠️</span>' : ''}</a>` : person.name;
                     const behaviorText = `<span class="${behaviorClass}">${person.behavior}</span>`;
