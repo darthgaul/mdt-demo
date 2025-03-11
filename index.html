@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Security Patrol MDT</title>
+    <title>MDT Demo</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #1a1a1a; color: #fff; margin: 0; padding: 20px; }
         nav { margin-bottom: 20px; }
@@ -22,48 +22,40 @@
         .unknown-text { color: #808080; }
         .section { margin-top: 30px; display: none; }
         .active { display: block; }
-        .login-section { display: block; }
-        .dark-mode-toggle { float: right; }
-        .tooltip { position: relative; display: inline-block; }
-        .tooltip .tooltiptext { visibility: hidden; width: 120px; background-color: #555; color: #fff; text-align: center; border-radius: 6px; padding: 5px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -60px; }
-        .tooltip:hover .tooltiptext { visibility: visible; }
+        .ctn-icon { margin-left: 5px; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div id="login" class="login-section">
-        <h2>Officer Login</h2>
+    <div id="login" class="section active">
+        <h2>MDT Login</h2>
         <input type="text" id="username" placeholder="Username">
         <input type="password" id="password" placeholder="Password">
         <button onclick="login()">Login</button>
+        <p id="loginError" style="color: red;"></p>
     </div>
 
-    <div id="mdt" style="display: none;">
-        <h2>Security Patrol MDT</h2>
-        <button class="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
-        <nav>
-            <a href="#dashboard" onclick="showSection('dashboard')">Dashboard</a>
-            <a href="#properties" onclick="showSection('properties')">Properties</a>
-            <a href="#people" onclick="showSection('people')">People</a>
-            <a href="#dispatch" onclick="showSection('dispatch')">Dispatch</a>
-            <a href="#reports" onclick="showSection('reports')">Reports</a>
-            <a href="#calendar" onclick="showSection('calendar')">Calendar</a>
+    <div id="mdt" class="section hidden">
+        <h2>MDT Dashboard - <span id="userRole"></span></h2>
+        <nav id="navMenu">
+            <a href="#dashboard" onclick="showSection('dashboard')" id="navDashboard">Dashboard</a>
+            <a href="#properties" onclick="showSection('properties')" id="navProperties">Properties</a>
+            <a href="#people" onclick="showSection('people')" id="navPeople">People</a>
+            <a href="#dispatch" onclick="showSection('dispatch')" id="navDispatch">Dispatch</a>
         </nav>
 
         <div id="dashboard" class="section active">
-            <h3>Dashboard</h3>
-            <p>Active Dispatches: <span id="activeDispatches">0</span></p>
-            <p>Recent Alerts: <span id="recentAlerts">None</span></p>
+            <h3>Active Dispatches</h3>
+            <div id="dispatchSummary"></div>
         </div>
 
         <div id="properties" class="section">
             <h3>Properties</h3>
             <div id="propertiesList"></div>
-            <input type="text" id="propertyNote" placeholder="Add Note">
-            <button onclick="addPropertyNote()">Add Note</button>
         </div>
 
         <div id="people" class="section">
-            <h3>People Search <span class="tooltip">[?]<span class="tooltiptext">Search by Name or ID</span></span></h3>
+            <h3>People Search</h3>
             <input type="text" id="searchInput" placeholder="Enter Name or ID">
             <button onclick="searchPeople()">Search</button>
             <div id="peopleResults"></div>
@@ -73,93 +65,154 @@
             <h3>Dispatch Log</h3>
             <div id="dispatchList"></div>
         </div>
-
-        <div id="reports" class="section">
-            <h3>Incident Reports</h3>
-            <form id="reportForm" onsubmit="submitReport(event)">
-                <input type="text" name="type" placeholder="Incident Type" required>
-                <input type="text" name="narrative" placeholder="Narrative" required>
-                <input type="file" name="photo" accept="image/*">
-                <button type="submit">Submit Report</button>
-            </form>
-            <div id="reportList"></div>
-        </div>
-
-        <div id="calendar" class="section">
-            <h3>Calendar</h3>
-            <p>Upcoming patrols and events (placeholder)</p>
-        </div>
     </div>
 
     <script>
-        // Sample data (replace with actual JSON loading in a real implementation)
-        const peopleData = [
-            {"id": "P001", "name": "Jane Smith", "dob": "1990-01-15", "type": "Staff", "property": "PROP001", "behavior": "Friendly", "ctn": "N"},
-            {"id": "P002", "name": "John Doe", "dob": "1985-03-22", "type": "Visitor", "property": "PROP002", "behavior": "Hostile", "ctn": "Y"},
-            // ... Add remaining 48 entries here ...
-        ];
-        const dispatchData = [
-            {"id": "D001", "datetime": "2023-10-01 14:30", "caller": "Resident", "property": "PROP002", "issue": "Suspicious Activity", "status": "Pending"},
-            {"id": "D002", "datetime": "2023-10-01 15:00", "caller": "Staff", "property": "PROP004", "issue": "Noise Complaint", "status": "Assigned"}
-        ];
+        // Global data variables
+        let peopleData = [];
+        let propertiesData = [];
+        let dispatchData = [];
+        let usersData = [];
+        let currentUser = null;
 
-        // Login system
+        // Load data with error handling
+        Promise.all([
+            fetch('people.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('People fetch error:', err); return []; }),
+            fetch('properties.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('Properties fetch error:', err); return []; }),
+            fetch('dispatch.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('Dispatch fetch error:', err); return []; }),
+            fetch('users.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('Users fetch error:', err); return []; })
+        ]).then(([people, properties, dispatch, users]) => {
+            console.log('Data loaded successfully:', { people, properties, dispatch, users });
+            peopleData = people || [];
+            propertiesData = properties || [];
+            dispatchData = dispatch || [];
+            usersData = users || [];
+        }).catch(err => console.error('Promise.all error:', err));
+
+        // Login function
         function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            if (username === 'officer' && password === 'password') {
-                document.getElementById('login').style.display = 'none';
-                document.getElementById('mdt').style.display = 'block';
+            const user = usersData.find(u => u.username === username && u.password === password);
+            if (user) {
+                currentUser = user;
+                document.getElementById('login').classList.remove('active');
+                document.getElementById('mdt').classList.remove('hidden');
+                document.getElementById('userRole').textContent = `${user.username} (${user.group})`;
+                adjustUIForUserGroup(user.group, user.property);
                 loadDashboard();
+                loadProperties();
                 loadDispatch();
             } else {
-                alert('Invalid credentials');
+                document.getElementById('loginError').textContent = 'Invalid username or password';
             }
         }
 
-        // Dark mode toggle
-        function toggleDarkMode() {
-            document.body.classList.toggle('light-mode');
-            if (document.body.classList.contains('light-mode')) {
-                document.body.style.backgroundColor = '#fff';
-                document.body.style.color = '#000';
-                document.querySelectorAll('th').forEach(th => th.style.backgroundColor = '#ddd');
-            } else {
-                document.body.style.backgroundColor = '#1a1a1a';
-                document.body.style.color = '#fff';
-                document.querySelectorAll('th').forEach(th => th.style.backgroundColor = '#333');
+        // Adjust UI based on usergroup
+        function adjustUIForUserGroup(group, assignedProperty) {
+            const navDashboard = document.getElementById('navDashboard');
+            const navProperties = document.getElementById('navProperties');
+            const navPeople = document.getElementById('navPeople');
+            const navDispatch = document.getElementById('navDispatch');
+
+            switch (group) {
+                case 'Managers':
+                    // Full access, no changes needed
+                    break;
+                case 'Supervisors':
+                    // All sections, but limited editing (handled in functions)
+                    break;
+                case 'Dispatchers':
+                    navProperties.classList.add('hidden');
+                    navPeople.classList.add('hidden');
+                    showSection('dispatch');
+                    break;
+                case 'Patrol Officers':
+                    // Full read access, limited dispatch editing
+                    break;
+                case 'Static-Site Officers':
+                    navDashboard.classList.add('hidden');
+                    navDispatch.classList.add('hidden');
+                    showSection('properties');
+                    break;
             }
         }
 
         // Show/hide sections
         function showSection(sectionId) {
-            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
-            document.getElementById(sectionId).classList.add('active');
+            if (!currentUser) return;
+            const allowedSections = {
+                'Managers': ['dashboard', 'properties', 'people', 'dispatch'],
+                'Supervisors': ['dashboard', 'properties', 'people', 'dispatch'],
+                'Dispatchers': ['dashboard', 'dispatch'],
+                'Patrol Officers': ['dashboard', 'properties', 'people', 'dispatch'],
+                'Static-Site Officers': ['properties', 'people']
+            };
+            if (allowedSections[currentUser.group].includes(sectionId)) {
+                console.log('Showing section:', sectionId);
+                document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+                document.getElementById(sectionId).classList.add('active');
+            }
         }
 
-        // Load dashboard
+        // Dashboard summary
         function loadDashboard() {
-            const activeCount = dispatchData.filter(d => d.status !== 'Completed').length;
-            document.getElementById('activeDispatches').textContent = activeCount;
-            document.getElementById('recentAlerts').textContent = 'CTN near PROP002 detected';
+            const pending = dispatchData.filter(d => d.status === 'Pending').length;
+            document.getElementById('dispatchSummary').innerHTML = `Pending Dispatches: ${pending}`;
+        }
+
+        // Properties list
+        function loadProperties() {
+            let filteredProperties = propertiesData;
+            if (currentUser.group === 'Static-Site Officers') {
+                filteredProperties = propertiesData.filter(prop => prop.id === currentUser.property);
+            }
+            let html = '<table><tr><th>ID</th><th>Address</th><th>Apt</th><th>Notes</th></tr>';
+            filteredProperties.forEach(prop => {
+                html += `<tr><td>${prop.id}</td><td>${prop.address}</td><td>${prop.apt}</td><td>${prop.notes}</td></tr>`;
+            });
+            html += '</table>';
+            document.getElementById('propertiesList').innerHTML = html;
         }
 
         // People search
         function searchPeople() {
+            console.log('Search button clicked');
+            if (!peopleData || peopleData.length === 0) {
+                document.getElementById('peopleResults').innerHTML = 'No people data loaded. Check console for errors.';
+                console.log('People data:', peopleData);
+                return;
+            }
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = peopleData.filter(person => 
+            console.log('Search query:', query);
+            let filtered = peopleData;
+            if (currentUser.group === 'Static-Site Officers') {
+                filtered = peopleData.filter(person => person.property === currentUser.property);
+            }
+            filtered = filtered.filter(person => 
                 person.id.toLowerCase().includes(query) || 
                 person.name.toLowerCase().includes(query)
             );
+            console.log('Filtered results:', filtered);
+
             let html = '<table><tr><th>ID</th><th>Name</th><th>DoB</th><th>Type</th><th>Property</th><th>Behavior</th><th>CTN</th></tr>';
             if (filtered.length > 0) {
                 filtered.forEach(person => {
                     const behaviorClass = person.behavior.toLowerCase() + '-text';
                     const ctnClass = person.ctn === 'Y' ? 'ctn-active' : '';
-                    const nameText = person.type === 'Staff' ? `<span class="staff-text">${person.name}</span>` : person.name;
+                    const nameText = person.ctn === 'Y' ? `<span class="name">${person.name} <span class="ctn-icon">⚠️</span></span>` : 
+                        (person.type === 'Staff' ? `<span class="staff-text">${person.name}</span>` : person.name);
+                    const behaviorText = person.ctn === 'Y' ? `<span class="behavior">${person.behavior}</span>` : `<span class="${behaviorClass}">${person.behavior}</span>`;
+
                     html += `<tr class="${ctnClass}">`;
-                    html += `<td>${person.id}</td><td>${nameText}</td><td>${person.dob}</td><td>${person.type}</td><td>${person.property}</td>`;
-                    html += `<td class="${behaviorClass}">${person.behavior}</td><td>${person.ctn}</td></tr>`;
+                    html += `<td>${person.id}</td>`;
+                    html += `<td>${nameText}</td>`;
+                    html += `<td>${person.dob}</td>`;
+                    html += `<td>${person.type}</td>`;
+                    html += `<td>${person.property}</td>`;
+                    html += `<td>${behaviorText}</td>`;
+                    html += `<td>${person.ctn}</td>`;
+                    html += `</tr>`;
                 });
             } else {
                 html += '<tr><td colspan="7">No results found</td></tr>';
@@ -168,39 +221,22 @@
             document.getElementById('peopleResults').innerHTML = html;
         }
 
-        // Load dispatch log
+        // Dispatch list (placeholder if dispatch.json is missing)
         function loadDispatch() {
-            let html = '<table><tr><th>ID</th><th>Date/Time</th><th>Caller</th><th>Property</th><th>Issue</th><th>Status</th><th>Action</th></tr>';
-            dispatchData.forEach(call => {
-                html += `<tr><td>${call.id}</td><td>${call.datetime}</td><td>${call.caller}</td><td>${call.property}</td><td>${call.issue}</td><td>${call.status}</td>`;
-                html += `<td><button onclick="updateStatus('${call.id}', 'In Progress')">In Progress</button> <button onclick="updateStatus('${call.id}', 'Completed')">Complete</button></td></tr>`;
-            });
+            let html = '<table><tr><th>ID</th><th>Date/Time</th><th>Caller</th><th>Property</th><th>Issue</th><th>Status</th></tr>';
+            if (dispatchData.length === 0) {
+                html += '<tr><td colspan="6">No dispatch data available</td></tr>';
+            } else {
+                let filteredDispatch = dispatchData;
+                if (currentUser.group === 'Patrol Officers') {
+                    filteredDispatch = dispatchData.filter(d => d.assignedOfficer === currentUser.username || !d.assignedOfficer);
+                }
+                filteredDispatch.forEach(disp => {
+                    html += `<tr><td>${disp.id}</td><td>${disp.dateTime}</td><td>${disp.caller}</td><td>${disp.property}</td><td>${disp.issue}</td><td>${disp.status}</td></tr>`;
+                });
+            }
             html += '</table>';
             document.getElementById('dispatchList').innerHTML = html;
-        }
-
-        // Update dispatch status
-        function updateStatus(id, status) {
-            const call = dispatchData.find(d => d.id === id);
-            call.status = status;
-            loadDispatch();
-            loadDashboard();
-        }
-
-        // Submit report (placeholder)
-        function submitReport(event) {
-            event.preventDefault();
-            const form = document.getElementById('reportForm');
-            const type = form.type.value;
-            const narrative = form.narrative.value;
-            alert(`Report Submitted: ${type} - ${narrative}`);
-            form.reset();
-        }
-
-        // Add property note (placeholder)
-        function addPropertyNote() {
-            const note = document.getElementById('propertyNote').value;
-            alert(`Note Added: ${note}`);
         }
     </script>
 </body>
