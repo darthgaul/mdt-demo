@@ -11,6 +11,7 @@
         .dark-mode .bg-gray-700 { background-color: #d1d5db; }
         .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
         tr:hover { background-color: rgba(255, 255, 255, 0.1); }
+        @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-6">
@@ -26,32 +27,42 @@
         </div>
         <div class="flex space-x-4 items-center">
             <span id="userInfo" class="text-sm"></span>
-            <button id="darkModeToggle" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm">Toggle Light Mode</button>
-            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm">Logout</button>
+            <button id="darkModeToggle" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm shadow">Toggle Light Mode</button>
+            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
         </div>
     </nav>
 
-    <h3 class="text-xl font-semibold mb-2">Active Dispatches</h3>
-    <div id="dispatchSummary" class="bg-gray-800 p-4 rounded-lg shadow"></div>
+    <h3 class="text-xl font-semibold mb-2">Your Active Dispatches</h3>
+    <div id="dispatchSummary" class="bg-gray-800 p-4 rounded-lg shadow grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
 
     <script src="scripts.js"></script>
     <script>
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) window.location.href = 'login.html';
-        if (user.group !== 'Managers') document.getElementById('managerLink').style.display = 'none';
+        if (user.group !== 'Managers' && user.group !== 'Supervisors' && user.group !== 'Dispatchers') document.getElementById('managerLink').style.display = 'none';
         document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
 
         loadData(() => {
-            const pending = dispatchData.filter(d => d.status === 'Pending').length;
-            const inProgress = dispatchData.filter(d => d.status === 'In Progress').length;
-            document.getElementById('dispatchSummary').innerHTML = `Pending: ${pending} | In Progress: ${inProgress}`;
+            const active = dispatchData.filter(d => (d.assignedOfficer === user.username || user.group === 'Supervisors') && d.status !== 'Completed');
+            let html = active.length ? '' : '<p class="text-center">No active dispatches assigned to you.</p>';
+            active.forEach(disp => {
+                const statusColor = { Pending: 'yellow-500', Assigned: 'blue-500', 'In Progress': 'orange-500', Completed: 'green-500' }[disp.status];
+                html += `<div class="bg-gray-700 p-3 rounded shadow"><p><strong>ID:</strong> ${disp.id}</p><p><strong>Issue:</strong> ${disp.issue}</p><p><strong>Property:</strong> ${disp.property}</p><p><strong>Status:</strong> <span class="text-${statusColor}">${disp.status}</span></p></div>`;
+            });
+            document.getElementById('dispatchSummary').innerHTML = html;
         });
 
         document.getElementById('darkModeToggle').addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
             const btn = document.getElementById('darkModeToggle');
             btn.textContent = document.body.classList.contains('dark-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
         });
+
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('darkModeToggle').textContent = 'Toggle Dark Mode';
+        }
 
         function logout() {
             localStorage.removeItem('user');
