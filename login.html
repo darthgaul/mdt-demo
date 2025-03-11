@@ -5,14 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .dark-mode { background-color: #f3f4f6; color: #374151; }
+        .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
+        .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
+    </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
-    <div class="bg-gray-800 p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 class="text-3xl font-bold mb-6 text-center text-blue-400">MDT Login</h2>
-        <input type="text" id="username" placeholder="Username" class="bg-gray-700 text-white p-3 rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <input type="password" id="password" placeholder="Password" class="bg-gray-700 text-white p-3 rounded w-full mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button onclick="login()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded w-full font-semibold shadow">Login</button>
-        <p id="loginError" class="text-red-500 mt-4 text-center"></p>
+    <div class="w-full max-w-md">
+        <div class="tips">
+            <h4 class="text-lg font-semibold">Tips</h4>
+            <p>Use these demo logins:</p>
+            <ul class="list-disc ml-4">
+                <li>Manager: <strong>manager1 / mgrpass</strong></li>
+                <li>Supervisor: <strong>supervisor1 / suppass</strong></li>
+                <li>Dispatcher: <strong>dispatch1 / dispass</strong></li>
+                <li>Officer: <strong>officer1 / offpass</strong></li>
+            </ul>
+        </div>
+        <div class="bg-gray-800 p-8 rounded-lg shadow-lg">
+            <h2 class="text-3xl font-bold mb-6 text-center text-blue-400">MDT Login</h2>
+            <input type="text" id="username" placeholder="Username" class="bg-gray-700 text-white p-3 rounded w-full mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <input type="password" id="password" placeholder="Password" class="bg-gray-700 text-white p-3 rounded w-full mb-6 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <button onclick="login()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded w-full font-semibold shadow">Login</button>
+            <p id="loginError" class="text-red-500 mt-4 text-center"></p>
+        </div>
     </div>
 
     <script src="scripts.js"></script>
