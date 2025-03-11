@@ -8,11 +8,11 @@
     <style>
         .ctn-active { background-color: #ef4444; }
         .ctn-active .name, .ctn-active .behavior { color: #fff; }
-        .staff-text { color: #22c55e; }
         .friendly-text { color: #22c55e; }
         .cautious-text { color: #eab308; }
         .hostile-text { color: #ef4444; }
         .unknown-text { color: #6b7280; }
+        .vctw-highlight { background-color: #f59e0b; }
         .ctn-icon { margin-left: 5px; }
     </style>
 </head>
@@ -52,17 +52,16 @@
             );
             console.log('Filtered results:', filtered);
 
-            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">DoB</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Behavior</th><th class="p-2 bg-gray-700">CTN</th></tr>';
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">DoB</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Behavior</th><th class="p-2 bg-gray-700">CTN Status</th></tr>';
             if (filtered.length > 0) {
                 filtered.forEach(person => {
                     const behaviorClass = person.behavior.toLowerCase() + '-text';
-                    const ctnClass = person.ctn === 'Y' ? 'ctn-active' : '';
-                    const nameText = person.ctn === 'Y' ? `<span class="name">${person.name} <span class="ctn-icon">⚠️</span></span>` : 
-                        (person.type === 'Staff' ? `<span class="staff-text">${person.name}</span>` : person.name);
-                    const behaviorText = person.ctn === 'Y' ? `<span class="behavior">${person.behavior}</span>` : `<span class="${behaviorClass}">${person.behavior}</span>`;
-                    const ctnLink = person.ctn === 'Y' ? `<a href="reports.html?personId=${person.id}" class="underline">Y</a>` : 'N';
+                    const ctnClass = person.ctnStatus === 'CTN Issued' ? 'ctn-active' : (person.ctnStatus === 'VCTW' ? 'vctw-highlight' : '');
+                    const hasReports = reportsData.some(r => r.personId === person.id);
+                    const nameText = hasReports ? `<a href="reports.html?personId=${person.id}" class="underline">${person.name}${person.ctnStatus !== 'N/A' ? ' <span class="ctn-icon">⚠️</span>' : ''}</a>` : person.name;
+                    const behaviorText = `<span class="${behaviorClass}">${person.behavior}</span>`;
 
-                    html += `<tr class="${ctnClass}"><td class="p-2">${person.id}</td><td class="p-2">${nameText}</td><td class="p-2">${person.dob}</td><td class="p-2">${person.type}</td><td class="p-2">${person.property}</td><td class="p-2">${behaviorText}</td><td class="p-2">${ctnLink}</td></tr>`;
+                    html += `<tr class="${ctnClass}"><td class="p-2">${person.id}</td><td class="p-2">${nameText}</td><td class="p-2">${person.dob}</td><td class="p-2">${person.status}</td><td class="p-2">${person.property}</td><td class="p-2">${behaviorText}</td><td class="p-2">${person.ctnStatus}</td></tr>`;
                 });
             } else {
                 html += '<tr><td colspan="7" class="p-2 text-center">No results found</td></tr>';
