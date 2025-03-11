@@ -6,7 +6,7 @@
     <title>MDT Dispatch</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .dark-mode { background-color: #f3f4f6; color: #374151; }
+        .dark-mode { background-color: #f3f4f6; color: #1f2937; }
         .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
         .dark-mode .bg-gray-700 { background-color: #d1d5db; }
         .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
@@ -74,8 +74,12 @@
         }
 
         let currentTab = 'active';
+        let refreshInterval = null;
+
         function showTab(tab) {
             currentTab = tab;
+            if (refreshInterval) clearTimeout(refreshInterval);
+
             const isDispatcherOrAbove = ['Managers', 'Supervisors', 'Dispatchers'].includes(user.group);
             const active = dispatchData.filter(d => d.status !== 'Completed').slice(0, 10);
             const history = dispatchData.filter(d => d.status === 'Completed');
@@ -94,7 +98,7 @@
                     const elapsedClass = elapsed.minutes >= 15 && tab === 'active' ? 'text-red-500' : '';
                     const statusColor = { Pending: 'yellow-500', Assigned: 'blue-500', 'In Progress': 'orange-500', Completed: 'green-500' }[disp.status];
                     html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.dateTime}</td><td class="p-2 ${elapsedClass}">${elapsedText}</td><td class="p-2">${disp.caller}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.issue}</td><td class="p-2 text-${statusColor}">${disp.status}</td>`;
-                    html += `<td class="p-2"><select onchange="assignOfficer('${disp.id}', this.value)" class="bg-gray-700 text-white p-1 rounded ${!isDispatcherOrAbove && disp.assignedOfficer !== user.username ? 'cursor-not-allowed' : ''}" ${!isDispatcherOrAbove && disp.assignedOfficer !== user.username ? 'disabled' : ''}><option value="">Unassigned</option>`;
+                    html += `<td class="p-2"><select id="assign-${disp.id}" onchange="assignOfficer('${disp.id}', this.value)" class="bg-gray-700 text-white p-1 rounded ${!isDispatcherOrAbove && disp.assignedOfficer !== user.username ? 'cursor-not-allowed' : ''}" ${!isDispatcherOrAbove && disp.assignedOfficer !== user.username ? 'disabled' : ''}><option value="">Unassigned</option>`;
                     employeesData.forEach(emp => {
                         html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`;
                     });
@@ -121,7 +125,16 @@
                 html += '</div>';
             }
             document.getElementById('dispatchList').innerHTML = html;
-            if (tab === 'active') setTimeout(() => { if (currentTab === 'active') showTab('active'); }, 1000); // Only refresh active
+
+            // Prevent refresh while dropdown is focused
+            document.querySelectorAll('select').forEach(select => {
+                select.addEventListener('focus', () => clearTimeout(refreshInterval));
+                select.addEventListener('blur', () => {
+                    if (currentTab === 'active') refreshInterval = setTimeout(() => showTab('active'), 1000);
+                });
+            });
+
+            if (tab === 'active') refreshInterval = setTimeout(() => { if (currentTab === 'active') showTab('active'); }, 1000);
         }
 
         function updateStatus(id, status) {
