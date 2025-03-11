@@ -14,13 +14,14 @@
         th, td { border: 1px solid #fff; padding: 8px; text-align: left; }
         th { background-color: #333; }
         .ctn-active { background-color: #FF0000; }
+        .ctn-active .name, .ctn-active .behavior { color: #fff; } /* White text on red rows */
         .friendly-text { color: #00FF00; }
         .cautious-text { color: #FFFF00; }
         .hostile-text { color: #FF0000; }
         .unknown-text { color: #808080; }
         .section { margin-top: 30px; display: none; }
         .active { display: block; }
-        .ctn-link { cursor: pointer; text-decoration: underline; }
+        .ctn-icon { margin-left: 5px; }
     </style>
 </head>
 <body>
@@ -108,8 +109,8 @@
         // Properties list
         function loadProperties() {
             let html = '<table><tr><th>ID</th><th>Address</th><th>Apt</th><th>Notes</th></tr>';
-            propertiesData.forEach(propBruh => {
-                html += `<tr><td>${propBruh.id}</td><td>${propBruh.address}</td><td>${propBruh.apt}</td><td>${propBruh.notes}</td></tr>`;
+            propertiesData.forEach(prop => {
+                html += `<tr><td>${prop.id}</td><td>${prop.address}</td><td>${prop.apt}</td><td>${prop.notes}</td></tr>`;
             });
             html += '</table>';
             document.getElementById('propertiesList').innerHTML = html;
@@ -136,28 +137,24 @@
                 filtered.forEach(person => {
                     const behaviorClass = person.behavior.toLowerCase() + '-text';
                     const ctnClass = person.ctn === 'Y' ? 'ctn-active' : '';
+                    const nameText = person.ctn === 'Y' ? `<span class="name">${person.name} <span class="ctn-icon">⚠️</span></span>` : `<span class="${behaviorClass}">${person.name}</span>`;
+                    const behaviorText = person.ctn === 'Y' ? `<span class="behavior">${person.behavior}</span>` : `<span class="${behaviorClass}">${person.behavior}</span>`;
+
                     html += `<tr class="${ctnClass}">`;
                     html += `<td>${person.id}</td>`;
-                    html += `<td class="${behaviorClass}">${person.name}</td>`;
+                    html += `<td>${nameText}</td>`;
                     html += `<td>${person.dob}</td>`;
                     html += `<td>${person.type}</td>`;
                     html += `<td>${person.property}</td>`;
-                    html += `<td class="${behaviorClass}">${person.behavior}</td>`;
-                    html += `<td>${person.ctn === 'Y' ? '<span class="ctn-link" onclick="showCTNReport(\'' + person.id + '\')">Y</span>' : 'N'}</td>`;
-                    html += '</tr>';
+                    html += `<td>${behaviorText}</td>`;
+                    html += `<td>${person.ctn}</td>`;
+                    html += `</tr>`;
                 });
             } else {
                 html += '<tr><td colspan="7">No results found</td></tr>';
             }
             html += '</table>';
             document.getElementById('peopleResults').innerHTML = html;
-        }
-
-        // Placeholder for CTN report linking
-        function showCTNReport(personId) {
-            console.log('Show CTN report for person:', personId);
-            alert('CTN report for ' + personId + ' coming soon!'); // Placeholder
-            // Future: Load report from reports.json based on personId
         }
 
         // Dispatch list
