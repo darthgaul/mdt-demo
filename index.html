@@ -4,56 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #1a1a1a; color: #fff; margin: 0; padding: 20px; }
-        nav { margin-bottom: 20px; }
-        nav a { color: #fff; margin-right: 15px; text-decoration: none; }
-        nav a:hover { text-decoration: underline; }
-        input, button, select { margin: 5px; padding: 5px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #fff; padding: 8px; text-align: left; }
-        th { background-color: #333; }
-        .ctn-active { background-color: #FF0000; }
+        .ctn-active { background-color: #ef4444; }
         .ctn-active .name, .ctn-active .behavior { color: #fff; }
-        .staff-text { color: #00FF00; }
-        .friendly-text { color: #00FF00; }
-        .cautious-text { color: #FFFF00; }
-        .hostile-text { color: #FF0000; }
-        .unknown-text { color: #808080; }
-        .section { margin-top: 30px; display: none; }
-        .active { display: block; }
+        .staff-text { color: #22c55e; }
+        .friendly-text { color: #22c55e; }
+        .cautious-text { color: #eab308; }
+        .hostile-text { color: #ef4444; }
+        .unknown-text { color: #6b7280; }
         .ctn-icon { margin-left: 5px; }
     </style>
 </head>
-<body>
-    <h2>MDT Dashboard</h2>
-    <nav>
-        <a href="#dashboard" onclick="showSection('dashboard')">Dashboard</a>
-        <a href="#properties" onclick="showSection('properties')">Properties</a>
-        <a href="#people" onclick="showSection('people')">People</a>
-        <a href="#dispatch" onclick="showSection('dispatch')">Dispatch</a>
+<body class="bg-gray-900 text-white min-h-screen p-6">
+    <h2 class="text-2xl font-bold mb-4">MDT Dashboard</h2>
+    <nav class="flex space-x-4 mb-6">
+        <a href="#dashboard" onclick="showSection('dashboard')" class="hover:underline">Dashboard</a>
+        <a href="#properties" onclick="showSection('properties')" class="hover:underline">Properties</a>
+        <a href="#people" onclick="showSection('people')" class="hover:underline">People</a>
+        <a href="#dispatch" onclick="showSection('dispatch')" class="hover:underline">Dispatch</a>
+        <a href="#reports" onclick="showSection('reports')" class="hover:underline">Reports</a>
     </nav>
 
     <div id="dashboard" class="section active">
-        <h3>Active Dispatches</h3>
-        <div id="dispatchSummary"></div>
+        <h3 class="text-xl font-semibold mb-2">Active Dispatches</h3>
+        <div id="dispatchSummary" class="bg-gray-800 p-4 rounded-lg"></div>
     </div>
 
     <div id="properties" class="section">
-        <h3>Properties</h3>
-        <div id="propertiesList"></div>
+        <h3 class="text-xl font-semibold mb-2">Properties</h3>
+        <div id="propertiesList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto"></div>
     </div>
 
     <div id="people" class="section">
-        <h3>People Search</h3>
-        <input type="text" id="searchInput" placeholder="Enter Name or ID">
-        <button onclick="searchPeople()">Search</button>
-        <div id="peopleResults"></div>
+        <h3 class="text-xl font-semibold mb-2">People Search</h3>
+        <div class="flex space-x-2 mb-4">
+            <input type="text" id="searchInput" placeholder="Enter Name or ID" class="bg-gray-700 text-white p-2 rounded w-full max-w-md">
+            <button onclick="searchPeople()" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded">Search</button>
+        </div>
+        <div id="peopleResults" class="bg-gray-800 p-4 rounded-lg overflow-x-auto"></div>
     </div>
 
     <div id="dispatch" class="section">
-        <h3>Dispatch Log</h3>
-        <div id="dispatchList"></div>
+        <h3 class="text-xl font-semibold mb-2">Dispatch Log</h3>
+        <div id="dispatchList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto"></div>
+    </div>
+
+    <div id="reports" class="section">
+        <h3 class="text-xl font-semibold mb-2">Reports</h3>
+        <form id="reportForm" class="bg-gray-800 p-4 rounded-lg mb-4" onsubmit="submitReport(event)">
+            <input type="text" name="personId" placeholder="Person ID (e.g., P001)" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
+            <input type="text" name="property" placeholder="Property ID (e.g., PROP001)" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
+            <input type="text" name="type" placeholder="Incident Type" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
+            <textarea name="narrative" placeholder="Narrative" class="bg-gray-700 text-white p-2 rounded w-full mb-2" rows="3" required></textarea>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded">Submit Report</button>
+        </form>
+        <div id="reportList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto"></div>
     </div>
 
     <script>
@@ -61,31 +67,31 @@
         let peopleData = [];
         let propertiesData = [];
         let dispatchData = [];
-
-        // Placeholder officer list (for assignments)
+        let reportsData = [];
         const officers = ['Patrol1', 'Patrol2', 'Patrol3', 'Static1', 'Static2'];
 
         // Load data with error handling
         Promise.all([
             fetch('people.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('People fetch error:', err); return []; }),
             fetch('properties.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('Properties fetch error:', err); return []; }),
-            fetch('dispatch.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('Dispatch fetch error:', err); return []; })
-        ]).then(([people, properties, dispatch]) => {
-            console.log('Data loaded successfully:', { people, properties, dispatch });
+            fetch('dispatch.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('Dispatch fetch error:', err); return []; }),
+            fetch('reports.json').then(res => res.ok ? res.json() : []).catch(err => { console.error('Reports fetch error:', err); return []; })
+        ]).then(([people, properties, dispatch, reports]) => {
+            console.log('Data loaded successfully:', { people, properties, dispatch, reports });
             peopleData = people || [];
             propertiesData = properties || [];
             dispatchData = dispatch || [];
+            reportsData = reports || [];
             loadDashboard();
             loadProperties();
             loadDispatch();
+            loadReports();
         }).catch(err => console.error('Promise.all error:', err));
 
         // Show/hide sections
         function showSection(sectionId) {
             console.log('Showing section:', sectionId);
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.remove('active');
-            });
+            document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
             document.getElementById(sectionId).classList.add('active');
         }
 
@@ -98,9 +104,9 @@
 
         // Properties list
         function loadProperties() {
-            let html = '<table><tr><th>ID</th><th>Address</th><th>Apt</th><th>Notes</th></tr>';
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Apt</th><th class="p-2 bg-gray-700">Notes</th></tr>';
             propertiesData.forEach(prop => {
-                html += `<tr><td>${prop.id}</td><td>${prop.address}</td><td>${prop.apt}</td><td>${prop.notes}</td></tr>`;
+                html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${prop.address}</td><td class="p-2">${prop.apt}</td><td class="p-2">${prop.notes}</td></tr>`;
             });
             html += '</table>';
             document.getElementById('propertiesList').innerHTML = html;
@@ -110,7 +116,7 @@
         function searchPeople() {
             console.log('Search button clicked');
             if (!peopleData || peopleData.length === 0) {
-                document.getElementById('peopleResults').innerHTML = 'No people data loaded. Check console for errors.';
+                document.getElementById('peopleResults').innerHTML = '<p class="text-red-500">No people data loaded. Check console for errors.</p>';
                 console.log('People data:', peopleData);
                 return;
             }
@@ -122,7 +128,7 @@
             );
             console.log('Filtered results:', filtered);
 
-            let html = '<table><tr><th>ID</th><th>Name</th><th>DoB</th><th>Type</th><th>Property</th><th>Behavior</th><th>CTN</th></tr>';
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">DoB</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Behavior</th><th class="p-2 bg-gray-700">CTN</th></tr>';
             if (filtered.length > 0) {
                 filtered.forEach(person => {
                     const behaviorClass = person.behavior.toLowerCase() + '-text';
@@ -130,19 +136,12 @@
                     const nameText = person.ctn === 'Y' ? `<span class="name">${person.name} <span class="ctn-icon">⚠️</span></span>` : 
                         (person.type === 'Staff' ? `<span class="staff-text">${person.name}</span>` : person.name);
                     const behaviorText = person.ctn === 'Y' ? `<span class="behavior">${person.behavior}</span>` : `<span class="${behaviorClass}">${person.behavior}</span>`;
+                    const ctnLink = person.ctn === 'Y' ? `<a href="#" onclick="showCTNReports('${person.id}'); return false;" class="underline">Y</a>` : 'N';
 
-                    html += `<tr class="${ctnClass}">`;
-                    html += `<td>${person.id}</td>`;
-                    html += `<td>${nameText}</td>`;
-                    html += `<td>${person.dob}</td>`;
-                    html += `<td>${person.type}</td>`;
-                    html += `<td>${person.property}</td>`;
-                    html += `<td>${behaviorText}</td>`;
-                    html += `<td>${person.ctn}</td>`;
-                    html += `</tr>`;
+                    html += `<tr class="${ctnClass}"><td class="p-2">${person.id}</td><td class="p-2">${nameText}</td><td class="p-2">${person.dob}</td><td class="p-2">${person.type}</td><td class="p-2">${person.property}</td><td class="p-2">${behaviorText}</td><td class="p-2">${ctnLink}</td></tr>`;
                 });
             } else {
-                html += '<tr><td colspan="7">No results found</td></tr>';
+                html += '<tr><td colspan="7" class="p-2 text-center">No results found</td></tr>';
             }
             html += '</table>';
             document.getElementById('peopleResults').innerHTML = html;
@@ -150,18 +149,18 @@
 
         // Dispatch list with status updates and assignments
         function loadDispatch() {
-            let html = '<table><tr><th>ID</th><th>Date/Time</th><th>Caller</th><th>Property</th><th>Issue</th><th>Status</th><th>Assigned</th><th>Actions</th></tr>';
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Caller</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Assigned</th><th class="p-2 bg-gray-700">Actions</th></tr>';
             if (dispatchData.length === 0) {
-                html += '<tr><td colspan="8">No dispatch data available</td></tr>';
+                html += '<tr><td colspan="8" class="p-2 text-center">No dispatch data available</td></tr>';
             } else {
                 dispatchData.forEach(disp => {
-                    html += `<tr><td>${disp.id}</td><td>${disp.dateTime}</td><td>${disp.caller}</td><td>${disp.property}</td><td>${disp.issue}</td><td>${disp.status}</td>`;
-                    html += `<td><select onchange="assignOfficer('${disp.id}', this.value)"><option value="">Unassigned</option>`;
+                    html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.dateTime}</td><td class="p-2">${disp.caller}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.issue}</td><td class="p-2">${disp.status}</td>`;
+                    html += `<td class="p-2"><select onchange="assignOfficer('${disp.id}', this.value)" class="bg-gray-700 text-white p-1 rounded"><option value="">Unassigned</option>`;
                     officers.forEach(officer => {
                         html += `<option value="${officer}" ${disp.assignedOfficer === officer ? 'selected' : ''}>${officer}</option>`;
                     });
                     html += `</select></td>`;
-                    html += `<td><button onclick="updateStatus('${disp.id}', 'Assigned')">Assign</button> <button onclick="updateStatus('${disp.id}', 'In Progress')">In Progress</button> <button onclick="updateStatus('${disp.id}', 'Completed')">Complete</button></td></tr>`;
+                    html += `<td class="p-2 space-x-2"><button onclick="updateStatus('${disp.id}', 'Assigned')" class="bg-blue-600 hover:bg-blue-700 text-white p-1 rounded text-sm">Assign</button> <button onclick="updateStatus('${disp.id}', 'In Progress')" class="bg-yellow-600 hover:bg-yellow-700 text-white p-1 rounded text-sm">In Progress</button> <button onclick="updateStatus('${disp.id}', 'Completed')" class="bg-green-600 hover:bg-green-700 text-white p-1 rounded text-sm">Complete</button></td></tr>`;
                 });
             }
             html += '</table>';
@@ -187,6 +186,59 @@
                 loadDispatch();
                 loadDashboard();
             }
+        }
+
+        // Load reports
+        function loadReports() {
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Person ID</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
+            if (reportsData.length === 0) {
+                html += '<tr><td colspan="6" class="p-2 text-center">No reports available</td></tr>';
+            } else {
+                reportsData.forEach(report => {
+                    html += `<tr><td class="p-2">${report.id}</td><td class="p-2">${report.dateTime}</td><td class="p-2">${report.personId}</td><td class="p-2">${report.property}</td><td class="p-2">${report.type}</td><td class="p-2">${report.narrative}</td></tr>`;
+                });
+            }
+            html += '</table>';
+            document.getElementById('reportList').innerHTML = html;
+        }
+
+        // Show CTN reports
+        function showCTNReports(personId) {
+            const personReports = reportsData.filter(r => r.personId === personId);
+            let html = '<div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"><div class="bg-gray-800 p-6 rounded-lg max-w-lg w-full">';
+            html += `<h3 class="text-lg font-semibold mb-4">Reports for ${personId}</h3>`;
+            if (personReports.length > 0) {
+                html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
+                personReports.forEach(report => {
+                    html += `<tr><td class="p-2">${report.id}</td><td class="p-2">${report.dateTime}</td><td class="p-2">${report.type}</td><td class="p-2">${report.narrative}</td></tr>`;
+                });
+                html += '</table>';
+            } else {
+                html += '<p>No reports found for this person.</p>';
+            }
+            html += '<button onclick="showSection(\'people\')" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded">Close</button></div></div>';
+            document.getElementById('peopleResults').innerHTML = html;
+        }
+
+        // Submit report
+        function submitReport(event) {
+            event.preventDefault();
+            const form = document.getElementById('reportForm');
+            const newReport = {
+                id: `R${(reportsData.length + 1).toString().padStart(3, '0')}`,
+                dateTime: new Date().toISOString(),
+                personId: form.personId.value,
+                property: form.property.value,
+                type: form.type.value,
+                narrative: form.narrative.value
+            };
+            reportsData.push(newReport);
+            if (peopleData.find(p => p.id === newReport.personId && newReport.type.includes('Trespass'))) {
+                peopleData.find(p => p.id === newReport.personId).ctn = 'Y';
+            }
+            form.reset();
+            loadReports();
+            alert('Report submitted successfully!');
         }
     </script>
 </body>
