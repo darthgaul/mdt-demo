@@ -24,7 +24,8 @@
         loadData(() => {
             let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Property Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Apt</th><th class="p-2 bg-gray-700">Min. Hits</th><th class="p-2 bg-gray-700">Notes</th></tr>';
             propertiesData.forEach(prop => {
-                html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${prop.apt}</td><td class="p-2">${prop.minHits}</td><td class="p-2">${prop.notes}</td></tr>`;
+                const link = (prop.id === 'PROP001' || prop.id === 'PROP002' || prop.id === 'PROP003') ? `<a href="${prop.id.toLowerCase()}.html" class="underline">${prop.propertyName}</a>` : prop.propertyName;
+                html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${link}</td><td class="p-2">${prop.address}</td><td class="p-2">${prop.apt}</td><td class="p-2">${prop.minHits}</td><td class="p-2">${prop.notes}</td></tr>`;
             });
             html += '</table>';
             document.getElementById('propertiesList').innerHTML = html;
