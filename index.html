@@ -8,20 +8,24 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="min-h-screen p-6">
-    <nav class="sticky-nav flex justify-between items-center mb-6 p-4 bg-gray-900 rounded-lg shadow">
-        <div class="flex space-x-4">
-            <a href="index.html" class="text-blue-400 font-semibold">Dashboard</a>
-            <a href="properties.html" class="hover:underline">Properties</a>
-            <a href="people.html" class="hover:underline">People</a>
-            <a href="dispatch.html" class="hover:underline">Dispatch</a>
-            <a href="reports.html" class="hover:underline">Reports</a>
-            <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
-            <a href="map.html" class="hover:underline">Map</a>
-        </div>
-        <div class="flex space-x-4 items-center">
-            <span id="userInfo" class="text-sm"></span>
-            <button id="darkModeToggle" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm shadow">Toggle Light Mode</button>
-            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
+    <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow">
+        <div class="flex justify-between items-start">
+            <div class="nav-tabs">
+                <a href="index.html" class="active">Dashboard</a>
+                <a href="properties.html">Properties</a>
+                <a href="people.html">People</a>
+                <a href="dispatch.html">Dispatch</a>
+                <a href="reports.html">Reports</a>
+                <a href="manager.html" id="managerLink">Manager</a>
+                <a href="map.html">Map</a>
+            </div>
+            <div class="flex flex-col items-end space-y-2">
+                <span id="userInfo" class="text-sm"></span>
+                <div class="flex items-center space-x-2">
+                    <button id="darkModeToggle"></button>
+                    <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
+                </div>
+            </div>
         </div>
     </nav>
 
