@@ -11,15 +11,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const toggleBtn = document.getElementById('darkModeToggle');
     if (toggleBtn) {
+        toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'bg-gray-700', 'transition-colors', 'duration-200');
+        toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
+        
         toggleBtn.addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
-            toggleBtn.textContent = document.body.classList.contains('light-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
-            localStorage.setItem('lightMode', document.body.classList.contains('light-mode'));
+            const isLightMode = document.body.classList.contains('light-mode');
+            toggleBtn.classList.toggle('bg-blue-600', isLightMode);
+            toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
+            toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
+            localStorage.setItem('lightMode', isLightMode);
         });
 
         if (localStorage.getItem('lightMode') === 'true') {
             document.body.classList.add('light-mode');
-            toggleBtn.textContent = 'Toggle Dark Mode';
+            toggleBtn.classList.remove('bg-gray-700');
+            toggleBtn.classList.add('bg-blue-600');
+            toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
         }
     }
 });
