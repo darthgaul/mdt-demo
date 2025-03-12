@@ -4,7 +4,7 @@ body { background-color: #1f2937; color: #f3f4f6; } /* Default dark mode */
 .light-mode .bg-gray-800 { background-color: #e5e7eb; }
 .light-mode .bg-gray-700 { background-color: #d1d5db; }
 .light-mode .text-white { color: #1f2937; }
-.sticky-nav { position: sticky; top: 0; z-index: 20; background-color: inherit; } /* Higher z-index */
+.sticky-nav { position: sticky; top: 0; z-index: 20; background-color: inherit; }
 tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
 .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
@@ -69,7 +69,7 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 
 /* Hamburger menu styles */
 .hamburger {
-    display: none; /* Hidden on desktop */
+    display: none;
     cursor: pointer;
     padding: 0.5rem;
 }
@@ -87,13 +87,13 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 /* Mobile adjustments */
 @media (max-width: 640px) {
     .hamburger {
-        display: block; /* Show hamburger on mobile */
+        display: block;
     }
     .nav-tabs {
-        display: none; /* Hidden by default on mobile */
+        display: none;
         flex-direction: column;
         position: absolute;
-        top: 100%; /* Below nav */
+        top: 100%;
         left: 0;
         width: 100%;
         background-color: #374151;
@@ -102,14 +102,17 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
     .nav-tabs.active {
-        display: flex; /* Show when toggled */
+        display: flex;
     }
     .nav-tabs a {
         padding: 0.75rem;
-        font-size: 1rem; /* Larger for touch */
+        font-size: 1rem;
         margin: 0;
     }
     .light-mode .nav-tabs {
         background-color: #e5e7eb;
+    }
+    .sticky-nav .flex.items-center.space-x-4 {
+        space-x: 1rem; /* More spacing between dark mode and logout on mobile */
     }
 }
