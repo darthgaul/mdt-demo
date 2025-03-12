@@ -19,3 +19,42 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 .unknown-text { color: #6b7280; }
 .vctw-highlight { background-color: rgba(245, 158, 11, 0.5); }
 .ctn-icon { margin-left: 5px; }
+
+/* New tab navigation styles */
+.nav-tabs {
+    display: flex;
+    gap: 0.5rem;
+    background-color: #374151;
+    padding: 0.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.nav-tabs a {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    color: #d1d5db;
+    transition: background-color 0.2s, color 0.2s;
+}
+.nav-tabs a:hover {
+    background-color: #4b5563;
+    color: #f3f4f6;
+}
+.nav-tabs a.active {
+    background-color: #2563eb;
+    color: #ffffff;
+    font-weight: 600;
+}
+.light-mode .nav-tabs {
+    background-color: #e5e7eb;
+}
+.light-mode .nav-tabs a {
+    color: #4b5563;
+}
+.light-mode .nav-tabs a:hover {
+    background-color: #d1d5db;
+}
+.light-mode .nav-tabs a.active {
+    background-color: #3b82f6;
+    color: #ffffff;
+}
