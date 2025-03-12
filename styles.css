@@ -23,16 +23,16 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 /* Updated tab navigation styles */
 .nav-tabs {
     display: flex;
-    flex-wrap: wrap; /* Allow wrapping on small screens */
-    justify-content: center; /* Center tabs horizontally */
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 0.5rem;
     background-color: #374151;
     padding: 0.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    width: 100%; /* Full width for responsiveness */
-    max-width: 800px; /* Limit width on large screens */
-    margin: 0 auto; /* Center within parent */
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
 }
 .nav-tabs a {
     padding: 0.5rem 1rem;
@@ -40,8 +40,9 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     text-decoration: none;
     color: #d1d5db;
     transition: background-color 0.2s, color 0.2s;
-    flex: 1 0 auto; /* Allow tabs to grow/shrink */
-    text-align: center; /* Center text in tabs */
+    flex: 1 0 auto;
+    text-align: center;
+    white-space: nowrap; /* Prevent text wrapping */
 }
 .nav-tabs a:hover {
     background-color: #4b5563;
@@ -69,11 +70,13 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 /* Mobile adjustments */
 @media (max-width: 640px) {
     .nav-tabs {
-        flex-direction: column; /* Stack tabs vertically on mobile */
+        flex-direction: column;
         padding: 0.25rem;
+        gap: 0.25rem; /* Tighter spacing */
     }
     .nav-tabs a {
-        padding: 0.75rem; /* More touch-friendly size */
-        margin: 0.25rem 0; /* Vertical spacing */
+        padding: 0.5rem; /* Smaller padding */
+        font-size: 0.875rem; /* Smaller text (14px) */
+        margin: 0; /* Remove extra margin */
     }
 }
