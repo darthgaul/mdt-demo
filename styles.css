@@ -4,7 +4,7 @@ body { background-color: #1f2937; color: #f3f4f6; } /* Default dark mode */
 .light-mode .bg-gray-800 { background-color: #e5e7eb; }
 .light-mode .bg-gray-700 { background-color: #d1d5db; }
 .light-mode .text-white { color: #1f2937; }
-.sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
+.sticky-nav { position: sticky; top: 0; z-index: 20; background-color: inherit; } /* Higher z-index */
 tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
 .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
@@ -42,7 +42,7 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     transition: background-color 0.2s, color 0.2s;
     flex: 1 0 auto;
     text-align: center;
-    white-space: nowrap; /* Prevent text wrapping */
+    white-space: nowrap;
 }
 .nav-tabs a:hover {
     background-color: #4b5563;
@@ -67,16 +67,49 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     color: #ffffff;
 }
 
+/* Hamburger menu styles */
+.hamburger {
+    display: none; /* Hidden on desktop */
+    cursor: pointer;
+    padding: 0.5rem;
+}
+.hamburger div {
+    width: 25px;
+    height: 3px;
+    background-color: #f3f4f6;
+    margin: 5px 0;
+    transition: all 0.3s ease;
+}
+.light-mode .hamburger div {
+    background-color: #1f2937;
+}
+
 /* Mobile adjustments */
 @media (max-width: 640px) {
+    .hamburger {
+        display: block; /* Show hamburger on mobile */
+    }
     .nav-tabs {
+        display: none; /* Hidden by default on mobile */
         flex-direction: column;
-        padding: 0.25rem;
-        gap: 0.25rem; /* Tighter spacing */
+        position: absolute;
+        top: 100%; /* Below nav */
+        left: 0;
+        width: 100%;
+        background-color: #374151;
+        padding: 0.5rem;
+        border-radius: 0 0 0.75rem 0.75rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+    .nav-tabs.active {
+        display: flex; /* Show when toggled */
     }
     .nav-tabs a {
-        padding: 0.5rem; /* Smaller padding */
-        font-size: 0.875rem; /* Smaller text (14px) */
-        margin: 0; /* Remove extra margin */
+        padding: 0.75rem;
+        font-size: 1rem; /* Larger for touch */
+        margin: 0;
+    }
+    .light-mode .nav-tabs {
+        background-color: #e5e7eb;
     }
 }
