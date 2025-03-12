@@ -6,10 +6,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (nav) {
         nav.innerHTML = `
             <div class="flex justify-between items-center">
-                <div class="hamburger">
-                    <div></div>
-                    <div></div>
-                    <div></div>
+                <div class="flex items-center space-x-4">
+                    <div class="hamburger">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <button id="darkModeToggle"></button>
                 </div>
                 <div class="nav-tabs">
                     <a href="index.html">Dashboard</a>
@@ -22,8 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="flex flex-col items-end space-y-2">
                     <span id="userInfo" class="text-sm"></span>
-                    <div class="flex items-center space-x-2">
-                        <button id="darkModeToggle"></button>
+                    <div class="flex items-center space-x-4">
                         <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
                     </div>
                 </div>
