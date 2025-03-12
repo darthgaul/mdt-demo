@@ -5,19 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { background-color: #1f2937; color: #f3f4f6; } /* Default dark mode */
-        .light-mode { background-color: #f3f4f6; color: #1f2937; } /* Light mode */
-        .light-mode .bg-gray-900 { background-color: #ffffff; }
-        .light-mode .bg-gray-800 { background-color: #e5e7eb; }
-        .light-mode .bg-gray-700 { background-color: #d1d5db; }
-        .light-mode .text-white { color: #1f2937; }
-        .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
-        tr:hover { background-color: rgba(0, 0, 0, 0.1); }
-        @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
-        .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-        .light-mode .tips { background-color: #dbeafe; border-color: #3b82f6; color: #1e3a8a; }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body class="min-h-screen p-6">
     <nav class="sticky-nav flex justify-between items-center mb-6 p-4 bg-gray-900 rounded-lg shadow">
@@ -51,30 +39,9 @@
     <div id="alert" class="fixed top-4 right-4 bg-red-600 text-white p-4 rounded shadow hidden"></div>
 
     <script src="scripts.js"></script>
+    <script src="common.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) window.location.href = 'login.html';
-        if (user.group !== 'Managers' && user.group !== 'Supervisors' && user.group !== 'Dispatchers') document.getElementById('managerLink').style.display = 'none';
-        document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
-
         loadData(() => showTab('overview'));
-
-        document.getElementById('darkModeToggle').addEventListener('click', () => {
-            document.body.classList.toggle('light-mode');
-            const btn = document.getElementById('darkModeToggle');
-            btn.textContent = document.body.classList.contains('light-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
-            localStorage.setItem('lightMode', document.body.classList.contains('light-mode'));
-        });
-
-        if (localStorage.getItem('lightMode') === 'true') {
-            document.body.classList.add('light-mode');
-            document.getElementById('darkModeToggle').textContent = 'Toggle Dark Mode';
-        }
-
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
-        }
 
         function showTab(tab) {
             const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
@@ -91,7 +58,7 @@
                         html += `<tr><td class="p-2 ${isOnline ? 'text-green-500' : 'text-red-500'}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2">${isOnline ? 'Online' : 'Offline'}</td></tr>`;
                     });
                     html += '</table>';
-                    setInterval(checkDispatchTimeouts, 60000); // Check every minute
+                    setInterval(checkDispatchTimeouts, 60000);
                 } else {
                     const active = dispatchData.filter(d => d.assignedOfficer === user.username && d.status !== 'Completed');
                     html += '<h3 class="text-lg font-semibold mb-2">Your Active Dispatches</h3>';
@@ -154,17 +121,10 @@
                 dispatchData.forEach(disp => {
                     const elapsed = calculateElapsed(disp.dateTime);
                     if (elapsed.minutes >= 15 && disp.status !== 'Completed') {
-                        showAlert(`Dispatch ${disp.id} overdue (${elapsed.minutes}m)`);
+                        showAlert(`Dispatch ${disp.id} overdue (${elapsed.minutes}m)`, 'bg-red-600');
                     }
                 });
             }
-        }
-
-        function showAlert(message) {
-            const alert = document.getElementById('alert');
-            alert.textContent = message;
-            alert.classList.remove('hidden');
-            setTimeout(() => alert.classList.add('hidden'), 5000);
         }
     </script>
 </body>
