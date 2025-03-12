@@ -37,12 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Adjust layout: stack user info above buttons
-    const navRight = document.querySelector('nav .flex:last-child');
-    if (navRight) {
-        navRight.classList.remove('flex', 'space-x-4', 'items-center');
-        navRight.classList.add('flex', 'flex-col', 'items-end', 'space-y-2');
-    }
+    // Set active tab based on current page
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const navLinks = document.querySelectorAll('.nav-tabs a');
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (href === currentPage) {
+            link.classList.add('active');
+        } else {
+            link.classList.remove('active');
+        }
+    });
 });
 
 function logout() {
