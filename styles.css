@@ -20,14 +20,19 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 .vctw-highlight { background-color: rgba(245, 158, 11, 0.5); }
 .ctn-icon { margin-left: 5px; }
 
-/* New tab navigation styles */
+/* Updated tab navigation styles */
 .nav-tabs {
     display: flex;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
+    justify-content: center; /* Center tabs horizontally */
     gap: 0.5rem;
     background-color: #374151;
     padding: 0.5rem;
     border-radius: 0.75rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    width: 100%; /* Full width for responsiveness */
+    max-width: 800px; /* Limit width on large screens */
+    margin: 0 auto; /* Center within parent */
 }
 .nav-tabs a {
     padding: 0.5rem 1rem;
@@ -35,6 +40,8 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     text-decoration: none;
     color: #d1d5db;
     transition: background-color 0.2s, color 0.2s;
+    flex: 1 0 auto; /* Allow tabs to grow/shrink */
+    text-align: center; /* Center text in tabs */
 }
 .nav-tabs a:hover {
     background-color: #4b5563;
@@ -57,4 +64,16 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 .light-mode .nav-tabs a.active {
     background-color: #3b82f6;
     color: #ffffff;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+    .nav-tabs {
+        flex-direction: column; /* Stack tabs vertically on mobile */
+        padding: 0.25rem;
+    }
+    .nav-tabs a {
+        padding: 0.75rem; /* More touch-friendly size */
+        margin: 0.25rem 0; /* Vertical spacing */
+    }
 }
