@@ -6,16 +6,20 @@
     <title>MDT Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .dark-mode { background-color: #f3f4f6; color: #1f2937; }
-        .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
-        .dark-mode .bg-gray-700 { background-color: #d1d5db; }
+        body { background-color: #1f2937; color: #f3f4f6; } /* Default dark mode */
+        .light-mode { background-color: #f3f4f6; color: #1f2937; } /* Light mode */
+        .light-mode .bg-gray-900 { background-color: #ffffff; }
+        .light-mode .bg-gray-800 { background-color: #e5e7eb; }
+        .light-mode .bg-gray-700 { background-color: #d1d5db; }
+        .light-mode .text-white { color: #1f2937; }
         .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
         tr:hover { background-color: rgba(0, 0, 0, 0.1); }
         @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
         .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
+        .light-mode .tips { background-color: #dbeafe; border-color: #3b82f6; color: #1e3a8a; }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-6">
+<body class="min-h-screen p-6">
     <nav class="sticky-nav flex justify-between items-center mb-6 p-4 bg-gray-900 rounded-lg shadow">
         <div class="flex space-x-4">
             <a href="index.html" class="text-blue-400 font-semibold">Dashboard</a>
@@ -56,14 +60,14 @@
         loadData(() => showTab('overview'));
 
         document.getElementById('darkModeToggle').addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
+            document.body.classList.toggle('light-mode');
             const btn = document.getElementById('darkModeToggle');
-            btn.textContent = document.body.classList.contains('dark-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+            btn.textContent = document.body.classList.contains('light-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
+            localStorage.setItem('lightMode', document.body.classList.contains('light-mode'));
         });
 
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
+        if (localStorage.getItem('lightMode') === 'true') {
+            document.body.classList.add('light-mode');
             document.getElementById('darkModeToggle').textContent = 'Toggle Dark Mode';
         }
 
