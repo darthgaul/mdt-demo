@@ -6,27 +6,133 @@
     <title>MDT Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .dashboard-container {
+            display: flex;
+            gap: 1rem;
+            height: calc(100vh - 120px); /* Adjusted for nav (60px), padding (60px total) */
+            min-height: 400px; /* Minimum height for content */
+        }
+        .sidebar {
+            width: 300px;
+            min-width: 250px;
+            background-color: #2d3748;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+        .main-content {
+            flex: 1;
+            min-width: 0; /* Prevents overflow */
+            background-color: #2d3748;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-y: auto;
+        }
+        .light-mode .sidebar, .light-mode .main-content {
+            background-color: #e5e7eb;
+        }
+        .toggle-sidebar {
+            display: none;
+            background-color: #2563eb;
+            color: white;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            width: 100%;
+        }
+        .toggle-sidebar:hover {
+            background-color: #1d4ed8;
+        }
+        @media (max-width: 1024px) {
+            .dashboard-container {
+                flex-direction: column;
+                height: auto;
+            }
+            .sidebar {
+                width: 100%;
+                display: none;
+            }
+            .sidebar.active {
+                display: block;
+            }
+            .toggle-sidebar {
+                display: block;
+            }
+            .main-content {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body class="min-h-screen p-6">
     <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
 
     <div class="tips">
         <h4 class="text-lg font-semibold">Tips</h4>
-        <p>Overview: See your dispatches or team status (e.g., active calls, officer status). Route: Start your patrol route (e.g., "Alpha-5" for Officer Alex Reed).</p>
+        <p>Overview: See your dispatches or team status. Route: Start your patrol route. Use the sidebar toggles on mobile.</p>
     </div>
 
-    <div class="flex space-x-4 mb-4">
-        <button onclick="showTab('overview')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Overview</button>
-        <button onclick="showTab('route')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Route</button>
+    <div class="dashboard-container">
+        <div class="sidebar" id="unitsSidebar">
+            <button class="toggle-sidebar" onclick="toggleSidebar('unitsSidebar')">Toggle Units</button>
+            <h3 class="text-lg font-semibold mb-2">Active Units</h3>
+            <div id="unitsList"></div>
+        </div>
+        <div class="main-content">
+            <div class="flex space-x-4 mb-4">
+                <button onclick="showTab('overview')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Overview</button>
+                <button onclick="showTab('route')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Route</button>
+            </div>
+            <div id="dashboardContent"></div>
+        </div>
+        <div class="sidebar" id="dispatchSidebar">
+            <button class="toggle-sidebar" onclick="toggleSidebar('dispatchSidebar')">Toggle Dispatches</button>
+            <h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>
+            <div id="dispatchList"></div>
+        </div>
     </div>
-    <div id="dashboardContent" class="bg-gray-800 p-4 rounded-lg shadow"></div>
 
     <div id="alert" class="fixed top-4 right-4 bg-red-600 text-white p-4 rounded shadow hidden"></div>
 
     <script src="scripts.js"></script>
     <script src="common.js"></script>
     <script>
-        loadData(() => showTab('overview'));
+        loadData(() => {
+            showTab('overview');
+            updateUnitsList();
+            updateDispatchList();
+        });
+
+        function toggleSidebar(id) {
+            const sidebar = document.getElementById(id);
+            sidebar.classList.toggle('active');
+        }
+
+        function updateUnitsList() {
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Status</th></tr>';
+            employeesData.forEach(emp => {
+                const isOnline = usersData.some(u => u.username === emp.name);
+                const statusColor = isOnline ? 'text-green-500' : 'text-red-500';
+                html += `<tr><td class="p-2">${emp.name}</td><td class="p-2 ${statusColor}">${isOnline ? 'Online' : 'Offline'}</td></tr>`;
+            });
+            html += '</table>';
+            document.getElementById('unitsList').innerHTML = html;
+        }
+
+        function updateDispatchList() {
+            const active = dispatchData.filter(d => d.status !== 'Completed');
+            let html = active.length ? '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Status</th></tr>' : '<p class="text-center">No active dispatches.</p>';
+            active.forEach(disp => {
+                const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500' }[disp.status] || 'text-gray-500';
+                html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.issue}</td><td class="p-2 ${statusColor}">${disp.status}</td></tr>`;
+            });
+            if (active.length) html += '</table>';
+            document.getElementById('dispatchList').innerHTML = html;
+        }
 
         function showTab(tab) {
             const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
@@ -40,7 +146,8 @@
                     html += '<h3 class="text-lg font-semibold mb-2">Officer Status</h3><table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Route</th><th class="p-2 bg-gray-700">Start</th><th class="p-2 bg-gray-700">End</th><th class="p-2 bg-gray-700">Status</th></tr>';
                     employeesData.forEach(emp => {
                         const isOnline = usersData.some(u => u.username === emp.name);
-                        html += `<tr><td class="p-2 ${isOnline ? 'text-green-500' : 'text-red-500'}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2">${isOnline ? 'Online' : 'Offline'}</td></tr>`;
+                        const statusColor = isOnline ? 'text-green-500' : 'text-red-500';
+                        html += `<tr><td class="p-2 ${statusColor}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2">${isOnline ? 'Online' : 'Offline'}</td></tr>`;
                     });
                     html += '</table>';
                     setInterval(checkDispatchTimeouts, 60000);
@@ -49,8 +156,8 @@
                     html += '<h3 class="text-lg font-semibold mb-2">Your Active Dispatches</h3>';
                     html += active.length ? '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' : '<p class="text-center">No active dispatches assigned to you.</p>';
                     active.forEach(disp => {
-                        const statusColor = { Pending: 'yellow-500', Assigned: 'blue-500', 'In Progress': 'orange-500', Completed: 'green-500' }[disp.status];
-                        html += `<div class="bg-gray-700 p-3 rounded shadow"><p><strong>ID:</strong> ${disp.id}</p><p><strong>Issue:</strong> ${disp.issue}</p><p><strong>Property:</strong> ${disp.property}</p><p><strong>Status:</strong> <span class="text-${statusColor}">${disp.status}</span></p></div>`;
+                        const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500', Completed: 'text-green-500' }[disp.status];
+                        html += `<div class="bg-gray-700 p-3 rounded shadow"><p><strong>ID:</strong> ${disp.id}</p><p><strong>Issue:</strong> ${disp.issue}</p><p><strong>Property:</strong> ${disp.property}</p><p><strong>Status:</strong> <span class="${statusColor}">${disp.status}</span></p></div>`;
                     });
                     if (active.length) html += '</div>';
                 }
