@@ -5,175 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Dispatch</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .dark-mode { background-color: #f3f4f6; color: #1f2937; }
-        .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
-        .dark-mode .bg-gray-700 { background-color: #d1d5db; }
-        .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
-        tr:hover { background-color: rgba(0, 0, 0, 0.1); }
-        @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
-        .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-6">
-    <nav class="sticky-nav flex justify-between items-center mb-6 p-4 bg-gray-900 rounded-lg shadow">
-        <div class="flex space-x-4">
-            <a href="index.html" class="hover:underline">Dashboard</a>
-            <a href="properties.html" class="hover:underline">Properties</a>
-            <a href="people.html" class="hover:underline">People</a>
-            <a href="dispatch.html" class="text-blue-400 font-semibold">Dispatch</a>
-            <a href="reports.html" class="hover:underline">Reports</a>
-            <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
-            <a href="map.html" class="hover:underline">Map</a>
-        </div>
-        <div class="flex space-x-4 items-center">
-            <span id="userInfo" class="text-sm"></span>
-            <button id="darkModeToggle" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm shadow">Toggle Light Mode</button>
-            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
-        </div>
-    </nav>
+<body class="min-h-screen p-6">
+    <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
 
     <div class="tips">
         <h4 class="text-lg font-semibold">Tips</h4>
-        <p>Active: View and manage current calls. History: See completed calls, restore if needed. Assign officers via dropdown (e.g., "Officer Alex Reed").</p>
+        <p>Active: View and manage current calls (assign officers, mark complete). History: See completed calls (restore if needed). Officers see only their assigned calls.</p>
     </div>
 
-    <h3 class="text-xl font-semibold mb-2">Dispatch Hub</h3>
     <div class="flex space-x-4 mb-4">
         <button onclick="showTab('active')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Active</button>
-        <button onclick="showTab('history')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">History</button>
+        <button onclick="showTab('history')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">History</button>
     </div>
-    <div id="dispatchList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
+    <div id="dispatchContent" class="bg-gray-800 p-4 rounded-lg shadow"></div>
 
     <div id="alert" class="fixed top-4 right-4 bg-green-600 text-white p-4 rounded shadow hidden"></div>
 
     <script src="scripts.js"></script>
+    <script src="common.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) window.location.href = 'login.html';
-        if (user.group !== 'Managers' && user.group !== 'Supervisors' && user.group !== 'Dispatchers') document.getElementById('managerLink').style.display = 'none';
-        document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
-
         loadData(() => showTab('active'));
 
-        document.getElementById('darkModeToggle').addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const btn = document.getElementById('darkModeToggle');
-            btn.textContent = document.body.classList.contains('dark-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-        });
-
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-            document.getElementById('darkModeToggle').textContent = 'Toggle Dark Mode';
-        }
-
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
-        }
-
-        let currentTab = 'active';
-        let refreshInterval = null;
-
         function showTab(tab) {
-            currentTab = tab;
-            if (refreshInterval) clearTimeout(refreshInterval);
+            const isOfficer = user.group === 'Officers';
+            const isDispatcher = ['Dispatchers', 'Managers', 'Supervisors'].includes(user.group);
+            let html = '';
 
-            const isDispatcherOrAbove = ['Managers', 'Supervisors', 'Dispatchers'].includes(user.group);
-            const active = dispatchData.filter(d => d.status !== 'Completed').slice(0, 10);
-            const history = dispatchData.filter(d => d.status === 'Completed');
-
-            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Elapsed</th><th class="p-2 bg-gray-700">Caller</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Assigned</th>';
-            if (isDispatcherOrAbove) html += '<th class="p-2 bg-gray-700">Actions</th>';
-            html += '</tr>';
-
-            const data = tab === 'active' ? active : history;
-            if (!data.length) {
-                html += `<tr><td colspan="${isDispatcherOrAbove ? 9 : 8}" class="p-2 text-center">No ${tab} dispatches</td></tr>`;
-            } else {
-                data.forEach(disp => {
-                    const elapsed = calculateElapsed(disp.dateTime);
-                    const elapsedText = `${elapsed.minutes}m ${elapsed.seconds}s`;
-                    const elapsedClass = elapsed.minutes >= 15 && tab === 'active' ? 'text-red-500' : '';
-                    const statusColor = { Pending: 'yellow-500', Assigned: 'blue-500', 'In Progress': 'orange-500', Completed: 'green-500' }[disp.status];
-                    html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.dateTime}</td><td class="p-2 ${elapsedClass}">${elapsedText}</td><td class="p-2">${disp.caller}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.issue}</td><td class="p-2 text-${statusColor}">${disp.status}</td>`;
-                    html += `<td class="p-2"><select id="assign-${disp.id}" onchange="assignOfficer('${disp.id}', this.value)" class="bg-gray-700 text-white p-1 rounded ${!isDispatcherOrAbove && disp.assignedOfficer !== user.username ? 'cursor-not-allowed' : ''}" ${!isDispatcherOrAbove && disp.assignedOfficer !== user.username ? 'disabled' : ''}><option value="">Unassigned</option>`;
-                    employeesData.forEach(emp => {
-                        html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`;
-                    });
-                    html += `</select></td>`;
-                    if (isDispatcherOrAbove) {
-                        html += `<td class="p-2 space-x-2">`;
-                        if (tab === 'active') {
-                            html += `<button onclick="updateStatus('${disp.id}', 'Completed')" class="bg-green-600 hover:bg-green-700 text-white p-1 rounded text-sm shadow">Complete</button>`;
-                        } else {
-                            html += `<button onclick="restoreDispatch('${disp.id}')" class="bg-red-600 hover:bg-red-700 text-white p-1 rounded text-sm shadow">Restore</button>`;
+            if (tab === 'active') {
+                const activeDispatches = dispatchData.filter(d => d.status !== 'Completed');
+                html += '<h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>';
+                if (activeDispatches.length) {
+                    html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Time</th><th class="p-2 bg-gray-700">Officer</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
+                    activeDispatches.forEach(disp => {
+                        if (!isOfficer || disp.assignedOfficer === user.username) {
+                            const elapsed = calculateElapsed(disp.dateTime);
+                            const timeColor = elapsed.minutes >= 15 ? 'text-red-500' : '';
+                            html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2 ${timeColor}">${elapsed.hours}h ${elapsed.minutes}m</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td>`;
+                            if (isDispatcher) {
+                                html += '<td class="p-2 space-x-2"><select onchange="assignOfficer(this, \'' + disp.id + '\')" class="bg-gray-700 text-white p-1 rounded">';
+                                html += '<option value="">Assign</option>';
+                                employeesData.forEach(emp => html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`);
+                                html += '</select><button onclick="completeDispatch(\'' + disp.id + '\')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Complete</button></td>';
+                            }
+                            html += '</tr>';
                         }
-                        html += `</td>`;
-                    }
-                    html += `</tr>`;
-                });
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p class="text-center">No active dispatches.</p>';
+                }
+            } else if (tab === 'history') {
+                const completedDispatches = dispatchData.filter(d => d.status === 'Completed');
+                html += '<h3 class="text-lg font-semibold mb-2">Dispatch History</h3>';
+                if (completedDispatches.length) {
+                    html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
+                    completedDispatches.forEach(disp => {
+                        if (!isOfficer || disp.assignedOfficer === user.username) {
+                            html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td>`;
+                            if (isDispatcher) {
+                                html += '<td class="p-2"><button onclick="restoreDispatch(\'' + disp.id + '\')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow">Restore</button></td>';
+                            }
+                            html += '</tr>';
+                        }
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p class="text-center">No completed dispatches.</p>';
+                }
             }
-            html += '</table>';
-            if (isDispatcherOrAbove && tab === 'active') {
-                html += '<h4 class="text-lg font-semibold mt-4">Officer Availability</h4><div class="grid grid-cols-2 sm:grid-cols-4 gap-2">';
-                employeesData.forEach(emp => {
-                    const isOnline = usersData.some(u => u.username === emp.name);
-                    html += `<div class="bg-gray-700 p-2 rounded shadow"><p class="${isOnline ? 'text-green-500' : 'text-red-500'}">${emp.name}</p><p>${emp.route}</p></div>`;
-                });
-                html += '</div>';
-            }
-            document.getElementById('dispatchList').innerHTML = html;
-
-            // Prevent refresh while dropdown is focused
-            document.querySelectorAll('select').forEach(select => {
-                select.addEventListener('focus', () => clearTimeout(refreshInterval));
-                select.addEventListener('blur', () => {
-                    if (currentTab === 'active') refreshInterval = setTimeout(() => showTab('active'), 1000);
-                });
-            });
-
-            if (tab === 'active') refreshInterval = setTimeout(() => { if (currentTab === 'active') showTab('active'); }, 1000);
+            document.getElementById('dispatchContent').innerHTML = html;
         }
 
-        function updateStatus(id, status) {
-            const dispatch = dispatchData.find(d => d.id === id);
+        function assignOfficer(select, dispatchId) {
+            const officer = select.value;
+            const dispatch = dispatchData.find(d => d.id === dispatchId);
             if (dispatch) {
-                dispatch.status = status;
+                dispatch.assignedOfficer = officer || null;
+                dispatch.status = officer ? 'Assigned' : 'Pending';
                 saveDispatch();
                 showTab('active');
-                showAlert(`Dispatch ${id} updated to ${status}`);
             }
         }
 
-        function assignOfficer(id, officer) {
-            const dispatch = dispatchData.find(d => d.id === id);
+        function completeDispatch(dispatchId) {
+            const dispatch = dispatchData.find(d => d.id === dispatchId);
             if (dispatch) {
-                dispatch.assignedOfficer = officer || '';
-                if (officer && dispatch.status === 'Pending') dispatch.status = 'Assigned';
+                dispatch.status = 'Completed';
                 saveDispatch();
-                showTab(currentTab);
-                showAlert(`Dispatch ${id} assigned to ${officer || 'Unassigned'}`);
+                showAlert('Dispatch completed', 'bg-green-600');
+                showTab('active');
             }
         }
 
-        function restoreDispatch(id) {
-            const dispatch = dispatchData.find(d => d.id === id);
+        function restoreDispatch(dispatchId) {
+            const dispatch = dispatchData.find(d => d.id === dispatchId);
             if (dispatch) {
                 dispatch.status = 'Pending';
-                dispatch.assignedOfficer = '';
                 saveDispatch();
+                showAlert('Dispatch restored', 'bg-green-600');
                 showTab('history');
-                showAlert(`Dispatch ${id} restored to Active`);
             }
-        }
-
-        function showAlert(message) {
-            const alert = document.getElementById('alert');
-            alert.textContent = message;
-            alert.classList.remove('hidden');
-            setTimeout(() => alert.classList.add('hidden'), 3000);
         }
     </script>
 </body>
