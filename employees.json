@@ -1,22 +1,42 @@
 [
-    {"id": "E001", "name": "Officer Alex Reed", "group": "Officer", "schedule": {"start": "2025-03-11T18:00:00Z", "end": "2025-03-12T02:00:00Z"}, "route": "Alpha-5"},
-    {"id": "E002", "name": "Officer Bella Cruz", "group": "Officer", "schedule": {"start": "2025-03-11T18:00:00Z", "end": "2025-03-12T02:00:00Z"}, "route": "Bravo-5"},
-    {"id": "E003", "name": "Officer Chris Dunn", "group": "Officer", "schedule": {"start": "2025-03-11T18:00:00Z", "end": "2025-03-12T02:00:00Z"}, "route": "Charlie-5"},
-    {"id": "E004", "name": "Officer Dana Ellis", "group": "Officer", "schedule": {"start": "2025-03-11T18:00:00Z", "end": "2025-03-12T02:00:00Z"}, "route": "Delta-5"},
-    {"id": "E005", "name": "Officer Evan Ford", "group": "Officer", "schedule": {"start": "2025-03-11T18:00:00Z", "end": "2025-03-12T02:00:00Z"}, "route": "Echo-5"},
-    {"id": "E006", "name": "Officer Fiona Gray", "group": "Officer", "schedule": {"start": "2025-03-11T20:00:00Z", "end": "2025-03-12T04:00:00Z"}, "route": "Foxtrot-5"},
-    {"id": "E007", "name": "Officer Greg Hale", "group": "Officer", "schedule": {"start": "2025-03-11T20:00:00Z", "end": "2025-03-12T04:00:00Z"}, "route": "Golf-5"},
-    {"id": "E008", "name": "Officer Hana Ito", "group": "Officer", "schedule": {"start": "2025-03-11T20:00:00Z", "end": "2025-03-12T04:00:00Z"}, "route": "Hotel-5"},
-    {"id": "E009", "name": "Officer Ian James", "group": "Officer", "schedule": {"start": "2025-03-11T20:00:00Z", "end": "2025-03-12T04:00:00Z"}, "route": "India-5"},
-    {"id": "E010", "name": "Officer Jada Kim", "group": "Officer", "schedule": {"start": "2025-03-11T20:00:00Z", "end": "2025-03-12T04:00:00Z"}, "route": "Juliett-5"},
-    {"id": "E011", "name": "Officer Kyle Lane", "group": "Officer", "schedule": {"start": "2025-03-11T22:00:00Z", "end": "2025-03-12T06:00:00Z"}, "route": "Kilo-5"},
-    {"id": "E012", "name": "Officer Lila Moss", "group": "Officer", "schedule": {"start": "2025-03-11T22:00:00Z", "end": "2025-03-12T06:00:00Z"}, "route": "Lima-5"},
-    {"id": "E013", "name": "Officer Mike Nash", "group": "Officer", "schedule": {"start": "2025-03-11T22:00:00Z", "end": "2025-03-12T06:00:00Z"}, "route": "Mike-5"},
-    {"id": "E014", "name": "Officer Nina Ortiz", "group": "Officer", "schedule": {"start": "2025-03-11T22:00:00Z", "end": "2025-03-12T06:00:00Z"}, "route": "November-5"},
-    {"id": "E015", "name": "Officer Owen Park", "group": "Officer", "schedule": {"start": "2025-03-11T22:00:00Z", "end": "2025-03-12T06:00:00Z"}, "route": "Oscar-5"},
-    {"id": "E016", "name": "Officer Pia Quinn", "group": "Officer", "schedule": {"start": "2025-03-12T00:00:00Z", "end": "2025-03-12T08:00:00Z"}, "route": "Papa-5"},
-    {"id": "E017", "name": "Officer Ray Silva", "group": "Officer", "schedule": {"start": "2025-03-12T00:00:00Z", "end": "2025-03-12T08:00:00Z"}, "route": "Quebec-5"},
-    {"id": "E018", "name": "Officer Sara Tate", "group": "Officer", "schedule": {"start": "2025-03-12T00:00:00Z", "end": "2025-03-12T08:00:00Z"}, "route": "Romeo-5"},
-    {"id": "E019", "name": "Supervisor Tom Vega", "group": "Supervisor", "schedule": {"start": "2025-03-11T18:00:00Z", "end": "2025-03-12T02:00:00Z"}, "route": "Sierra-5"},
-    {"id": "E020", "name": "Supervisor Uma West", "group": "Supervisor", "schedule": {"start": "2025-03-11T20:00:00Z", "end": "2025-03-12T04:00:00Z"}, "route": "Tango-5"}
+    {
+        "name": "Tom Vega",
+        "route": "Alpha-1",
+        "schedule": {
+            "start": "2025-03-13T08:00:00",
+            "end": "2025-03-13T16:00:00"
+        },
+        "location": "317 East Joshua Road",
+        "department": "Supervisors"
+    },
+    {
+        "name": "Alex Reed",
+        "route": "Alpha-5",
+        "schedule": {
+            "start": "2025-03-13T09:00:00",
+            "end": "2025-03-13T17:00:00"
+        },
+        "location": "294 Alhambra Dr",
+        "department": "Officers"
+    },
+    {
+        "name": "Bella Cruz",
+        "route": "Alpha-4",
+        "schedule": {
+            "start": "2025-03-13T07:00:00",
+            "end": "2025-03-13T15:00:00"
+        },
+        "location": "239 Zancudo Ave",
+        "department": "Officers"
+    },
+    {
+        "name": "dispatch1",
+        "route": "N/A",
+        "schedule": {
+            "start": "2025-03-13T06:00:00",
+            "end": "2025-03-13T18:00:00"
+        },
+        "location": "Dispatch HQ",
+        "department": "Dispatchers"
+    }
 ]
