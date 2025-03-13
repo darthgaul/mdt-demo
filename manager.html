@@ -5,179 +5,151 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .dark-mode { background-color: #f3f4f6; color: #374151; }
-        .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
-        .dark-mode .bg-gray-700 { background-color: #d1d5db; }
-        .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
-        tr:hover { background-color: rgba(0, 0, 0, 0.1); }
-        @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
-        .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-6">
-    <nav class="sticky-nav flex justify-between items-center mb-6 p-4 bg-gray-900 rounded-lg shadow">
-        <div class="flex space-x-4">
-            <a href="index.html" class="hover:underline">Dashboard</a>
-            <a href="properties.html" class="hover:underline">Properties</a>
-            <a href="people.html" class="hover:underline">People</a>
-            <a href="dispatch.html" class="hover:underline">Dispatch</a>
-            <a href="reports.html" class="hover:underline">Reports</a>
-            <a href="manager.html" class="text-blue-400 font-semibold">Manager</a>
-            <a href="map.html" class="hover:underline">Map</a>
-        </div>
-        <div class="flex space-x-4 items-center">
-            <span id="userInfo" class="text-sm"></span>
-            <button id="darkModeToggle" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm shadow">Toggle Light Mode</button>
-            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
-        </div>
-    </nav>
+<body class="min-h-screen p-6">
+    <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
 
     <div class="tips">
         <h4 class="text-lg font-semibold">Tips</h4>
-        <p>Add properties/users, manage suspensions. Edit officers (e.g., change group), confirm deletes/suspensions carefully.</p>
+        <p>Add properties, manage employees (edit group/delete), and suspend/activate properties. All actions require confirmation.</p>
     </div>
 
-    <h3 class="text-xl font-semibold mb-2">Add New Property</h3>
-    <form id="propertyForm" class="bg-gray-800 p-4 rounded-lg mb-4 shadow" onsubmit="addProperty(event)">
-        <input type="text" name="propertyName" placeholder="Property Name" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
-        <input type="text" name="address" placeholder="Address" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
-        <input type="text" name="apt" placeholder="Apartment (optional)" class="bg-gray-700 text-white p-2 rounded w-full mb-2">
-        <input type="number" name="minHits" placeholder="Min Hits (1-4)" min="1" max="4" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
-        <textarea name="notes" placeholder="Notes" class="bg-gray-700 text-white p-2 rounded w-full mb-2" rows="3"></textarea>
-        <input type="text" name="emergencyContact" placeholder="Emergency Contact" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
-        <input type="text" name="accessCode" placeholder="Access Code" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded w-full shadow">Add Property</button>
-    </form>
+    <h3 class="text-xl font-semibold mb-2">Add Property</h3>
+    <div class="bg-gray-800 p-4 rounded-lg mb-4 shadow">
+        <div class="flex flex-wrap gap-2">
+            <input type="text" id="propId" placeholder="Property ID (e.g., PROP004)" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/4">
+            <input type="text" id="propName" placeholder="Property Name" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/4">
+            <input type="text" id="propAddress" placeholder="Address" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/3">
+            <input type="text" id="propApt" placeholder="Apt" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/6">
+            <input type="number" id="propHits" placeholder="Min Hits" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/6">
+            <input type="text" id="propNotes" placeholder="Notes" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/3">
+            <button onclick="addProperty()" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Add</button>
+        </div>
+    </div>
 
     <h3 class="text-xl font-semibold mb-2">Manage Employees</h3>
-    <div id="employeeList" class="bg-gray-800 p-4 rounded-lg mb-4 shadow"></div>
+    <div id="employeeList" class="bg-gray-800 p-4 rounded-lg mb-4 shadow overflow-x-auto"></div>
 
     <h3 class="text-xl font-semibold mb-2">Manage Properties</h3>
-    <div id="propertyList" class="bg-gray-800 p-4 rounded-lg shadow"></div>
+    <div id="propertyList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
 
     <div id="alert" class="fixed top-4 right-4 bg-green-600 text-white p-4 rounded shadow hidden"></div>
 
     <script src="scripts.js"></script>
+    <script src="common.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user || user.group !== 'Managers') window.location.href = 'index.html';
-        document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
+        if (user.group !== 'Managers') window.location.href = 'index.html';
 
         loadData(() => {
-            loadEmployees();
-            loadProperties();
-            const customProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
-            customProperties.forEach(prop => {
-                if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
-            });
+            showEmployees();
+            showProperties();
         });
 
-        document.getElementById('darkModeToggle').addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const btn = document.getElementById('darkModeToggle');
-            btn.textContent = document.body.classList.contains('dark-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-        });
+        function addProperty() {
+            const id = document.getElementById('propId').value.toUpperCase();
+            const name = document.getElementById('propName').value;
+            const address = document.getElementById('propAddress').value;
+            const apt = document.getElementById('propApt').value;
+            const hits = parseInt(document.getElementById('propHits').value) || 0;
+            const notes = document.getElementById('propNotes').value;
 
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-            document.getElementById('darkModeToggle').textContent = 'Toggle Dark Mode';
-        }
+            if (!id || !name || !address) {
+                showAlert('ID, Name, and Address are required', 'bg-red-600');
+                return;
+            }
+            if (propertiesData.some(p => p.id === id)) {
+                showAlert('Property ID already exists', 'bg-red-600');
+                return;
+            }
 
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
-        }
-
-        function addProperty(event) {
-            event.preventDefault();
-            const form = document.getElementById('propertyForm');
-            const newId = `PROP${(propertiesData.length + 1).toString().padStart(3, '0')}`;
-            const newProperty = {
-                id: newId,
-                propertyName: form.propertyName.value,
-                address: form.address.value,
-                apt: form.apt.value || '',
-                minHits: parseInt(form.minHits.value),
-                notes: form.notes.value || '',
-                emergencyContact: form.emergencyContact.value,
-                accessCode: form.accessCode.value,
-                suspended: false
-            };
-            propertiesData.push(newProperty);
+            const newProp = { id, propertyName: name, address, apt, minHits: hits, notes, suspended: false };
+            propertiesData.push(newProp);
+            let customProps = JSON.parse(localStorage.getItem('customProperties') || '[]');
+            customProps.push(newProp);
+            localStorage.setItem('customProperties', JSON.stringify(customProps));
             saveProperties();
-            form.reset();
-            loadProperties();
-            showAlert(`Property ${newId} added!`);
+
+            showAlert('Property added', 'bg-green-600');
+            showProperties();
+            document.getElementById('propId').value = '';
+            document.getElementById('propName').value = '';
+            document.getElementById('propAddress').value = '';
+            document.getElementById('propApt').value = '';
+            document.getElementById('propHits').value = '';
+            document.getElementById('propNotes').value = '';
         }
 
-        function loadEmployees() {
+        function showEmployees() {
             let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Group</th><th class="p-2 bg-gray-700">Actions</th></tr>';
             employeesData.forEach(emp => {
-                const userData = usersData.find(u => u.username === emp.name) || { group: emp.group };
-                html += `<tr><td class="p-2">${emp.name}</td><td class="p-2">${userData.group}</td><td class="p-2 space-x-2">`;
-                html += `<button onclick="editEmployee('${emp.name}')" class="bg-yellow-600 hover:bg-yellow-700 text-white p-1 rounded text-sm shadow">Edit</button>`;
-                html += `<button onclick="deleteEmployee('${emp.name}')" class="bg-red-600 hover:bg-red-700 text-white p-1 rounded text-sm shadow">Delete</button>`;
-                html += `</td></tr>`;
+                const userData = usersData.find(u => u.username === emp.name) || {};
+                html += `<tr><td class="p-2">${emp.name}</td><td class="p-2"><select onchange="editGroup(this, '${emp.name}')" class="bg-gray-700 text-white p-1 rounded">`;
+                ['Managers', 'Supervisors', 'Dispatchers', 'Officers'].forEach(group => {
+                    html += `<option value="${group}" ${userData.group === group ? 'selected' : ''}>${group}</option>`;
+                });
+                html += `</select></td><td class="p-2"><button onclick="deleteEmployee('${emp.name}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button></td></tr>`;
             });
             html += '</table>';
             document.getElementById('employeeList').innerHTML = html;
         }
 
-        function editEmployee(name) {
-            const emp = employeesData.find(e => e.name === name);
-            const userData = usersData.find(u => u.username === name);
-            const newGroup = prompt(`Edit group for ${name} (Managers, Supervisors, Dispatchers, Officers):`, userData.group);
-            if (newGroup && ['Managers', 'Supervisors', 'Dispatchers', 'Officers'].includes(newGroup)) {
-                userData.group = newGroup;
-                emp.group = newGroup;
-                localStorage.setItem('usersData', JSON.stringify(usersData));
-                loadEmployees();
-                showAlert(`${name} updated to ${newGroup}`);
-            }
-        }
-
-        function deleteEmployee(name) {
-            const confirmText = prompt(`Type "Delete this user" to confirm deletion of ${name}:`);
-            if (confirmText === "Delete this user") {
-                usersData = usersData.filter(u => u.username !== name);
-                employeesData = employeesData.filter(e => e.name !== name);
-                localStorage.setItem('usersData', JSON.stringify(usersData));
-                loadEmployees();
-                showAlert(`${name} deleted!`);
-            } else {
-                showAlert('Deletion cancelled');
-            }
-        }
-
-        function loadProperties() {
-            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
+        function showProperties() {
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
             propertiesData.forEach(prop => {
-                html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.suspended ? 'Suspended' : 'Active'}</td><td class="p-2"><button onclick="toggleSuspend('${prop.id}')" class="bg-${prop.suspended ? 'green' : 'red'}-600 hover:bg-${prop.suspended ? 'green' : 'red'}-700 text-white p-1 rounded text-sm shadow">${prop.suspended ? 'Activate' : 'Suspend'}</button></td></tr>`;
+                html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${prop.suspended ? 'Suspended' : 'Active'}</td><td class="p-2">`;
+                html += `<button onclick="${prop.suspended ? 'activateProperty' : 'suspendProperty'}('${prop.id}')" class="bg-${prop.suspended ? 'green' : 'yellow'}-600 hover:bg-${prop.suspended ? 'green' : 'yellow'}-700 p-1 rounded text-sm shadow">${prop.suspended ? 'Activate' : 'Suspend'}</button></td></tr>`;
             });
             html += '</table>';
             document.getElementById('propertyList').innerHTML = html;
         }
 
-        function toggleSuspend(id) {
-            const prop = propertiesData.find(p => p.id === id);
-            const confirmText = prompt(`Type "Suspend this property" to ${prop.suspended ? 'activate' : 'suspend'} ${prop.propertyName}:`);
-            if (confirmText === "Suspend this property") {
-                prop.suspended = !prop.suspended;
-                saveProperties();
-                loadProperties();
-                showAlert(`Property ${prop.propertyName} ${prop.suspended ? 'suspended' : 'activated'}!`);
+        function editGroup(select, name) {
+            if (confirm(`Change ${name}'s group to ${select.value}?`)) {
+                const userData = usersData.find(u => u.username === name);
+                if (userData) {
+                    userData.group = select.value;
+                    localStorage.setItem('users', JSON.stringify(usersData));
+                    showAlert(`Group updated for ${name}`, 'bg-green-600');
+                }
             } else {
-                showAlert('Action cancelled');
+                select.value = usersData.find(u => u.username === name).group;
             }
         }
 
-        function showAlert(message) {
-            const alert = document.getElementById('alert');
-            alert.textContent = message;
-            alert.classList.remove('hidden');
-            setTimeout(() => alert.classList.add('hidden'), 3000);
+        function deleteEmployee(name) {
+            if (confirm(`Delete ${name}? This cannot be undone.`)) {
+                employeesData = employeesData.filter(e => e.name !== name);
+                usersData = usersData.filter(u => u.username !== name);
+                localStorage.setItem('employees', JSON.stringify(employeesData));
+                localStorage.setItem('users', JSON.stringify(usersData));
+                showAlert(`${name} deleted`, 'bg-green-600');
+                showEmployees();
+            }
+        }
+
+        function suspendProperty(id) {
+            if (confirm(`Suspend property ${id}?`)) {
+                const prop = propertiesData.find(p => p.id === id);
+                if (prop) {
+                    prop.suspended = true;
+                    saveProperties();
+                    showAlert(`Property ${id} suspended`, 'bg-green-600');
+                    showProperties();
+                }
+            }
+        }
+
+        function activateProperty(id) {
+            if (confirm(`Activate property ${id}?`)) {
+                const prop = propertiesData.find(p => p.id === id);
+                if (prop) {
+                    prop.suspended = false;
+                    saveProperties();
+                    showAlert(`Property ${id} activated`, 'bg-green-600');
+                    showProperties();
+                }
+            }
         }
     </script>
 </body>
