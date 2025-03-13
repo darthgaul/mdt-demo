@@ -10,8 +10,8 @@
         .dashboard-container {
             display: flex;
             gap: 1rem;
-            height: calc(100vh - 120px); /* Adjusted for nav (60px), padding (60px total) */
-            min-height: 400px; /* Minimum height for content */
+            height: calc(100vh - 120px);
+            min-height: 400px;
         }
         .sidebar {
             width: 300px;
@@ -24,7 +24,7 @@
         }
         .main-content {
             flex: 1;
-            min-width: 0; /* Prevents overflow */
+            min-width: 0;
             background-color: #2d3748;
             padding: 1rem;
             border-radius: 0.5rem;
@@ -46,6 +46,38 @@
         }
         .toggle-sidebar:hover {
             background-color: #1d4ed8;
+        }
+        .unit-group {
+            margin-bottom: 1rem;
+        }
+        .unit-group h4 {
+            cursor: pointer;
+            padding: 0.5rem;
+            background-color: #374151;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .unit-group.collapsed .unit-list {
+            display: none;
+        }
+        .unit-card {
+            background-color: #4b5563;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .light-mode .unit-group h4 {
+            background-color: #d1d5db;
+        }
+        .light-mode .unit-card {
+            background-color: #e5e7eb;
+        }
+        .status-tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
         }
         @media (max-width: 1024px) {
             .dashboard-container {
@@ -80,6 +112,12 @@
         <div class="sidebar" id="unitsSidebar">
             <button class="toggle-sidebar" onclick="toggleSidebar('unitsSidebar')">Toggle Units</button>
             <h3 class="text-lg font-semibold mb-2">Active Units</h3>
+            <select id="unitFilter" class="bg-gray-700 text-white p-2 rounded w-full mb-2" onchange="updateUnitsList()">
+                <option value="">All Departments</option>
+                <option value="Supervisors">Supervisors</option>
+                <option value="Dispatchers">Dispatchers</option>
+                <option value="Officers">Officers</option>
+            </select>
             <div id="unitsList"></div>
         </div>
         <div class="main-content">
@@ -112,15 +150,76 @@
             sidebar.classList.toggle('active');
         }
 
+        function toggleUnitGroup(groupId) {
+            const group = document.getElementById(groupId);
+            group.classList.toggle('collapsed');
+        }
+
         function updateUnitsList() {
-            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Status</th></tr>';
+            const filter = document.getElementById('unitFilter').value;
+            const groupedUnits = {};
             employeesData.forEach(emp => {
-                const isOnline = usersData.some(u => u.username === emp.name);
-                const statusColor = isOnline ? 'text-green-500' : 'text-red-500';
-                html += `<tr><td class="p-2">${emp.name}</td><td class="p-2 ${statusColor}">${isOnline ? 'Online' : 'Offline'}</td></tr>`;
+                const dept = emp.department || 'Other';
+                if (!groupedUnits[dept]) groupedUnits[dept] = [];
+                groupedUnits[dept].push(emp);
             });
-            html += '</table>';
-            document.getElementById('unitsList').innerHTML = html;
+
+            let html = '';
+            Object.keys(groupedUnits).forEach(dept => {
+                if (!filter || filter === dept) {
+                    html += `<div class="unit-group" id="group-${dept}"><h4 onclick="toggleUnitGroup('group-${dept}')">${dept}</h4><div class="unit-list">`;
+                    groupedUnits[dept].forEach(emp => {
+                        const isOnline = usersData.some(u => u.username === emp.name);
+                        const currentTime = new Date();
+                        const isOnDuty = currentTime >= new Date(emp.schedule.start) && currentTime <= new Date(emp.schedule.end);
+                        let status = 'Offline';
+                        let statusClass = 'bg-red-500';
+                        if (isOnline && isOnDuty) {
+                            status = 'Available';
+                            statusClass = 'bg-green-500';
+                        } else if (isOnline && !isOnDuty) {
+                            status = 'Off Duty';
+                            statusClass = 'bg-gray-500';
+                        }
+                        html += `<div class="unit-card"><p><strong>${emp.name}</strong> <span class="status-tag ${statusClass}">${status}</span></p>`;
+                        html += `<p><strong>Location:</strong> ${emp.location || 'N/A'}</p>`;
+                        html += `<p><strong>Department:</strong> ${emp.department || 'N/A'}</p>`;
+                        html += `<div class="flex space-x-2 mt-2">
+                            <button onclick="messageUnit('${emp.name}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow">Message</button>
+                            <button onclick="setStatus('${emp.name}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Set Status</button>
+                            <button onclick="assignCall('${emp.name}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Assign Call</button>
+                        </div></div>`;
+                    });
+                    html += '</div></div>';
+                }
+            });
+            document.getElementById('unitsList').innerHTML = html || '<p class="text-center">No units found.</p>';
+        }
+
+        function messageUnit(name) {
+            const message = prompt(`Message to ${name}:`);
+            if (message) showAlert(`Message sent to ${name}: ${message}`, 'bg-green-600');
+        }
+
+        function setStatus(name) {
+            const status = prompt(`Set status for ${name} (e.g., Available, Busy, On Scene):`);
+            if (status) showAlert(`Status for ${name} set to ${status}`, 'bg-green-600');
+        }
+
+        function assignCall(name) {
+            const callId = prompt(`Enter dispatch ID to assign to ${name}:`);
+            if (callId) {
+                const dispatch = dispatchData.find(d => d.id === callId && d.status !== 'Completed');
+                if (dispatch) {
+                    dispatch.assignedOfficer = name;
+                    dispatch.status = 'Assigned';
+                    saveDispatch();
+                    showAlert(`Dispatch ${callId} assigned to ${name}`, 'bg-green-600');
+                    updateDispatchList();
+                } else {
+                    showAlert(`Dispatch ${callId} not found or completed`, 'bg-red-600');
+                }
+            }
         }
 
         function updateDispatchList() {
