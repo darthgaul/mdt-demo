@@ -5,137 +5,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Reports</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .dark-mode { background-color: #f3f4f6; color: #374151; }
-        .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
-        .dark-mode .bg-gray-700 { background-color: #d1d5db; }
-        .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
-        tr:hover { background-color: rgba(0, 0, 0, 0.1); }
-        @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
-        .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-6">
-    <nav class="sticky-nav flex justify-between items-center mb-6 p-4 bg-gray-900 rounded-lg shadow">
-        <div class="flex space-x-4">
-            <a href="index.html" class="hover:underline">Dashboard</a>
-            <a href="properties.html" class="hover:underline">Properties</a>
-            <a href="people.html" class="hover:underline">People</a>
-            <a href="dispatch.html" class="hover:underline">Dispatch</a>
-            <a href="reports.html" class="text-blue-400 font-semibold">Reports</a>
-            <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
-            <a href="map.html" class="hover:underline">Map</a>
-        </div>
-        <div class="flex space-x-4 items-center">
-            <span id="userInfo" class="text-sm"></span>
-            <button id="darkModeToggle" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm shadow">Toggle Light Mode</button>
-            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
-        </div>
-    </nav>
+<body class="min-h-screen p-6">
+    <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
 
     <div class="tips">
         <h4 class="text-lg font-semibold">Tips</h4>
-        <p>Submit a report (e.g., Person ID: "P001", Property: "PROP001", Type: "Trespass"). View all reports or filter by person via People page links.</p>
+        <p>Submit a report below (e.g., Patrol Hit, Incident). View all reports in the table. Filter by person via URL (e.g., ?personId=P001).</p>
     </div>
 
     <h3 class="text-xl font-semibold mb-2">Submit Report</h3>
-    <form id="reportForm" class="bg-gray-800 p-4 rounded-lg mb-4 shadow" onsubmit="submitReport(event)">
-        <input type="text" name="personId" placeholder="Person ID (e.g., P001)" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
-        <input type="text" name="property" placeholder="Property ID (e.g., PROP001)" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
-        <input type="text" name="type" placeholder="Incident Type" class="bg-gray-700 text-white p-2 rounded w-full mb-2" required>
-        <textarea name="narrative" placeholder="Narrative" class="bg-gray-700 text-white p-2 rounded w-full mb-2" rows="3" required></textarea>
-        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded w-full shadow">Submit Report</button>
-    </form>
+    <div class="bg-gray-800 p-4 rounded-lg mb-4 shadow">
+        <div class="flex flex-wrap gap-2">
+            <input type="text" id="personId" placeholder="Person ID (e.g., P001)" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/4">
+            <input type="text" id="property" placeholder="Property ID (e.g., PROP001)" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/4">
+            <select id="type" class="bg-gray-700 text-white p-2 rounded"><option value="Patrol Hit">Patrol Hit</option><option value="Incident">Incident</option><option value="CTN Update">CTN Update</option></select>
+            <input type="text" id="narrative" placeholder="Narrative" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/3">
+            <button onclick="submitReport()" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Submit</button>
+        </div>
+    </div>
 
     <h3 class="text-xl font-semibold mb-2">Reports</h3>
-    <div id="reportList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
+    <div id="reportsList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
 
     <div id="alert" class="fixed top-4 right-4 bg-green-600 text-white p-4 rounded shadow hidden"></div>
 
     <script src="scripts.js"></script>
+    <script src="common.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) window.location.href = 'login.html';
-        if (user.group !== 'Managers' && user.group !== 'Supervisors' && user.group !== 'Dispatchers') document.getElementById('managerLink').style.display = 'none';
-        document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
-
         loadData(() => {
             const urlParams = new URLSearchParams(window.location.search);
             const personId = urlParams.get('personId');
-            if (personId) filterReportsByPerson(personId);
-            else loadReports();
+            showReports(personId);
         });
 
-        document.getElementById('darkModeToggle').addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const btn = document.getElementById('darkModeToggle');
-            btn.textContent = document.body.classList.contains('dark-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-        });
+        function submitReport() {
+            const personId = document.getElementById('personId').value || 'N/A';
+            const property = document.getElementById('property').value;
+            const type = document.getElementById('type').value;
+            const narrative = document.getElementById('narrative').value;
 
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-            document.getElementById('darkModeToggle').textContent = 'Toggle Dark Mode';
-        }
-
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
-        }
-
-        function loadReports() {
-            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Person ID</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
-            if (reportsData.length === 0) {
-                html += '<tr><td colspan="6" class="p-2 text-center">No reports available</td></tr>';
-            } else {
-                reportsData.forEach(report => {
-                    html += `<tr><td class="p-2">${report.id}</td><td class="p-2">${report.dateTime}</td><td class="p-2">${report.personId}</td><td class="p-2">${report.property}</td><td class="p-2">${report.type}</td><td class="p-2">${report.narrative}</td></tr>`;
-                });
+            if (!property && !narrative) {
+                showAlert('Property or narrative required', 'bg-red-600');
+                return;
             }
-            html += '</table>';
-            document.getElementById('reportList').innerHTML = html;
-        }
 
-        function filterReportsByPerson(personId) {
-            const personReports = reportsData.filter(r => r.personId === personId);
-            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
-            if (personReports.length > 0) {
-                personReports.forEach(report => {
-                    html += `<tr><td class="p-2">${report.id}</td><td class="p-2">${report.dateTime}</td><td class="p-2">${report.type}</td><td class="p-2">${report.narrative}</td></tr>`;
-                });
-            } else {
-                html += `<tr><td colspan="4" class="p-2 text-center">No reports found for ${personId}</td></tr>`;
-            }
-            html += '</table>';
-            document.getElementById('reportList').innerHTML = html;
-        }
-
-        function submitReport(event) {
-            event.preventDefault();
-            const form = document.getElementById('reportForm');
-            const newReport = {
+            const report = {
                 id: `R${(reportsData.length + 1).toString().padStart(3, '0')}`,
                 dateTime: new Date().toISOString(),
-                personId: form.personId.value,
-                property: form.property.value,
-                type: form.type.value,
-                narrative: form.narrative.value
+                personId,
+                property,
+                type,
+                narrative: `${user.username}: ${narrative}`
             };
-            reportsData.push(newReport);
-            if (peopleData.find(p => p.id === newReport.personId && newReport.type.includes('Trespass'))) {
-                peopleData.find(p => p.id === newReport.personId).ctnStatus = 'CTN Issued';
+            reportsData.push(report);
+            saveReports();
+
+            if (type === 'CTN Update' && personId !== 'N/A') {
+                const person = peopleData.find(p => p.id === personId);
+                if (person) {
+                    person.ctnStatus = 'CTN Issued';
+                }
             }
-            localStorage.setItem('reportsData', JSON.stringify(reportsData));
-            form.reset();
-            loadReports();
-            showAlert('Report submitted successfully!');
+
+            showAlert('Report submitted', 'bg-green-600');
+            showReports();
+            document.getElementById('personId').value = '';
+            document.getElementById('property').value = '';
+            document.getElementById('narrative').value = '';
         }
 
-        function showAlert(message) {
-            const alert = document.getElementById('alert');
-            alert.textContent = message;
-            alert.classList.remove('hidden');
-            setTimeout(() => alert.classList.add('hidden'), 3000);
+        function showReports(filterPersonId = null) {
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Person ID</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
+            const filteredReports = filterPersonId ? reportsData.filter(r => r.personId === filterPersonId) : reportsData;
+            if (filteredReports.length) {
+                filteredReports.forEach(report => {
+                    html += `<tr><td class="p-2">${report.id}</td><td class="p-2">${report.dateTime}</td><td class="p-2">${report.personId}</td><td class="p-2">${report.property}</td><td class="p-2">${report.type}</td><td class="p-2">${report.narrative}</td></tr>`;
+                });
+            } else {
+                html += '<tr><td colspan="6" class="p-2 text-center">No reports found</td></tr>';
+            }
+            html += '</table>';
+            document.getElementById('reportsList').innerHTML = html;
         }
     </script>
 </body>
