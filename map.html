@@ -5,132 +5,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Map</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .dark-mode { background-color: #f3f4f6; color: #374151; }
-        .dark-mode .bg-gray-800 { background-color: #e5e7eb; }
-        .dark-mode .bg-gray-700 { background-color: #d1d5db; }
-        .sticky-nav { position: sticky; top: 0; z-index: 10; background-color: inherit; }
-        #map { height: 500px; width: 100%; }
-        .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-6">
-    <nav class="sticky-nav flex justify-between items-center mb-6 p-4 bg-gray-900 rounded-lg shadow">
-        <div class="flex space-x-4">
-            <a href="index.html" class="hover:underline">Dashboard</a>
-            <a href="properties.html" class="hover:underline">Properties</a>
-            <a href="people.html" class="hover:underline">People</a>
-            <a href="dispatch.html" class="hover:underline">Dispatch</a>
-            <a href="reports.html" class="hover:underline">Reports</a>
-            <a href="manager.html" class="hover:underline" id="managerLink">Manager</a>
-            <a href="map.html" class="text-blue-400 font-semibold">Map</a>
-        </div>
-        <div class="flex space-x-4 items-center">
-            <span id="userInfo" class="text-sm"></span>
-            <button id="darkModeToggle" class="bg-gray-700 hover:bg-gray-600 p-2 rounded text-sm shadow">Toggle Light Mode</button>
-            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
-        </div>
-    </nav>
+<body class="min-h-screen p-6">
+    <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
 
     <div class="tips">
         <h4 class="text-lg font-semibold">Tips</h4>
-        <p>Search properties (e.g., "Axel Apartments") to zoom in. Click markers for details.</p>
+        <p>View all properties on the map (PROP001-003). Search by name (e.g., "Axel Apartments"). Click markers for details.</p>
     </div>
 
-    <h3 class="text-xl font-semibold mb-2">Property Map</h3>
-    <div class="flex space-x-2 mb-4">
-        <input type="text" id="mapSearch" placeholder="Search Property Name" class="bg-gray-700 text-white p-2 rounded w-full max-w-md">
-        <button onclick="searchMap()" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded shadow">Search</button>
+    <h3 class="text-xl font-semibold mb-2">Map Overview</h3>
+    <div class="bg-gray-800 p-4 rounded-lg mb-4 shadow">
+        <input type="text" id="mapSearch" placeholder="Search by property name" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/3 mb-2">
     </div>
-    <div id="map" class="bg-gray-800 rounded-lg"></div>
-    <div id="mapError" class="text-red-500 mt-2"></div>
+    <div id="map" class="bg-gray-800 p-4 rounded-lg shadow" style="height: 500px;"></div>
+
+    <div id="alert" class="fixed top-4 right-4 bg-green-600 text-white p-4 rounded shadow hidden"></div>
 
     <script src="scripts.js"></script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDcaYshVKliKeSBOQws4uso0JKPnLP476s&callback=initMap" async defer></script>
+    <script src="common.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) window.location.href = 'login.html';
-        if (user.group !== 'Managers' && user.group !== 'Supervisors' && user.group !== 'Dispatchers') document.getElementById('managerLink').style.display = 'none';
-        document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
-
         let map, markers = [];
+
         function initMap() {
-            console.log('initMap called');
             loadData(() => {
-                console.log('Data loaded, initializing map');
-                try {
-                    map = new google.maps.Map(document.getElementById('map'), {
-                        zoom: 12,
-                        center: { lat: 30.2672, lng: -97.7431 } // Austin, TX center
-                    });
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: { lat: 37.7749, lng: -122.4194 }, // Default: San Francisco
+                    zoom: 12
+                });
 
-                    const propertiesToMap = propertiesData.filter(prop => 
-                        ['PROP001', 'PROP002', 'PROP003'].includes(prop.id)
-                    );
-
-                    const markerData = [
-                        { id: 'PROP001', lat: 30.2710, lng: -97.7500, name: 'Axel Apartments', address: '123 Demo St, Austin, TX 78701' },
-                        { id: 'PROP002', lat: 30.2650, lng: -97.7400, name: 'Briarwood Estates', address: '456 Sample Rd, Austin, TX 78702' },
-                        { id: 'PROP003', lat: 30.2600, lng: -97.7300, name: 'Cedar Heights', address: '789 Test Ave, Austin, TX 78703' }
-                    ];
-
-                    markers = markerData.map(marker => {
-                        const mapMarker = new google.maps.Marker({
-                            position: { lat: marker.lat, lng: marker.lng },
+                propertiesData.forEach(prop => {
+                    if (prop.address) {
+                        const marker = new google.maps.Marker({
+                            position: { lat: parseFloat(prop.lat || 37.7749), lng: parseFloat(prop.lng || -122.4194) },
                             map: map,
-                            title: marker.name
+                            title: prop.propertyName
                         });
-
-                        const infoWindow = new google.maps.InfoWindow({
-                            content: `
-                                <div class="p-2">
-                                    <h4 class="font-bold">${marker.name}</h4>
-                                    <p>${marker.address}</p>
-                                    <a href="${marker.id.toLowerCase()}.html" class="text-blue-400 underline">View Details</a>
-                                </div>
-                            `
+                        marker.addListener('click', () => {
+                            if (['PROP001', 'PROP002', 'PROP003'].includes(prop.id)) {
+                                window.location.href = `${prop.id.toLowerCase()}.html`;
+                            } else {
+                                showAlert(`${prop.propertyName}: ${prop.address}`, 'bg-blue-600');
+                            }
                         });
+                        markers.push(marker);
+                    }
+                });
 
-                        mapMarker.addListener('click', () => {
-                            infoWindow.open(map, mapMarker);
-                        });
-
-                        return mapMarker;
+                document.getElementById('mapSearch').addEventListener('input', (e) => {
+                    const search = e.target.value.toLowerCase();
+                    markers.forEach(marker => {
+                        const title = marker.getTitle().toLowerCase();
+                        marker.setVisible(search === '' || title.includes(search));
                     });
-                    console.log('Map initialized with markers');
-                } catch (error) {
-                    document.getElementById('mapError').innerHTML = 'Map failed to load: ' + error.message;
-                    console.error('Map error:', error);
-                }
+                });
             });
-        }
-
-        document.getElementById('darkModeToggle').addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            const btn = document.getElementById('darkModeToggle');
-            btn.textContent = document.body.classList.contains('dark-mode') ? 'Toggle Dark Mode' : 'Toggle Light Mode';
-            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
-        });
-
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-            document.getElementById('darkModeToggle').textContent = 'Toggle Dark Mode';
-        }
-
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = 'login.html';
-        }
-
-        function searchMap() {
-            const query = document.getElementById('mapSearch').value.toLowerCase();
-            const marker = markers.find(m => m.title.toLowerCase().includes(query));
-            if (marker) {
-                map.setCenter(marker.getPosition());
-                map.setZoom(15);
-            } else {
-                alert('Property not found on map');
-            }
         }
     </script>
 </body>
