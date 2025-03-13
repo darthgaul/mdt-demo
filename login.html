@@ -9,14 +9,25 @@
     <style>
         .logo {
             display: block;
-            width: 200px; /* Fixed smaller size */
+            width: 200px;
             height: auto;
-            margin: 0 auto 2rem auto; /* Centered with bottom spacing */
+            margin: 0 auto 2rem auto;
+        }
+        .alert {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background-color: #dc2626;
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            display: none;
         }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-6 flex flex-col items-center justify-center">
-    <img src="images/SW-S527-AD.png" alt="MDT Logo" class="logo">
+    <img src="./images/SW-S527-AD.png" alt="MDT Logo" class="logo">
     <div class="bg-gray-800 p-6 rounded-lg shadow w-full max-w-md">
         <h2 class="text-2xl font-semibold mb-4 text-center">MDT Login</h2>
         <input type="text" id="username" placeholder="Username" class="bg-gray-700 text-white p-2 rounded w-full mb-2">
@@ -28,10 +39,9 @@
         <p>Use these demo logins: <br>Supervisor Tom Vega / tom123 <br>Officer Alex Reed / alex123 <br>Officer Bella Cruz / bella123 <br>dispatch1 / dispass</p>
     </div>
 
-    <div id="alert" class="fixed top-4 right-4 bg-red-600 text-white p-4 rounded shadow hidden"></div>
+    <div id="alert" class="alert"></div>
 
     <script src="scripts.js"></script>
-    <script src="common.js"></script>
     <script>
         if (localStorage.getItem('user')) window.location.href = 'index.html';
 
@@ -54,9 +64,16 @@
                     localStorage.setItem('user', JSON.stringify(user));
                     window.location.href = 'index.html';
                 } else {
-                    showAlert('Invalid username or password', 'bg-red-600');
+                    showAlert('Invalid username or password');
                 }
             });
+        }
+
+        function showAlert(message) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.style.display = 'block';
+            setTimeout(() => alert.style.display = 'none', 3000);
         }
     </script>
 </body>
