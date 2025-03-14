@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
     <style>
@@ -168,6 +169,12 @@
     <script src="scripts.js"></script>
     <script src="common.js"></script>
     <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+
         let isLoaded = false;
 
         if (!isLoaded) {
@@ -181,16 +188,16 @@
 
         function toggleSidebar(id) {
             const sidebar = document.getElementById(id);
-            sidebar.classList.toggle('active');
+            if (sidebar) sidebar.classList.toggle('active');
         }
 
         function toggleUnitGroup(groupId) {
             const group = document.getElementById(groupId);
-            group.classList.toggle('collapsed');
+            if (group) group.classList.toggle('collapsed');
         }
 
         function updateUnitsList() {
-            const filter = document.getElementById('unitFilter').value;
+            const filter = document.getElementById('unitFilter')?.value;
             const onlineUnits = [
                 { name: "TomVega", location: "317 East Joshua Road", department: "Supervisors", status: "Available", statusCode: "10-8", statusClass: "bg-green-500" },
                 { name: "AlexReed", location: "294 Alhambra Dr", department: "Officers", status: "Available", statusCode: "10-8", statusClass: "bg-green-500" },
@@ -238,7 +245,10 @@
         }
 
         function showTab(tab) {
-            if (!user) return; // Prevent rendering if no user
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
 
             const isManagerOrSupervisor = user && ['Managers', 'Supervisors'].includes(user.group);
             let html = '';
