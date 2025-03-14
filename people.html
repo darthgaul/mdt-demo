@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT People</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
+    <script src="officers.js"></script>
 </head>
 <body class="min-h-screen p-6">
     <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
@@ -33,7 +35,15 @@
     <script src="scripts.js"></script>
     <script src="common.js"></script>
     <script>
-        loadData(() => {});
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            loadData(() => {});
+        });
 
         function searchPeople() {
             const simple = document.getElementById('simpleSearch').value.toLowerCase();
@@ -42,7 +52,10 @@
             const property = document.getElementById('propertyFilter').value.toUpperCase();
 
             if (!simple && !ctn && !behavior && !property) {
-                document.getElementById('peopleResults').innerHTML = '<p class="text-center">Enter search criteria above to see results.</p>';
+                const peopleResults = document.getElementById('peopleResults');
+                if (peopleResults) {
+                    peopleResults.innerHTML = '<p class="text-center">Enter search criteria above to see results.</p>';
+                }
                 return;
             }
 
@@ -67,7 +80,10 @@
                 html += '<tr><td colspan="7" class="p-2 text-center">No results found</td></tr>';
             }
             html += '</table>';
-            document.getElementById('peopleResults').innerHTML = html;
+            const peopleResults = document.getElementById('peopleResults');
+            if (peopleResults) {
+                peopleResults.innerHTML = html;
+            }
         }
 
         function showPerson(id) {
@@ -77,7 +93,10 @@
             html += '<h4 class="text-lg font-semibold mt-4">Reports</h4><table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Case Number</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
             reports.forEach(r => html += `<tr><td class="p-2">${r.caseNumber}</td><td class="p-2">${r.dateTime}</td><td class="p-2">${r.type}</td><td class="p-2">${r.narrative}</td></tr>`);
             html += '</table></div>';
-            document.getElementById('peopleResults').innerHTML = html;
+            const peopleResults = document.getElementById('peopleResults');
+            if (peopleResults) {
+                peopleResults.innerHTML = html;
+            }
         }
     </script>
 </body>
