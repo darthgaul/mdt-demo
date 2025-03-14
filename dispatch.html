@@ -21,7 +21,7 @@
     </div>
     <div id="dispatchContent" class="bg-gray-800 p-4 rounded-lg shadow"></div>
 
-    <div id="alert" class="fixed top-4 right-4 bg-green-600 text-white p-4 rounded shadow hidden"></div>
+    <div id="alert" class="hidden"></div>
 
     <script src="scripts.js"></script>
     <script src="common.js"></script>
@@ -37,12 +37,13 @@
                 const activeDispatches = dispatchData.filter(d => d.status !== 'Completed');
                 html += '<h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>';
                 if (activeDispatches.length) {
-                    html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Time</th><th class="p-2 bg-gray-700">Officer</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
+                    html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
                     activeDispatches.forEach(disp => {
                         if (!isOfficer || disp.assignedOfficer === user.username) {
-                            const elapsed = calculateElapsed(disp.dateTime);
-                            const timeColor = elapsed.minutes >= 15 ? 'text-red-500' : '';
-                            html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2 ${timeColor}">${elapsed.hours}h ${elapsed.minutes}m</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td>`;
+                            const callTime = new Date(disp.dateTime).toLocaleString();
+                            const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
+                            const statusColor = { Pending: 'yellow-500', Assigned: 'blue-500', 'In Progress': 'orange-500' }[disp.status];
+                            html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td>`;
                             if (isDispatcher) {
                                 html += '<td class="p-2 space-x-2"><select onchange="assignOfficer(this, \'' + disp.id + '\')" class="bg-gray-700 text-white p-1 rounded">';
                                 html += '<option value="">Assign</option>';
@@ -60,10 +61,13 @@
                 const completedDispatches = dispatchData.filter(d => d.status === 'Completed');
                 html += '<h3 class="text-lg font-semibold mb-2">Dispatch History</h3>';
                 if (completedDispatches.length) {
-                    html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
+                    html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Resolve Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
                     completedDispatches.forEach(disp => {
                         if (!isOfficer || disp.assignedOfficer === user.username) {
-                            html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td>`;
+                            const callTime = new Date(disp.dateTime).toLocaleString();
+                            const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
+                            const resolveTime = disp.resolveTime ? new Date(disp.resolveTime).toLocaleString() : 'N/A';
+                            html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td><td class="p-2">${resolveTime}</td>`;
                             if (isDispatcher) {
                                 html += '<td class="p-2"><button onclick="restoreDispatch(\'' + disp.id + '\')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow">Restore</button></td>';
                             }
@@ -84,6 +88,7 @@
             if (dispatch) {
                 dispatch.assignedOfficer = officer || null;
                 dispatch.status = officer ? 'Assigned' : 'Pending';
+                dispatch.assignedTime = new Date().toISOString();
                 saveDispatch();
                 showTab('active');
             }
@@ -93,6 +98,7 @@
             const dispatch = dispatchData.find(d => d.id === dispatchId);
             if (dispatch) {
                 dispatch.status = 'Completed';
+                dispatch.resolveTime = new Date().toISOString();
                 saveDispatch();
                 showAlert('Dispatch completed', 'bg-green-600');
                 showTab('active');
@@ -103,6 +109,7 @@
             const dispatch = dispatchData.find(d => d.id === dispatchId);
             if (dispatch) {
                 dispatch.status = 'Pending';
+                dispatch.resolveTime = null;
                 saveDispatch();
                 showAlert('Dispatch restored', 'bg-green-600');
                 showTab('history');
