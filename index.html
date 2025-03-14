@@ -128,11 +128,10 @@
             </button>
             <h3 class="text-lg font-semibold mb-2">Active Units</h3>
             <select id="unitFilter" class="bg-gray-700 text-white p-2 rounded w-full mb-2 tooltip" onchange="updateUnitsList()">
-                <option value="">All Departments</option>
-                <option value="Supervisors">Supervisors</option>
-                <option value="Dispatchers">Dispatchers</option>
-                <option value="Officers">Officers</option>
-                <span class="tooltip-text">Filter units by department</span>
+                <option value="">All Units</option>
+                <option value="Online">Online</option>
+                <option value="Offline">Offline</option>
+                <span class="tooltip-text">Filter units by online/offline status</span>
             </select>
             <div id="unitsList"></div>
         </div>
@@ -187,89 +186,41 @@
 
         function updateUnitsList() {
             const filter = document.getElementById('unitFilter').value;
-            const groupedUnits = {};
-            employeesData.forEach(emp => {
-                const dept = emp.department || 'Other';
-                if (!groupedUnits[dept]) groupedUnits[dept] = [];
-                groupedUnits[dept].push(emp);
-            });
+            const onlineUnits = [
+                { name: "TomVega", location: "317 East Joshua Road", department: "Supervisors", status: "Available", statusCode: "10-8", statusClass: "bg-green-500" },
+                { name: "AlexReed", location: "294 Alhambra Dr", department: "Officers", status: "Available", statusCode: "10-8", statusClass: "bg-green-500" },
+                { name: "BellaCruz", location: "239 Zancudo Ave", department: "Officers", status: "Busy", statusCode: "10-6", statusClass: "bg-blue-500" },
+                { name: "SarahJones", location: "Dispatch HQ", department: "Dispatchers", status: "Lunch Break", statusCode: "10-100", statusClass: "bg-yellow-500" }
+            ];
+            const offlineUnits = [
+                { name: "JohnSmith", location: "N/A", department: "Managers", status: "Offline", statusCode: "10-42", statusClass: "bg-red-500" }
+            ];
 
             let html = '';
-            Object.keys(groupedUnits).forEach(dept => {
-                if (!filter || filter === dept) {
-                    html += `<div class="unit-group" id="group-${dept}"><h4 onclick="toggleUnitGroup('group-${dept}')">${dept}</h4><div class="unit-list">`;
-                    groupedUnits[dept].forEach(emp => {
-                        const isOnline = usersData.some(u => u.username === emp.name);
-                        const currentTime = new Date();
-                        const isOnDuty = currentTime >= new Date(emp.schedule.start) && currentTime <= new Date(emp.schedule.end);
-                        let status = 'Offline';
-                        let statusClass = 'bg-red-500';
-                        if (isOnline && isOnDuty) {
-                            status = 'Available';
-                            statusClass = 'bg-green-500';
-                        } else if (isOnline && !isOnDuty) {
-                            status = 'Off Duty';
-                            statusClass = 'bg-gray-500';
-                        }
-                        html += `<div class="unit-card"><p><strong>${emp.name}</strong> <span class="status-tag ${statusClass}">${status}</span></p>`;
-                        html += `<p><strong>Location:</strong> ${emp.location || 'N/A'}</p>`;
-                        html += `<p><strong>Department:</strong> ${emp.department || 'N/A'}</p>`;
-                        html += `<div class="flex space-x-2 mt-2">
-                            <button onclick="messageUnit('${emp.name}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow tooltip">
-                                Message
-                                <span class="tooltip-text">Send a message to this unit</span>
-                            </button>
-                            <button onclick="setStatus('${emp.name}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow tooltip">
-                                Set Status
-                                <span class="tooltip-text">Update the unit's status</span>
-                            </button>
-                            <button onclick="assignCall('${emp.name}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow tooltip">
-                                Assign Call
-                                <span class="tooltip-text">Assign a dispatch to this unit</span>
-                            </button>
-                        </div></div>`;
+            const groups = { Online: onlineUnits, Offline: offlineUnits };
+
+            Object.keys(groups).forEach(group => {
+                if (!filter || filter === group) {
+                    html += `<div class="unit-group" id="group-${group}"><h4 onclick="toggleUnitGroup('group-${group}')">${group}</h4><div class="unit-list">`;
+                    groups[group].forEach(emp => {
+                        const nameColor = group === 'Online' ? 'text-green-500' : 'text-red-500';
+                        html += `<div class="unit-card"><p><strong class="${nameColor}">${emp.name}</strong> <span class="status-tag ${emp.statusClass}">[${emp.statusCode}]</span></p>`;
+                        html += `<p><strong>Location:</strong> ${emp.location}</p>`;
+                        html += `<p><strong>Department:</strong> ${emp.department}</p></div>`;
                     });
                     html += '</div></div>';
                 }
             });
+
             document.getElementById('unitsList').innerHTML = html || '<p class="text-center">No units found.</p>';
-        }
-
-        function messageUnit(name) {
-            const message = prompt(`Message to ${name}:`);
-            if (message) showAlert(`Message sent to ${name}: ${message}`, 'bg-green-600');
-        }
-
-        function setStatus(name) {
-            const status = prompt(`Set status for ${name} (e.g., Available, Busy, On Scene):`);
-            if (status) showAlert(`Status for ${name} set to ${status}`, 'bg-green-600');
-        }
-
-        function assignCall(name) {
-            const callId = prompt(`Enter dispatch ID to assign to ${name}:`);
-            if (callId) {
-                const dispatch = dispatchData.find(d => d.id === callId && d.status !== 'Completed');
-                if (dispatch) {
-                    dispatch.assignedOfficer = name;
-                    dispatch.status = 'Assigned';
-                    saveDispatch();
-                    showAlert(`Dispatch ${callId} assigned to ${name}`, 'bg-green-600');
-                    updateDispatchList();
-                } else {
-                    showAlert(`Dispatch ${callId} not found or completed`, 'bg-red-600');
-                }
-            }
         }
 
         function updateDispatchList() {
             const active = dispatchData.filter(d => d.status !== 'Completed');
-            let html = active.length ? '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Actions</th></tr>' : '<p class="text-center">No active dispatches.</p>';
+            let html = active.length ? '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th></tr>' : '<p class="text-center">No active dispatches.</p>';
             active.forEach(disp => {
                 const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500' }[disp.status] || 'text-gray-500';
-                const callTime = new Date(disp.dateTime).toLocaleString();
-                const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
-                html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td>`;
-                html += `<td class="p-2 space-x-2"><button onclick="assignCall('${disp.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Assign</button></td></tr>`;
+                html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td></tr>`;
             });
             if (active.length) html += '</table>';
             document.getElementById('dispatchList').innerHTML = html;
@@ -359,7 +310,11 @@
             if (['Managers', 'Supervisors'].includes(user.group)) {
                 dispatchData.forEach(disp => {
                     const elapsed = calculateElapsed(disp.dateTime);
-                    if (elapsed.minutes >= 15 && disp.status !== 'Completed') {
+                    const now = new Date();
+                    const dispatchDate = new Date(disp.dateTime);
+                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                    const dispatchDay = new Date(dispatchDate.getFullYear(), dispatchDate.getMonth(), dispatchDate.getDate());
+                    if (elapsed.minutes >= 15 && disp.status !== 'Completed' && today.getTime() === dispatchDay.getTime()) {
                         showAlert(`Dispatch ${disp.id} overdue (${elapsed.minutes}m)`, 'bg-red-600');
                     }
                 });
