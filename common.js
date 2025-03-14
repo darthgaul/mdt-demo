@@ -1,25 +1,25 @@
 let isInitialized = false;
-const user = JSON.parse(localStorage.getItem('user'));
 
-// Function to handle initial redirect
 function checkAuthentication() {
+    const user = JSON.parse(localStorage.getItem('user'));
     if (!user) {
         console.log('No user found, redirecting to login.html');
         if (window.location.pathname.split('/').pop() !== 'login.html') {
             window.location.href = 'login.html';
         }
-        return true; // Indicate redirect occurred
+        return true;
     }
-    return false; // No redirect needed
+    return false;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (isInitialized) return; // Prevent multiple initializations
+    if (isInitialized) return;
     isInitialized = true;
     console.log('common.js: DOMContentLoaded triggered');
 
-    if (checkAuthentication()) return; // Exit if redirect occurred
+    if (checkAuthentication()) return;
 
+    const user = JSON.parse(localStorage.getItem('user'));
     const nav = document.querySelector('nav.sticky-nav');
     if (nav) {
         nav.innerHTML = `
@@ -49,10 +49,10 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
-        // Manager link visibility
+        // Manager link visibility: Only visible for Managers
         const managerLink = document.getElementById('managerLink');
         if (managerLink) {
-            if (!user || !['Managers', 'Supervisors', 'Dispatchers'].includes(user.group)) {
+            if (!user || user.group !== 'Managers') {
                 managerLink.style.display = 'none';
             }
         }
