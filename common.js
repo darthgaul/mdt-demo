@@ -1,5 +1,3 @@
-import { getOfficerStatus, setOfficerStatus, broadcastStatusUpdate, officerStatuses } from './officers.js';
-
 let isInitialized = false;
 
 function checkAuthentication() {
