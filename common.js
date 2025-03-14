@@ -1,7 +1,9 @@
-const user = JSON.parse(localStorage.getItem('user'));
-if (!user) window.location.href = 'login.html';
+let isInitialized = false;
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (isInitialized) return; // Prevent multiple initializations
+    isInitialized = true;
+
     const nav = document.querySelector('nav.sticky-nav');
     if (nav) {
         nav.innerHTML = `
@@ -33,10 +35,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Manager link visibility
         const managerLink = document.getElementById('managerLink');
-        if (managerLink && user.group !== 'Managers' && user.group !== 'Supervisors' && user.group !== 'Dispatchers') {
+        if (managerLink && user && !['Managers', 'Supervisors', 'Dispatchers'].includes(user.group)) {
             managerLink.style.display = 'none';
         }
-        document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
+        if (user) document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
 
         // Hamburger toggle
         const hamburger = document.querySelector('.hamburger');
