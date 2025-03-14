@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Dispatch</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -26,15 +27,26 @@
     <script src="scripts.js"></script>
     <script src="common.js"></script>
     <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+
         loadData(() => showTab('active'));
 
         function showTab(tab) {
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
             const isOfficer = user.group === 'Officers';
             const isDispatcher = ['Dispatchers', 'Managers', 'Supervisors'].includes(user.group);
             let html = '';
 
             if (tab === 'active') {
-                const activeDispatches = dispatchData.filter(d => d.status !== 'Completed');
+                const activeDispatches = dispatchData ? dispatchData.filter(d => d.status !== 'Completed') : [];
                 html += '<h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>';
                 if (activeDispatches.length) {
                     html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
@@ -47,7 +59,9 @@
                             if (isDispatcher) {
                                 html += '<td class="p-2 space-x-2"><select onchange="assignOfficer(this, \'' + disp.id + '\')" class="bg-gray-700 text-white p-1 rounded">';
                                 html += '<option value="">Assign</option>';
-                                employeesData.forEach(emp => html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`);
+                                if (employeesData) {
+                                    employeesData.forEach(emp => html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`);
+                                }
                                 html += '</select><button onclick="completeDispatch(\'' + disp.id + '\')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Complete</button></td>';
                             }
                             html += '</tr>';
@@ -58,7 +72,7 @@
                     html += '<p class="text-center">No active dispatches.</p>';
                 }
             } else if (tab === 'history') {
-                const completedDispatches = dispatchData.filter(d => d.status === 'Completed');
+                const completedDispatches = dispatchData ? dispatchData.filter(d => d.status === 'Completed') : [];
                 html += '<h3 class="text-lg font-semibold mb-2">Dispatch History</h3>';
                 if (completedDispatches.length) {
                     html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Resolve Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
@@ -79,7 +93,10 @@
                     html += '<p class="text-center">No completed dispatches.</p>';
                 }
             }
-            document.getElementById('dispatchContent').innerHTML = html;
+            const dispatchContent = document.getElementById('dispatchContent');
+            if (dispatchContent) {
+                dispatchContent.innerHTML = html;
+            }
         }
 
         function assignOfficer(select, dispatchId) {
