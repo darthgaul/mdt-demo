@@ -169,23 +169,25 @@
     <script src="scripts.js"></script>
     <script src="common.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
-
         let isLoaded = false;
 
-        if (!isLoaded) {
-            loadData(() => {
-                isLoaded = true;
-                console.log('index.html: Data loaded successfully');
-                showTab('overview');
-                updateUnitsList();
-                updateDispatchList();
-            });
-        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            if (!isLoaded) {
+                loadData(() => {
+                    isLoaded = true;
+                    console.log('index.html: Data loaded successfully');
+                    showTab('overview');
+                    updateUnitsList();
+                    updateDispatchList();
+                });
+            }
+        });
 
         function toggleSidebar(id) {
             const sidebar = document.getElementById(id);
@@ -250,6 +252,7 @@
         }
 
         function showTab(tab) {
+            const user = JSON.parse(localStorage.getItem('user'));
             if (!user) {
                 window.location.href = 'login.html';
                 return;
