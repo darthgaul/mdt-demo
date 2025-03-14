@@ -7,8 +7,8 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
-    <script type="module" src="officers.js"></script>
-    <script type="module" src="common.js"></script>
+    <script src="officers.js"></script>
+    <script src="common.js"></script>
     <style>
         .dashboard-container {
             display: flex;
@@ -169,7 +169,9 @@
     <div id="alert" class="hidden"></div>
 
     <script src="scripts.js"></script>
-    <script type="module">
+    <script>
+        let isLoaded = false;
+
         document.addEventListener('DOMContentLoaded', () => {
             const user = JSON.parse(localStorage.getItem('user'));
             if (!user) {
@@ -187,8 +189,6 @@
                 });
             }
         });
-
-        let isLoaded = false;
 
         function toggleSidebar(id) {
             const sidebar = document.getElementById(id);
@@ -343,6 +343,7 @@
         }
 
         function arrive(propId) {
+            const user = JSON.parse(localStorage.getItem('user'));
             const report = {
                 id: `R${(reportsData.length + 1).toString().padStart(3, '0')}`,
                 dateTime: new Date().toISOString(),
@@ -363,6 +364,7 @@
         }
 
         function checkDispatchTimeouts() {
+            const user = JSON.parse(localStorage.getItem('user'));
             if (user && ['Managers', 'Supervisors'].includes(user.group)) {
                 if (dispatchData) {
                     dispatchData.forEach(disp => {
