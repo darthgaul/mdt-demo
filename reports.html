@@ -72,6 +72,7 @@
                     narrative: `${user.username}: ${narrative}`,
                     officer: user.username
                 };
+                if (!reportsData) reportsData = []; // Ensure reportsData is initialized
                 reportsData.push(report);
                 saveReports();
 
@@ -111,7 +112,10 @@
 
             function showReportDetails(caseNumber) {
                 const report = reportsData.find(r => r.caseNumber === caseNumber);
-                if (!report) return;
+                if (!report) {
+                    showAlert('Report not found', 'bg-red-600');
+                    return;
+                }
 
                 const isOfficer = user.group === 'Officers' && user.username === report.officer;
                 const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
