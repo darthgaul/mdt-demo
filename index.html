@@ -168,7 +168,7 @@
     <script src="scripts.js"></script>
     <script src="common.js"></script>
     <script>
-        let isLoaded = false; // Safeguard to prevent multiple loads
+        let isLoaded = false;
 
         if (!isLoaded) {
             loadData(() => {
@@ -217,7 +217,10 @@
                 }
             });
 
-            document.getElementById('unitsList').innerHTML = html || '<p class="text-center">No units found.</p>';
+            const unitsList = document.getElementById('unitsList');
+            if (unitsList) {
+                unitsList.innerHTML = html || '<p class="text-center">No units found.</p>';
+            }
         }
 
         function updateDispatchList() {
@@ -228,11 +231,16 @@
                 html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td></tr>`;
             });
             if (active.length) html += '</table>';
-            document.getElementById('dispatchList').innerHTML = html;
+            const dispatchList = document.getElementById('dispatchList');
+            if (dispatchList) {
+                dispatchList.innerHTML = html;
+            }
         }
 
         function showTab(tab) {
-            const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
+            if (!user) return; // Prevent rendering if no user
+
+            const isManagerOrSupervisor = user && ['Managers', 'Supervisors'].includes(user.group);
             let html = '';
 
             if (tab === 'overview') {
@@ -284,7 +292,10 @@
                 });
                 html += '</table>';
             }
-            document.getElementById('dashboardContent').innerHTML = html;
+            const dashboardContent = document.getElementById('dashboardContent');
+            if (dashboardContent) {
+                dashboardContent.innerHTML = html;
+            }
         }
 
         function navigate(address) {
@@ -298,7 +309,7 @@
                 personId: 'N/A',
                 property: propId,
                 type: 'Patrol Hit',
-                narrative: `${user.username} arrived at property`
+                narrative: `${user ? user.username : 'Unknown'} arrived at property`
             };
             reportsData.push(report);
             saveReports();
@@ -312,7 +323,7 @@
         }
 
         function checkDispatchTimeouts() {
-            if (['Managers', 'Supervisors'].includes(user.group)) {
+            if (user && ['Managers', 'Supervisors'].includes(user.group)) {
                 dispatchData.forEach(disp => {
                     const elapsed = calculateElapsed(disp.dateTime);
                     const now = new Date();
