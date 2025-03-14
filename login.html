@@ -50,11 +50,13 @@
     <div id="alert" class="hidden"></div>
 
     <script src="scripts.js"></script>
-    <script src="common.js"></script>
     <script>
-        if (localStorage.getItem('user')) window.location.href = 'index.html';
+        let isLoaded = false;
 
         document.addEventListener('DOMContentLoaded', () => {
+            if (isLoaded) return;
+            isLoaded = true;
+
             if (localStorage.getItem('lightMode') === 'true') {
                 document.body.classList.add('light-mode');
             }
@@ -76,6 +78,16 @@
                     showAlert('Invalid username or password', 'bg-red-600');
                 }
             });
+        }
+
+        function showAlert(message, color = 'bg-green-600') {
+            const alert = document.getElementById('alert');
+            if (alert) {
+                alert.textContent = message;
+                alert.className = `fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000]`;
+                alert.classList.remove('hidden');
+                setTimeout(() => alert.classList.add('hidden'), 3000);
+            }
         }
     </script>
 </body>
