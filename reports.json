@@ -1,6 +1,47 @@
 [
-    {"id": "R001", "dateTime": "2025-03-11T18:00:00Z", "personId": "P001", "property": "PROP001", "type": "Patrol Hit", "narrative": "Officer Alex Reed arrived at property"},
-    {"id": "R002", "dateTime": "2025-03-11T18:05:00Z", "personId": "P002", "property": "PROP002", "type": "Trespass", "narrative": "Issued CTN to John Doe"},
-    {"id": "R003", "dateTime": "2025-03-11T18:10:00Z", "personId": "N/A", "property": "PROP003", "type": "Patrol Hit", "narrative": "Officer Bella Cruz arrived at property"},
-    {"id": "R004", "dateTime": "2025-03-11T18:15:00Z", "personId": "P003", "property": "PROP001", "type": "Patrol Hit", "narrative": "Second hit completed"}
+    {
+        "caseNumber": "25-03141030",
+        "dateTime": "2025-03-14T10:30:00.000Z",
+        "personId": "P001",
+        "property": "PROP001",
+        "type": "Patrol Hit",
+        "narrative": "JohnSmith: Patrol hit completed at Axel Apartments.",
+        "officer": "JohnSmith"
+    },
+    {
+        "caseNumber": "25-03141100",
+        "dateTime": "2025-03-14T11:00:00.000Z",
+        "personId": "N/A",
+        "property": "PROP002",
+        "type": "Incident",
+        "narrative": "TomVega: Suspicious activity reported at Beta Building.",
+        "officer": "TomVega"
+    },
+    {
+        "caseNumber": "25-03141130",
+        "dateTime": "2025-03-14T11:30:00.000Z",
+        "personId": "P002",
+        "property": "PROP003",
+        "type": "Patrol Hit",
+        "narrative": "AlexReed: Patrol hit completed at Gamma Towers.",
+        "officer": "AlexReed"
+    },
+    {
+        "caseNumber": "25-03141200",
+        "dateTime": "2025-03-14T12:00:00.000Z",
+        "personId": "N/A",
+        "property": "PROP001",
+        "type": "Patrol Hit",
+        "narrative": "BellaCruz: Static patrol hit at Axel Apartments.",
+        "officer": "BellaCruz"
+    },
+    {
+        "caseNumber": "25-03141230",
+        "dateTime": "2025-03-14T12:30:00.000Z",
+        "personId": "N/A",
+        "property": "PROP002",
+        "type": "Incident",
+        "narrative": "SarahJones: Logged incident reported by resident at Beta Building.",
+        "officer": "SarahJones"
+    }
 ]
