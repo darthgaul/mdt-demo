@@ -168,11 +168,16 @@
     <script src="scripts.js"></script>
     <script src="common.js"></script>
     <script>
-        loadData(() => {
-            showTab('overview');
-            updateUnitsList();
-            updateDispatchList();
-        });
+        let isLoaded = false; // Safeguard to prevent multiple loads
+
+        if (!isLoaded) {
+            loadData(() => {
+                isLoaded = true;
+                showTab('overview');
+                updateUnitsList();
+                updateDispatchList();
+            });
+        }
 
         function toggleSidebar(id) {
             const sidebar = document.getElementById(id);
