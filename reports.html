@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Reports</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -34,6 +35,12 @@
     <script src="scripts.js"></script>
     <script src="common.js"></script>
     <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+
         let editRequests = JSON.parse(localStorage.getItem('editRequests')) || [];
 
         loadData(() => {
@@ -82,7 +89,7 @@
         }
 
         function showReports(filterPersonId = null) {
-            const filteredReports = filterPersonId ? reportsData.filter(r => r.personId === filterPersonId) : reportsData;
+            const filteredReports = reportsData ? (filterPersonId ? reportsData.filter(r => r.personId === filterPersonId) : reportsData) : [];
             let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Case Number</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Person ID</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
             if (filteredReports.length) {
                 filteredReports.forEach(report => {
@@ -92,10 +99,13 @@
                     }
                 });
             } else {
-                html += '<tr><td colspan="6" class="p-2 text-center">No reports found</td></tr>';
+                html += '<tr><td colspan="6" class="p-2 text-center">No reports found. Data may have failed to load.</td></tr>';
             }
             html += '</table>';
-            document.getElementById('reportsList').innerHTML = html;
+            const reportsList = document.getElementById('reportsList');
+            if (reportsList) {
+                reportsList.innerHTML = html;
+            }
         }
 
         function showReportDetails(caseNumber) {
@@ -129,7 +139,10 @@
                 }
             }
             html += `</div>`;
-            document.getElementById('reportsList').innerHTML = html;
+            const reportsList = document.getElementById('reportsList');
+            if (reportsList) {
+                reportsList.innerHTML = html;
+            }
         }
 
         function requestEdit(caseNumber) {
