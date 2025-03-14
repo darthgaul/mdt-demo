@@ -28,6 +28,8 @@
     </div>
     <div id="peopleResults" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
 
+    <div id="alert" class="hidden"></div>
+
     <script src="scripts.js"></script>
     <script src="common.js"></script>
     <script>
@@ -72,8 +74,8 @@
             const person = peopleData.find(p => p.id === id);
             const reports = reportsData.filter(r => r.personId === id);
             let html = `<div class="bg-gray-800 p-4 rounded-lg shadow"><img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png" alt="${person.name}" class="w-32 h-32 rounded mb-4"><p><strong>Name:</strong> ${person.name}</p><p><strong>DoB:</strong> ${person.dob}</p><p><strong>Status:</strong> ${person.status}</p><p><strong>Property:</strong> ${person.property}</p><p><strong>Behavior:</strong> ${person.behavior}</p><p><strong>CTN Status:</strong> ${person.ctnStatus}</p>`;
-            html += '<h4 class="text-lg font-semibold mt-4">Reports</h4><table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
-            reports.forEach(r => html += `<tr><td class="p-2">${r.id}</td><td class="p-2">${r.dateTime}</td><td class="p-2">${r.type}</td><td class="p-2">${r.narrative}</td></tr>`);
+            html += '<h4 class="text-lg font-semibold mt-4">Reports</h4><table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Case Number</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
+            reports.forEach(r => html += `<tr><td class="p-2">${r.caseNumber}</td><td class="p-2">${r.dateTime}</td><td class="p-2">${r.type}</td><td class="p-2">${r.narrative}</td></tr>`);
             html += '</table></div>';
             document.getElementById('peopleResults').innerHTML = html;
         }
