@@ -8,14 +8,13 @@ function getOfficerStatus(officerName) {
 function setOfficerStatus(officerName, status) {
     officerStatuses[officerName] = status;
     localStorage.setItem('officerStatuses', JSON.stringify(officerStatuses));
-    broadcastStatusUpdate(officerName, status); // Notify all pages
+    broadcastStatusUpdate(officerName, status);
 }
 
 function broadcastStatusUpdate(officerName, status) {
-    // This could be enhanced with a custom event or pub/sub system in a full app
-    // For now, rely on page reloads or manual updates
     console.log(`Status updated for ${officerName} to ${status}`);
-    // In a real app, use a custom event: document.dispatchEvent(new CustomEvent('statusUpdate', { detail: { officerName, status } }));
+    // Trigger a custom event to notify other pages (simplified for now)
+    window.dispatchEvent(new Event('statusUpdate'));
 }
 
 // Initial setup with demo statuses
@@ -30,4 +29,7 @@ if (Object.keys(officerStatuses).length === 0) {
     localStorage.setItem('officerStatuses', JSON.stringify(officerStatuses));
 }
 
-export { getOfficerStatus, setOfficerStatus, broadcastStatusUpdate, officerStatuses };
+// Expose functions globally
+window.getOfficerStatus = getOfficerStatus;
+window.setOfficerStatus = setOfficerStatus;
+window.officerStatuses = officerStatuses;
