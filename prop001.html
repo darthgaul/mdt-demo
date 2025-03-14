@@ -56,9 +56,39 @@
         let map;
 
         function initMap() {
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: { lat: 37.7749, lng: -122.4194 }, // Placeholder: San Francisco
-                zoom: 15
+            loadData(() => {
+                const prop = propertiesData.find(p => p.id === 'PROP001');
+                if (prop && prop.address) {
+                    map = new google.maps.Map(document.getElementById('map'), {
+                        center: { lat: 37.7749, lng: -122.4194 }, // Placeholder: San Francisco
+                        zoom: 15
+                    });
+                    new google.maps.Marker({
+                        position: { lat: 37.7749, lng: -122.4194 }, // Replace with actual coordinates if available
+                        map: map,
+                        title: prop.propertyName
+                    });
+                }
+
+                // Associated People
+                const peopleHtml = peopleData.filter(p => p.property === 'PROP001')
+                    .map(p => `<tr><td class="p-2">${p.id}</td><td class="p-2">${p.name}</td><td class="p-2">${p.status}</td></tr>`)
+                    .join('');
+                document.querySelector('table:nth-child(3)').innerHTML += peopleHtml || '<tr><td colspan="3" class="p-2 text-center">No associated people</td></tr>';
+
+                // Recent Dispatches
+                const dispatchesHtml = dispatchData.filter(d => d.property === 'PROP001' && d.status !== 'Completed')
+                    .map(d => `<tr><td class="p-2">${d.issue}</td><td class="p-2">${d.assignedOfficer || 'Unassigned'}</td><td class="p-2">${new Date(d.dateTime).toLocaleString()}</td></tr>`)
+                    .join('');
+                document.querySelector('table:nth-child(5)').innerHTML += dispatchesHtml || '<tr><td colspan="3" class="p-2 text-center">No recent dispatches</td></tr>';
+
+                // Recent Reports
+                const reportsHtml = reportsData.filter(r => r.property === 'PROP001')
+                    .map(r => `<tr><td class="p-2">${r.caseNumber}</td><td class="p-2">${r.dateTime}</td><td class="p-2">${r.type}</td><td class="p-2">${r.narrative}</td></tr>`)
+                    .join('');
+                document.querySelector('table:nth-child(7)').innerHTML += reportsHtml || '<tr><td colspan="4" class="p-2 text-center">No recent reports</td></tr>';
             });
-            new google.maps.Marker({
-                position: { lat: 37.774
+        }
+    </script>
+</body>
+</html>
