@@ -7,6 +7,8 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
+    <script type="module" src="officers.js"></script>
+    <script type="module" src="common.js"></script>
     <style>
         .dashboard-container {
             display: flex;
@@ -167,10 +169,7 @@
     <div id="alert" class="hidden"></div>
 
     <script src="scripts.js"></script>
-    <script src="common.js"></script>
-    <script>
-        let isLoaded = false;
-
+    <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
             const user = JSON.parse(localStorage.getItem('user'));
             if (!user) {
@@ -189,6 +188,8 @@
             }
         });
 
+        let isLoaded = false;
+
         function toggleSidebar(id) {
             const sidebar = document.getElementById(id);
             if (sidebar) sidebar.classList.toggle('active');
@@ -201,15 +202,14 @@
 
         function updateUnitsList() {
             const filter = document.getElementById('unitFilter')?.value;
-            const onlineUnits = [
-                { name: "TomVega", location: "317 East Joshua Road", department: "Supervisors", status: "Available", statusCode: "10-8", statusClass: "bg-green-500" },
-                { name: "AlexReed", location: "294 Alhambra Dr", department: "Officers", status: "Available", statusCode: "10-8", statusClass: "bg-green-500" },
-                { name: "BellaCruz", location: "239 Zancudo Ave", department: "Officers", status: "Busy", statusCode: "10-6", statusClass: "bg-blue-500" },
-                { name: "SarahJones", location: "Dispatch HQ", department: "Dispatchers", status: "Lunch Break", statusCode: "10-100", statusClass: "bg-yellow-500" }
-            ];
-            const offlineUnits = [
-                { name: "JohnSmith", location: "N/A", department: "Managers", status: "Offline", statusCode: "10-42", statusClass: "bg-red-500" }
-            ];
+            const onlineUnits = employeesData.filter(emp => {
+                const status = getOfficerStatus(emp.name);
+                return ['10-8', '10-6', '10-100'].includes(status);
+            });
+            const offlineUnits = employeesData.filter(emp => {
+                const status = getOfficerStatus(emp.name);
+                return status === '10-42';
+            });
 
             let html = '';
             const groups = { Online: onlineUnits, Offline: offlineUnits };
@@ -218,8 +218,15 @@
                 if (!filter || filter === group) {
                     html += `<div class="unit-group" id="group-${group}"><h4 onclick="toggleUnitGroup('group-${group}')">${group}</h4><div class="unit-list">`;
                     groups[group].forEach(emp => {
+                        const status = getOfficerStatus(emp.name);
+                        const statusColor = {
+                            '10-8': 'bg-green-500',
+                            '10-6': 'bg-blue-500',
+                            '10-100': 'bg-yellow-500',
+                            '10-42': 'bg-red-500'
+                        }[status] || 'bg-gray-500';
                         const nameColor = group === 'Online' ? 'text-green-500' : 'text-red-500';
-                        html += `<div class="unit-card"><p><strong class="${nameColor}">${emp.name}</strong> <span class="status-tag ${emp.statusClass}">[${emp.statusCode}]</span></p>`;
+                        html += `<div class="unit-card"><p><strong class="${nameColor}">${emp.name}</strong> <span class="status-tag ${statusColor}">[${status}]</span></p>`;
                         html += `<p><strong>Location:</strong> ${emp.location}</p>`;
                         html += `<p><strong>Department:</strong> ${emp.department}</p></div>`;
                     });
@@ -264,15 +271,21 @@
             if (tab === 'overview') {
                 if (isManagerOrSupervisor) {
                     const activeCalls = dispatchData ? dispatchData.filter(d => d.status !== 'Completed').length : 0;
-                    const loggedInOfficers = usersData && employeesData ? usersData.filter(u => employeesData.some(e => e.name === u.username && new Date() >= new Date(e.schedule.start) && new Date() <= new Date(e.schedule.end))).length : 0;
+                    const loggedInOfficers = usersData && employeesData ? usersData.filter(u => employeesData.some(e => e.name === u.username && ['10-8', '10-6', '10-100'].includes(getOfficerStatus(e.name)))).length : 0;
                     html += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Active Calls:</strong> ${activeCalls}</p></div><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Officers Online:</strong> ${loggedInOfficers}</p></div></div>`;
                     html += '<h3 class="text-lg font-semibold mb-2">Officer Status</h3>';
                     if (employeesData && employeesData.length > 0) {
                         html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Route</th><th class="p-2 bg-gray-700">Start</th><th class="p-2 bg-gray-700">End</th><th class="p-2 bg-gray-700">Status</th></tr>';
                         employeesData.forEach(emp => {
-                            const isOnline = usersData.some(u => u.username === emp.name);
-                            const statusColor = isOnline ? 'text-green-500' : 'text-red-500';
-                            html += `<tr><td class="p-2 ${statusColor}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2">${isOnline ? 'Online' : 'Offline'}</td></tr>`;
+                            const status = getOfficerStatus(emp.name);
+                            const isOnline = ['10-8', '10-6', '10-100'].includes(status);
+                            const statusColor = {
+                                '10-8': 'text-green-500',
+                                '10-6': 'text-blue-500',
+                                '10-100': 'text-yellow-500',
+                                '10-42': 'text-red-500'
+                            }[status] || 'text-gray-500';
+                            html += `<tr><td class="p-2 ${isOnline ? 'text-green-500' : 'text-red-500'}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2 ${statusColor}">${status}</td></tr>`;
                         });
                         html += '</table>';
                     } else {
