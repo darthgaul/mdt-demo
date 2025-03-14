@@ -1,19 +1,24 @@
 let isInitialized = false;
+const user = JSON.parse(localStorage.getItem('user'));
+
+// Function to handle initial redirect
+function checkAuthentication() {
+    if (!user) {
+        console.log('No user found, redirecting to login.html');
+        if (window.location.pathname.split('/').pop() !== 'login.html') {
+            window.location.href = 'login.html';
+        }
+        return true; // Indicate redirect occurred
+    }
+    return false; // No redirect needed
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     if (isInitialized) return; // Prevent multiple initializations
     isInitialized = true;
     console.log('common.js: DOMContentLoaded triggered');
 
-    const user = JSON.parse(localStorage.getItem('user'));
-    // Redirect immediately if no user is present and not on login page
-    if (!user) {
-        console.log('No user found, redirecting to login.html');
-        if (window.location.pathname.split('/').pop() !== 'login.html') {
-            window.location.href = 'login.html';
-        }
-        return;
-    }
+    if (checkAuthentication()) return; // Exit if redirect occurred
 
     const nav = document.querySelector('nav.sticky-nav');
     if (nav) {
