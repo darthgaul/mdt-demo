@@ -31,6 +31,17 @@ function updateOfficerStatus(officerName, newStatus, currentUser) {
 function navigateToPage(page) {
     history.pushState({ page: page }, '', page);
     loadPageContent(page);
+    highlightActiveTab(page);
+}
+
+function highlightActiveTab(page) {
+    const navLinks = document.querySelectorAll('.nav-tabs a');
+    navLinks.forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('data-page') === page) {
+            link.classList.add('active');
+        }
+    });
 }
 
 function loadPageContent(page) {
@@ -39,36 +50,6 @@ function loadPageContent(page) {
         window.location.href = 'login.html';
         return;
     }
-
-    const nav = `
-        <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-4">
-                    <div class="hamburger">
-                        <div></div>
-                        <div></div>
-                        <div></div>
-                    </div>
-                    <button id="darkModeToggle"></button>
-                </div>
-                <div class="nav-tabs">
-                    <a href="#" data-page="index.html">Dashboard</a>
-                    <a href="#" data-page="properties.html">Properties</a>
-                    <a href="#" data-page="people.html">People</a>
-                    <a href="#" data-page="dispatch.html">Dispatch</a>
-                    <a href="#" data-page="reports.html">Reports</a>
-                    <a href="#" data-page="officers.html">Officers</a>
-                    <a href="#" data-page="manager.html" id="managerLink">Manager</a>
-                </div>
-                <div class="flex flex-col items-end space-y-2">
-                    <span id="userInfo" class="text-sm"></span>
-                    <div class="flex items-center space-x-4">
-                        <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
-                    </div>
-                </div>
-            </div>
-        </nav>
-    `;
 
     let content = '';
     switch (page) {
@@ -633,11 +614,12 @@ function loadPageContent(page) {
             content = '<p>Page not found</p>';
     }
 
-    // Inject content into the body, ensuring the navigation bar is included
-    document.body.innerHTML = nav + content;
-    // Re-initialize scripts or handle dynamic loading
-    if (typeof window.initializePage === 'function') {
-        window.initializePage();
+    // Update only the content area, leaving the navigation bar intact
+    const contentArea = document.getElementById('content-area');
+    if (contentArea) {
+        contentArea.innerHTML = content;
+    } else {
+        console.error('Content area not found');
     }
 }
 
@@ -651,7 +633,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const user = JSON.parse(localStorage.getItem('user'));
     const nav = document.querySelector('nav.sticky-nav');
     if (nav) {
-        loadPageContent(window.location.pathname.split('/').pop() || 'index.html');
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        loadPageContent(currentPage);
+        highlightActiveTab(currentPage);
 
         nav.addEventListener('click', (e) => {
             const link = e.target.closest('a[data-page]');
@@ -734,4 +718,5 @@ function showAlert(message, color = 'bg-green-600') {
 window.addEventListener('popstate', (e) => {
     const page = e.state ? e.state.page : window.location.pathname.split('/').pop() || 'index.html';
     loadPageContent(page);
+    highlightActiveTab(page);
 });
