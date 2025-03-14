@@ -1,15 +1,21 @@
-let isInitialized = false;
+// Move user check and redirect to the top, before any DOM manipulation
 const user = JSON.parse(localStorage.getItem('user'));
 
-// Redirect to login if no user is present
-if (!user && window.location.pathname.split('/').pop() !== 'login.html') {
-    window.location.href = 'login.html';
+// Redirect immediately if no user is present and not on login page
+if (!user) {
+    console.log('No user found, redirecting to login.html');
+    if (window.location.pathname.split('/').pop() !== 'login.html') {
+        window.location.href = 'login.html';
+    }
     return; // Stop further execution
 }
+
+let isInitialized = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     if (isInitialized) return; // Prevent multiple initializations
     isInitialized = true;
+    console.log('common.js: DOMContentLoaded triggered');
 
     const nav = document.querySelector('nav.sticky-nav');
     if (nav) {
@@ -42,54 +48,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Manager link visibility
         const managerLink = document.getElementById('managerLink');
-        if (managerLink && user && !['Managers', 'Supervisors', 'Dispatchers'].includes(user.group)) {
-            managerLink.style.display = 'none';
+        if (managerLink) {
+            if (!user || !['Managers', 'Supervisors', 'Dispatchers'].includes(user.group)) {
+                managerLink.style.display = 'none';
+            }
         }
 
-        // Set user info only if user exists
-        if (user && user.username) {
-            document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
-        } else {
-            window.location.href = 'login.html';
-            return;
+        // Set user info safely
+        const userInfo = document.getElementById('userInfo');
+        if (userInfo) {
+            userInfo.textContent = user && user.username ? `Logged in as ${user.username}` : 'Logged in as Guest';
         }
 
         // Hamburger toggle
         const hamburger = document.querySelector('.hamburger');
         const navTabs = document.querySelector('.nav-tabs');
-        hamburger.addEventListener('click', () => {
-            navTabs.classList.toggle('active');
-            const isOpen = navTabs.classList.contains('active');
-            hamburger.children[0].style.transform = isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none';
-            hamburger.children[1].style.opacity = isOpen ? '0' : '1';
-            hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
-        });
+        if (hamburger && navTabs) {
+            hamburger.addEventListener('click', () => {
+                navTabs.classList.toggle('active');
+                const isOpen = navTabs.classList.contains('active');
+                hamburger.children[0].style.transform = isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none';
+                hamburger.children[1].style.opacity = isOpen ? '0' : '1';
+                hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
+            });
+        }
 
         // Dark mode toggle
         const toggleBtn = document.getElementById('darkModeToggle');
-        toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
-        toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
-        const label = document.createElement('span');
-        label.className = 'ml-2 text-sm';
-        label.textContent = 'Dark Mode';
-        toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
+        if (toggleBtn) {
+            toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
+            toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
+            const label = document.createElement('span');
+            label.className = 'ml-2 text-sm';
+            label.textContent = 'Dark Mode';
+            toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
 
-        toggleBtn.addEventListener('click', () => {
-            document.body.classList.toggle('light-mode');
-            const isLightMode = document.body.classList.contains('light-mode');
-            toggleBtn.classList.toggle('bg-blue-600', isLightMode);
-            toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
-            toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
-            label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
-            localStorage.setItem('lightMode', isLightMode);
-        });
+            toggleBtn.addEventListener('click', () => {
+                document.body.classList.toggle('light-mode');
+                const isLightMode = document.body.classList.contains('light-mode');
+                toggleBtn.classList.toggle('bg-blue-600', isLightMode);
+                toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
+                toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
+                label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
+                localStorage.setItem('lightMode', isLightMode);
+            });
 
-        if (localStorage.getItem('lightMode') === 'true') {
-            document.body.classList.add('light-mode');
-            toggleBtn.classList.remove('bg-gray-700');
-            toggleBtn.classList.add('bg-blue-600');
-            toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
-            label.textContent = 'Light Mode';
+            if (localStorage.getItem('lightMode') === 'true') {
+                document.body.classList.add('light-mode');
+                toggleBtn.classList.remove('bg-gray-700');
+                toggleBtn.classList.add('bg-blue-600');
+                toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
+                label.textContent = 'Light Mode';
+            }
         }
 
         // Set active tab
