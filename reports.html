@@ -7,6 +7,7 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
+    <script src="officers.js"></script>
 </head>
 <body class="min-h-screen p-6">
     <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
@@ -129,7 +130,6 @@
                 html += `<p><strong>Narrative:</strong> ${report.narrative}</p>`;
                 html += `<p><strong>Officer:</strong> ${report.officer}</p>`;
 
-                // Only Officers (who authored the report), Managers, and Supervisors can request edits
                 if (isOfficer || isManagerOrSupervisor) {
                     if (isOfficer) {
                         const hasRequested = editRequests.some(req => req.caseNumber === caseNumber && req.officer === user.username);
