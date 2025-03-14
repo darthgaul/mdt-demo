@@ -1,6 +1,32 @@
 [
-    {"username": "Supervisor Tom Vega", "password": "tom123", "group": "Supervisors"},
-    {"username": "Officer Alex Reed", "password": "alex123", "group": "Officers"},
-    {"username": "Officer Bella Cruz", "password": "bella123", "group": "Officers"},
-    {"username": "dispatch1", "password": "dispass", "group": "Dispatchers"}
+    {
+        "username": "JohnSmith",
+        "password": "john123",
+        "group": "Managers",
+        "role": "Security Manager"
+    },
+    {
+        "username": "TomVega",
+        "password": "tom123",
+        "group": "Supervisors",
+        "role": "Security Supervisor"
+    },
+    {
+        "username": "AlexReed",
+        "password": "alex123",
+        "group": "Officers",
+        "role": "Patrol Officer"
+    },
+    {
+        "username": "BellaCruz",
+        "password": "bella123",
+        "group": "Officers",
+        "role": "Static Officer"
+    },
+    {
+        "username": "SarahJones",
+        "password": "sarah123",
+        "group": "Dispatchers",
+        "role": "Dispatcher"
+    }
 ]
