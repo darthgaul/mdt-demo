@@ -7,8 +7,7 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
-    <script type="module" src="officers.js"></script>
-    <script type="module" src="common.js"></script>
+    <script src="officers.js"></script>
 </head>
 <body class="min-h-screen p-6">
     <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
@@ -23,7 +22,9 @@
 
     <div id="alert" class="hidden"></div>
 
-    <script type="module">
+    <script src="scripts.js"></script>
+    <script src="common.js"></script>
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const user = JSON.parse(localStorage.getItem('user'));
             if (!user) {
