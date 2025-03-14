@@ -27,111 +27,113 @@
     <script src="scripts.js"></script>
     <script src="common.js"></script>
     <script>
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
-
-        loadData(() => showTab('active'));
-
-        function showTab(tab) {
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('user'));
             if (!user) {
                 window.location.href = 'login.html';
                 return;
             }
 
-            const isOfficer = user.group === 'Officers';
-            const isDispatcher = ['Dispatchers', 'Managers', 'Supervisors'].includes(user.group);
-            let html = '';
+            loadData(() => showTab('active'));
 
-            if (tab === 'active') {
-                const activeDispatches = dispatchData ? dispatchData.filter(d => d.status !== 'Completed') : [];
-                html += '<h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>';
-                if (activeDispatches.length) {
-                    html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
-                    activeDispatches.forEach(disp => {
-                        if (!isOfficer || disp.assignedOfficer === user.username) {
-                            const callTime = new Date(disp.dateTime).toLocaleString();
-                            const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
-                            const statusColor = { Pending: 'yellow-500', Assigned: 'blue-500', 'In Progress': 'orange-500' }[disp.status];
-                            html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td>`;
-                            if (isDispatcher) {
-                                html += '<td class="p-2 space-x-2"><select onchange="assignOfficer(this, \'' + disp.id + '\')" class="bg-gray-700 text-white p-1 rounded">';
-                                html += '<option value="">Assign</option>';
-                                if (employeesData) {
-                                    employeesData.forEach(emp => html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`);
+            function showTab(tab) {
+                if (!user) {
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                const isOfficer = user.group === 'Officers';
+                const isDispatcher = ['Dispatchers', 'Managers', 'Supervisors'].includes(user.group);
+                let html = '';
+
+                if (tab === 'active') {
+                    const activeDispatches = dispatchData ? dispatchData.filter(d => d.status !== 'Completed') : [];
+                    html += '<h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>';
+                    if (activeDispatches.length) {
+                        html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
+                        activeDispatches.forEach(disp => {
+                            if (!isOfficer || disp.assignedOfficer === user.username) {
+                                const callTime = new Date(disp.dateTime).toLocaleString();
+                                const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
+                                const statusColor = { Pending: 'yellow-500', Assigned: 'blue-500', 'In Progress': 'orange-500' }[disp.status];
+                                html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td>`;
+                                if (isDispatcher) {
+                                    html += '<td class="p-2 space-x-2"><select onchange="assignOfficer(this, \'' + disp.id + '\')" class="bg-gray-700 text-white p-1 rounded">';
+                                    html += '<option value="">Assign</option>';
+                                    if (employeesData) {
+                                        employeesData.forEach(emp => html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`);
+                                    }
+                                    html += '</select><button onclick="completeDispatch(\'' + disp.id + '\')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Complete</button></td>';
                                 }
-                                html += '</select><button onclick="completeDispatch(\'' + disp.id + '\')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Complete</button></td>';
+                                html += '</tr>';
                             }
-                            html += '</tr>';
-                        }
-                    });
-                    html += '</table>';
-                } else {
-                    html += '<p class="text-center">No active dispatches.</p>';
-                }
-            } else if (tab === 'history') {
-                const completedDispatches = dispatchData ? dispatchData.filter(d => d.status === 'Completed') : [];
-                html += '<h3 class="text-lg font-semibold mb-2">Dispatch History</h3>';
-                if (completedDispatches.length) {
-                    html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Resolve Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
-                    completedDispatches.forEach(disp => {
-                        if (!isOfficer || disp.assignedOfficer === user.username) {
-                            const callTime = new Date(disp.dateTime).toLocaleString();
-                            const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
-                            const resolveTime = disp.resolveTime ? new Date(disp.resolveTime).toLocaleString() : 'N/A';
-                            html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td><td class="p-2">${resolveTime}</td>`;
-                            if (isDispatcher) {
-                                html += '<td class="p-2"><button onclick="restoreDispatch(\'' + disp.id + '\')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow">Restore</button></td>';
+                        });
+                        html += '</table>';
+                    } else {
+                        html += '<p class="text-center">No active dispatches.</p>';
+                    }
+                } else if (tab === 'history') {
+                    const completedDispatches = dispatchData ? dispatchData.filter(d => d.status === 'Completed') : [];
+                    html += '<h3 class="text-lg font-semibold mb-2">Dispatch History</h3>';
+                    if (completedDispatches.length) {
+                        html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Resolve Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
+                        completedDispatches.forEach(disp => {
+                            if (!isOfficer || disp.assignedOfficer === user.username) {
+                                const callTime = new Date(disp.dateTime).toLocaleString();
+                                const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
+                                const resolveTime = disp.resolveTime ? new Date(disp.resolveTime).toLocaleString() : 'N/A';
+                                html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td><td class="p-2">${resolveTime}</td>`;
+                                if (isDispatcher) {
+                                    html += '<td class="p-2"><button onclick="restoreDispatch(\'' + disp.id + '\')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow">Restore</button></td>';
+                                }
+                                html += '</tr>';
                             }
-                            html += '</tr>';
-                        }
-                    });
-                    html += '</table>';
-                } else {
-                    html += '<p class="text-center">No completed dispatches.</p>';
+                        });
+                        html += '</table>';
+                    } else {
+                        html += '<p class="text-center">No completed dispatches.</p>';
+                    }
+                }
+                const dispatchContent = document.getElementById('dispatchContent');
+                if (dispatchContent) {
+                    dispatchContent.innerHTML = html;
                 }
             }
-            const dispatchContent = document.getElementById('dispatchContent');
-            if (dispatchContent) {
-                dispatchContent.innerHTML = html;
-            }
-        }
 
-        function assignOfficer(select, dispatchId) {
-            const officer = select.value;
-            const dispatch = dispatchData.find(d => d.id === dispatchId);
-            if (dispatch) {
-                dispatch.assignedOfficer = officer || null;
-                dispatch.status = officer ? 'Assigned' : 'Pending';
-                dispatch.assignedTime = new Date().toISOString();
-                saveDispatch();
-                showTab('active');
+            function assignOfficer(select, dispatchId) {
+                const officer = select.value;
+                const dispatch = dispatchData.find(d => d.id === dispatchId);
+                if (dispatch) {
+                    dispatch.assignedOfficer = officer || null;
+                    dispatch.status = officer ? 'Assigned' : 'Pending';
+                    dispatch.assignedTime = new Date().toISOString();
+                    saveDispatch();
+                    showTab('active');
+                }
             }
-        }
 
-        function completeDispatch(dispatchId) {
-            const dispatch = dispatchData.find(d => d.id === dispatchId);
-            if (dispatch) {
-                dispatch.status = 'Completed';
-                dispatch.resolveTime = new Date().toISOString();
-                saveDispatch();
-                showAlert('Dispatch completed', 'bg-green-600');
-                showTab('active');
+            function completeDispatch(dispatchId) {
+                const dispatch = dispatchData.find(d => d.id === dispatchId);
+                if (dispatch) {
+                    dispatch.status = 'Completed';
+                    dispatch.resolveTime = new Date().toISOString();
+                    saveDispatch();
+                    showAlert('Dispatch completed', 'bg-green-600');
+                    showTab('active');
+                }
             }
-        }
 
-        function restoreDispatch(dispatchId) {
-            const dispatch = dispatchData.find(d => d.id === dispatchId);
-            if (dispatch) {
-                dispatch.status = 'Pending';
-                dispatch.resolveTime = null;
-                saveDispatch();
-                showAlert('Dispatch restored', 'bg-green-600');
-                showTab('history');
+            function restoreDispatch(dispatchId) {
+                const dispatch = dispatchData.find(d => d.id === dispatchId);
+                if (dispatch) {
+                    dispatch.status = 'Pending';
+                    dispatch.resolveTime = null;
+                    saveDispatch();
+                    showAlert('Dispatch restored', 'bg-green-600');
+                    showTab('history');
+                }
             }
-        }
+        });
     </script>
 </body>
 </html>
