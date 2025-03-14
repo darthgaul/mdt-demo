@@ -26,6 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="flex flex-col items-end space-y-2">
                     <span id="userInfo" class="text-sm"></span>
                     <div class="flex items-center space-x-4">
+                        <button id="emergencyButton" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow tooltip">
+                            Emergency
+                            <span class="tooltip-text">Send distress alert to all units</span>
+                        </button>
                         <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
                     </div>
                 </div>
@@ -50,9 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
             hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
         });
 
-        // Dark mode toggle
+        // Dark mode toggle as a sliding toggle
         const toggleBtn = document.getElementById('darkModeToggle');
-        toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'bg-gray-700', 'transition-colors', 'duration-200');
+        toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
         toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
         const label = document.createElement('span');
         label.className = 'ml-2 text-sm';
@@ -83,6 +87,11 @@ document.addEventListener('DOMContentLoaded', () => {
         navLinks.forEach(link => {
             const href = link.getAttribute('href');
             if (href === currentPage) link.classList.add('active');
+        });
+
+        // Emergency button placeholder (to be implemented later)
+        document.getElementById('emergencyButton').addEventListener('click', () => {
+            showAlert('Emergency distress alert sent to all units!', 'bg-red-600');
         });
     }
 });
