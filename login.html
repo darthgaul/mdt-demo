@@ -13,16 +13,15 @@
             height: auto;
             margin: 0 auto 2rem auto;
         }
-        .alert {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            background-color: #dc2626;
-            color: white;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            display: none;
+        .login-legend {
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .username-text {
+            color: #34d399; /* Green that complements blue */
+        }
+        .password-text {
+            color: #facc15; /* Yellow that complements blue */
         }
     </style>
 </head>
@@ -36,12 +35,22 @@
     </div>
     <div class="tips mt-4 w-full max-w-md">
         <h4 class="text-lg font-semibold">Tips</h4>
-        <p>Use these demo logins: <br>Supervisor Tom Vega / tom123 <br>Officer Alex Reed / alex123 <br>Officer Bella Cruz / bella123 <br>dispatch1 / dispass</p>
+        <div class="login-legend">
+            <span class="username-text">Username</span> / <span class="password-text">Password</span>
+        </div>
+        <p>
+            [Security Manager] <span class="username-text">JohnSmith</span> / <span class="password-text">john123</span><br>
+            [Security Supervisor] <span class="username-text">TomVega</span> / <span class="password-text">tom123</span><br>
+            [Patrol Officer] <span class="username-text">AlexReed</span> / <span class="password-text">alex123</span><br>
+            [Static Officer] <span class="username-text">BellaCruz</span> / <span class="password-text">bella123</span><br>
+            [Dispatcher] <span class="username-text">SarahJones</span> / <span class="password-text">sarah123</span>
+        </p>
     </div>
 
-    <div id="alert" class="alert"></div>
+    <div id="alert" class="hidden"></div>
 
     <script src="scripts.js"></script>
+    <script src="common.js"></script>
     <script>
         if (localStorage.getItem('user')) window.location.href = 'index.html';
 
@@ -64,16 +73,9 @@
                     localStorage.setItem('user', JSON.stringify(user));
                     window.location.href = 'index.html';
                 } else {
-                    showAlert('Invalid username or password');
+                    showAlert('Invalid username or password', 'bg-red-600');
                 }
             });
-        }
-
-        function showAlert(message) {
-            const alert = document.getElementById('alert');
-            alert.textContent = message;
-            alert.style.display = 'block';
-            setTimeout(() => alert.style.display = 'none', 3000);
         }
     </script>
 </body>
