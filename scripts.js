@@ -1,54 +1,50 @@
-let peopleData = [], propertiesData = [], dispatchData = [], reportsData = [], usersData = [], employeesData = [];
+let employeesData = [];
+let dispatchData = [];
+let reportsData = [];
+let propertiesData = [];
+let peopleData = [];
+let usersData = [];
 
-function loadData(callback) {
-    Promise.all([
-        fetch('people.json').then(res => res.ok ? res.json() : []),
-        fetch('properties.json').then(res => res.ok ? res.json() : []),
-        fetch('dispatch.json').then(res => res.ok ? res.json() : []),
-        fetch('reports.json').then(res => res.ok ? res.json() : []),
-        fetch('users.json').then(res => res.ok ? res.json() : []),
-        fetch('employees.json').then(res => res.ok ? res.json() : [])
-    ]).then(([people, properties, dispatch, reports, users, employees]) => {
-        console.log('Data loaded:', { people, properties, dispatch, reports, users, employees });
-        peopleData = people || [];
-        propertiesData = properties || [];
-        dispatchData = dispatch || [];
-        reportsData = reports || [];
-        usersData = users || [];
-        employeesData = employees || [];
-
-        const storedDispatch = JSON.parse(localStorage.getItem('dispatchData') || '[]');
-        if (storedDispatch.length) dispatchData = storedDispatch;
-
-        const storedProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
-        storedProperties.forEach(prop => {
-            if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
-        });
-
-        const storedReports = JSON.parse(localStorage.getItem('reportsData') || '[]');
-        if (storedReports.length) reportsData = storedReports;
-
+async function loadData(callback) {
+    try {
+        const [employees, dispatch, reports, properties, people, users] = await Promise.all([
+            fetch('employees.json').then(res => res.json()),
+            fetch('dispatch.json').then(res => res.json()),
+            fetch('reports.json').then(res => res.json()),
+            fetch('properties.json').then(res => res.json()),
+            fetch('people.json').then(res => res.json()),
+            fetch('users.json').then(res => res.json())
+        ]);
+        employeesData = employees;
+        dispatchData = dispatch;
+        reportsData = reports;
+        propertiesData = properties;
+        peopleData = people;
+        usersData = users;
+        console.log('Data loaded:', { employeesData, dispatchData, reportsData, propertiesData, peopleData, usersData });
         if (callback) callback();
-    }).catch(err => console.error('Promise.all error:', err));
+    } catch (error) {
+        console.error('Promise.all error:', error);
+    }
 }
 
 function saveDispatch() {
-    localStorage.setItem('dispatchData', JSON.stringify(dispatchData));
+    localStorage.setItem('dispatch', JSON.stringify(dispatchData));
 }
 
 function saveReports() {
-    localStorage.setItem('reportsData', JSON.stringify(reportsData));
+    localStorage.setItem('reports', JSON.stringify(reportsData));
 }
 
 function saveProperties() {
-    localStorage.setItem('customProperties', JSON.stringify(propertiesData.filter(p => parseInt(p.id.replace('PROP', '')) > 50)));
+    localStorage.setItem('properties', JSON.stringify(propertiesData));
 }
 
 function calculateElapsed(dateTime) {
+    const start = new Date(dateTime);
     const now = new Date();
-    const callTime = new Date(dateTime);
-    const diffMs = now - callTime;
-    const minutes = Math.floor(diffMs / 60000);
-    const seconds = Math.floor((diffMs % 60000) / 1000);
-    return { minutes, seconds, totalMs: diffMs };
+    const diff = now - start;
+    const minutes = Math.floor(diff / 1000 / 60);
+    const hours = Math.floor(minutes / 60);
+    return { hours, minutes: minutes % 60 };
 }
