@@ -25,7 +25,6 @@ async function loadData(callback) {
         if (callback) callback();
     } catch (error) {
         console.error('Failed to load data:', error);
-        // Fallback to empty arrays to prevent rendering failures
         employeesData = [];
         dispatchData = [];
         reportsData = [];
@@ -56,3 +55,16 @@ function calculateElapsed(dateTime) {
     const hours = Math.floor(minutes / 60);
     return { hours, minutes: minutes % 60 };
 }
+
+// Expose variables and functions globally
+window.employeesData = employeesData;
+window.dispatchData = dispatchData;
+window.reportsData = reportsData;
+window.propertiesData = propertiesData;
+window.peopleData = peopleData;
+window.usersData = usersData;
+window.loadData = loadData;
+window.saveDispatch = saveDispatch;
+window.saveReports = saveReports;
+window.saveProperties = saveProperties;
+window.calculateElapsed = calculateElapsed;
