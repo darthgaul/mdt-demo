@@ -1,4 +1,11 @@
 let isInitialized = false;
+const user = JSON.parse(localStorage.getItem('user'));
+
+// Redirect to login if no user is present
+if (!user && window.location.pathname.split('/').pop() !== 'login.html') {
+    window.location.href = 'login.html';
+    return; // Stop further execution
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     if (isInitialized) return; // Prevent multiple initializations
@@ -38,7 +45,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (managerLink && user && !['Managers', 'Supervisors', 'Dispatchers'].includes(user.group)) {
             managerLink.style.display = 'none';
         }
-        if (user) document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
+
+        // Set user info only if user exists
+        if (user && user.username) {
+            document.getElementById('userInfo').textContent = `Logged in as ${user.username}`;
+        } else {
+            window.location.href = 'login.html';
+            return;
+        }
 
         // Hamburger toggle
         const hamburger = document.querySelector('.hamburger');
