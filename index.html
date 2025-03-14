@@ -164,7 +164,7 @@
         </div>
     </div>
 
-    <div id="alert" class="fixed top-4 right-4 bg-red-600 text-white p-4 rounded shadow hidden"></div>
+    <div id="alert" class="hidden"></div>
 
     <script src="scripts.js"></script>
     <script src="common.js"></script>
@@ -263,10 +263,13 @@
 
         function updateDispatchList() {
             const active = dispatchData.filter(d => d.status !== 'Completed');
-            let html = active.length ? '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Status</th></tr>' : '<p class="text-center">No active dispatches.</p>';
+            let html = active.length ? '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Actions</th></tr>' : '<p class="text-center">No active dispatches.</p>';
             active.forEach(disp => {
                 const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500' }[disp.status] || 'text-gray-500';
-                html += `<tr><td class="p-2">${disp.id}</td><td class="p-2">${disp.issue}</td><td class="p-2 ${statusColor}">${disp.status}</td></tr>`;
+                const callTime = new Date(disp.dateTime).toLocaleString();
+                const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
+                html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td>`;
+                html += `<td class="p-2 space-x-2"><button onclick="assignCall('${disp.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Assign</button></td></tr>`;
             });
             if (active.length) html += '</table>';
             document.getElementById('dispatchList').innerHTML = html;
@@ -295,7 +298,7 @@
                     html += active.length ? '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' : '<p class="text-center">No active dispatches assigned to you.</p>';
                     active.forEach(disp => {
                         const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500', Completed: 'text-green-500' }[disp.status];
-                        html += `<div class="bg-gray-700 p-3 rounded shadow"><p><strong>ID:</strong> ${disp.id}</p><p><strong>Issue:</strong> ${disp.issue}</p><p><strong>Property:</strong> ${disp.property}</p><p><strong>Status:</strong> <span class="${statusColor}">${disp.status}</span></p></div>`;
+                        html += `<div class="bg-gray-700 p-3 rounded shadow"><p><strong>Issue:</strong> ${disp.issue}</p><p><strong>Property:</strong> ${disp.property}</p><p><strong>Status:</strong> <span class="${statusColor}">${disp.status}</span></p></div>`;
                     });
                     if (active.length) html += '</div>';
                 }
