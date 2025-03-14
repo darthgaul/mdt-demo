@@ -1,3 +1,5 @@
+import { getOfficerStatus, setOfficerStatus, broadcastStatusUpdate, officerStatuses } from './officers.js';
+
 let isInitialized = false;
 
 function checkAuthentication() {
@@ -9,6 +11,22 @@ function checkAuthentication() {
         }
         return true;
     }
+    return false;
+}
+
+function updateOfficerStatus(officerName, newStatus, currentUser) {
+    if (!currentUser) return false;
+    const isOfficer = currentUser.group === 'Officers';
+    if (isOfficer && officerName !== currentUser.username) {
+        showAlert('Officers can only update their own status', 'bg-red-600');
+        return false;
+    }
+    if (['Managers', 'Supervisors', 'Dispatchers'].includes(currentUser.group) || (isOfficer && officerName === currentUser.username)) {
+        setOfficerStatus(officerName, newStatus);
+        showAlert(`Status for ${officerName} updated to ${newStatus}`, 'bg-green-600');
+        return true;
+    }
+    showAlert('Unauthorized to update officer status', 'bg-red-600');
     return false;
 }
 
@@ -114,6 +132,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (href === currentPage) link.classList.add('active');
         });
     }
+
+    // Expose updateOfficerStatus for use in other pages
+    window.updateOfficerStatus = updateOfficerStatus;
 });
 
 function logout() {
