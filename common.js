@@ -21,15 +21,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="dispatch.html">Dispatch</a>
                     <a href="reports.html">Reports</a>
                     <a href="manager.html" id="managerLink">Manager</a>
-                    <a href="map.html">Map</a>
                 </div>
                 <div class="flex flex-col items-end space-y-2">
                     <span id="userInfo" class="text-sm"></span>
                     <div class="flex items-center space-x-4">
-                        <button id="emergencyButton" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow tooltip">
-                            Emergency
-                            <span class="tooltip-text">Send distress alert to all units</span>
-                        </button>
                         <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
                     </div>
                 </div>
@@ -54,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
             hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
         });
 
-        // Dark mode toggle as a sliding toggle
+        // Dark mode toggle
         const toggleBtn = document.getElementById('darkModeToggle');
         toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
         toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
@@ -88,11 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const href = link.getAttribute('href');
             if (href === currentPage) link.classList.add('active');
         });
-
-        // Emergency button placeholder (to be implemented later)
-        document.getElementById('emergencyButton').addEventListener('click', () => {
-            showAlert('Emergency distress alert sent to all units!', 'bg-red-600');
-        });
     }
 });
 
@@ -105,7 +95,7 @@ function showAlert(message, color = 'bg-green-600') {
     const alert = document.getElementById('alert');
     if (alert) {
         alert.textContent = message;
-        alert.className = `fixed top-4 right-4 ${color} text-white p-4 rounded shadow`;
+        alert.className = `fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000]`;
         alert.classList.remove('hidden');
         setTimeout(() => alert.classList.add('hidden'), 3000);
     }
