@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MDT Manager</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -39,7 +40,16 @@
     <script src="scripts.js"></script>
     <script src="common.js"></script>
     <script>
-        if (user.group !== 'Managers') window.location.href = 'index.html';
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        if (user.group !== 'Managers') {
+            window.location.href = 'index.html';
+            return;
+        }
 
         loadData(() => {
             showEmployees();
@@ -82,26 +92,40 @@
 
         function showEmployees() {
             let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Group</th><th class="p-2 bg-gray-700">Actions</th></tr>';
-            employeesData.forEach(emp => {
-                const userData = usersData.find(u => u.username === emp.name) || {};
-                html += `<tr><td class="p-2">${emp.name}</td><td class="p-2"><select onchange="editGroup(this, '${emp.name}')" class="bg-gray-700 text-white p-1 rounded">`;
-                ['Managers', 'Supervisors', 'Dispatchers', 'Officers'].forEach(group => {
-                    html += `<option value="${group}" ${userData.group === group ? 'selected' : ''}>${group}</option>`;
+            if (employeesData && employeesData.length > 0) {
+                employeesData.forEach(emp => {
+                    const userData = usersData.find(u => u.username === emp.name) || {};
+                    html += `<tr><td class="p-2">${emp.name}</td><td class="p-2"><select onchange="editGroup(this, '${emp.name}')" class="bg-gray-700 text-white p-1 rounded">`;
+                    ['Managers', 'Supervisors', 'Dispatchers', 'Officers'].forEach(group => {
+                        html += `<option value="${group}" ${userData.group === group ? 'selected' : ''}>${group}</option>`;
+                    });
+                    html += `</select></td><td class="p-2"><button onclick="deleteEmployee('${emp.name}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button></td></tr>`;
                 });
-                html += `</select></td><td class="p-2"><button onclick="deleteEmployee('${emp.name}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button></td></tr>`;
-            });
+            } else {
+                html += '<tr><td colspan="3" class="p-2 text-center">No employees found. Data may have failed to load.</td></tr>';
+            }
             html += '</table>';
-            document.getElementById('employeeList').innerHTML = html;
+            const employeeList = document.getElementById('employeeList');
+            if (employeeList) {
+                employeeList.innerHTML = html;
+            }
         }
 
         function showProperties() {
             let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
-            propertiesData.forEach(prop => {
-                html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${prop.suspended ? 'Suspended' : 'Active'}</td><td class="p-2">`;
-                html += `<button onclick="${prop.suspended ? 'activateProperty' : 'suspendProperty'}('${prop.id}')" class="bg-${prop.suspended ? 'green' : 'yellow'}-600 hover:bg-${prop.suspended ? 'green' : 'yellow'}-700 p-1 rounded text-sm shadow">${prop.suspended ? 'Activate' : 'Suspend'}</button></td></tr>`;
-            });
+            if (propertiesData && propertiesData.length > 0) {
+                propertiesData.forEach(prop => {
+                    html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${prop.suspended ? 'Suspended' : 'Active'}</td><td class="p-2">`;
+                    html += `<button onclick="${prop.suspended ? 'activateProperty' : 'suspendProperty'}('${prop.id}')" class="bg-${prop.suspended ? 'green' : 'yellow'}-600 hover:bg-${prop.suspended ? 'green' : 'yellow'}-700 p-1 rounded text-sm shadow">${prop.suspended ? 'Activate' : 'Suspend'}</button></td></tr>`;
+                });
+            } else {
+                html += '<tr><td colspan="5" class="p-2 text-center">No properties found. Data may have failed to load.</td></tr>';
+            }
             html += '</table>';
-            document.getElementById('propertyList').innerHTML = html;
+            const propertyList = document.getElementById('propertyList');
+            if (propertyList) {
+                propertyList.innerHTML = html;
+            }
         }
 
         function editGroup(select, name) {
