@@ -28,6 +28,15 @@ function updateOfficerStatus(officerName, newStatus, currentUser) {
     return false;
 }
 
+function navigateToPage(page) {
+    // Update URL without reloading the page
+    history.pushState({ page: page }, '', page);
+    // Trigger page-specific rendering (you can customize this per page)
+    if (window.loadPageContent) {
+        window.loadPageContent(page);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     if (isInitialized) return;
     isInitialized = true;
@@ -49,13 +58,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button id="darkModeToggle"></button>
                 </div>
                 <div class="nav-tabs">
-                    <a href="index.html">Dashboard</a>
-                    <a href="properties.html">Properties</a>
-                    <a href="people.html">People</a>
-                    <a href="dispatch.html">Dispatch</a>
-                    <a href="reports.html">Reports</a>
-                    <a href="officers.html">Officers</a>
-                    <a href="manager.html" id="managerLink">Manager</a>
+                    <a href="#" data-page="index.html">Dashboard</a>
+                    <a href="#" data-page="properties.html">Properties</a>
+                    <a href="#" data-page="people.html">People</a>
+                    <a href="#" data-page="dispatch.html">Dispatch</a>
+                    <a href="#" data-page="reports.html">Reports</a>
+                    <a href="#" data-page="officers.html">Officers</a>
+                    <a href="#" data-page="manager.html" id="managerLink">Manager</a>
                 </div>
                 <div class="flex flex-col items-end space-y-2">
                     <span id="userInfo" class="text-sm"></span>
@@ -122,12 +131,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Set active tab
+        // Set active tab and handle navigation
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
         const navLinks = document.querySelectorAll('.nav-tabs a');
         navLinks.forEach(link => {
-            const href = link.getAttribute('href');
-            if (href === currentPage) link.classList.add('active');
+            const page = link.getAttribute('data-page');
+            if (page === currentPage) {
+                link.classList.add('active');
+            }
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigateToPage(page);
+            });
         });
     }
 
