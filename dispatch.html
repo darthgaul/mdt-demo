@@ -13,7 +13,7 @@
 
     <div class="tips">
         <h4 class="text-lg font-semibold">Tips</h4>
-        <p>Active: View and manage current calls (assign officers, mark complete). History: See completed calls (restore if needed). Officers see only their assigned calls.</p>
+        <p>Active: View and manage current calls (assign officers, mark clear). History: See completed calls (restore if needed). Officers see only their assigned calls.</p>
     </div>
 
     <div class="flex space-x-4 mb-4">
@@ -61,9 +61,11 @@
                                     html += '<td class="p-2 space-x-2"><select onchange="assignOfficer(this, \'' + disp.id + '\')" class="bg-gray-700 text-white p-1 rounded">';
                                     html += '<option value="">Assign</option>';
                                     if (employeesData) {
-                                        employeesData.forEach(emp => html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`);
+                                        employeesData.forEach(emp => {
+                                            html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`;
+                                        });
                                     }
-                                    html += '</select><button onclick="completeDispatch(\'' + disp.id + '\')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Complete</button></td>';
+                                    html += '</select><button onclick="clearDispatch(\'' + disp.id + '\')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Clear</button></td>';
                                 }
                                 html += '</tr>';
                             }
@@ -106,20 +108,24 @@
                 if (dispatch) {
                     dispatch.assignedOfficer = officer || null;
                     dispatch.status = officer ? 'Assigned' : 'Pending';
-                    dispatch.assignedTime = new Date().toISOString();
+                    dispatch.assignedTime = officer ? new Date().toISOString() : null; // Set assignedTime only if an officer is selected
                     saveDispatch();
-                    showTab('active');
+                    showTab('active'); // Refresh the active tab to show updated data
+                } else {
+                    showAlert('Dispatch not found', 'bg-red-600');
                 }
             }
 
-            function completeDispatch(dispatchId) {
+            function clearDispatch(dispatchId) {
                 const dispatch = dispatchData.find(d => d.id === dispatchId);
                 if (dispatch) {
                     dispatch.status = 'Completed';
                     dispatch.resolveTime = new Date().toISOString();
                     saveDispatch();
-                    showAlert('Dispatch completed', 'bg-green-600');
-                    showTab('active');
+                    showAlert('Dispatch cleared and moved to history', 'bg-green-600');
+                    showTab('active'); // Refresh the active tab to remove the cleared dispatch
+                } else {
+                    showAlert('Dispatch not found', 'bg-red-600');
                 }
             }
 
@@ -129,8 +135,10 @@
                     dispatch.status = 'Pending';
                     dispatch.resolveTime = null;
                     saveDispatch();
-                    showAlert('Dispatch restored', 'bg-green-600');
-                    showTab('history');
+                    showAlert('Dispatch restored to active', 'bg-green-600');
+                    showTab('history'); // Refresh the history tab
+                } else {
+                    showAlert('Dispatch not found', 'bg-red-600');
                 }
             }
         });
