@@ -79,6 +79,17 @@
             font-size: 0.75rem;
             margin-left: 0.5rem;
         }
+        .nato-cheat-sheet {
+            background-color: #1e3a8a;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+        .light-mode .nato-cheat-sheet {
+            background-color: #dbeafe;
+            color: #1e3a8a;
+        }
         @media (max-width: 1024px) {
             .dashboard-container {
                 flex-direction: column;
@@ -106,29 +117,48 @@
     <div class="tips">
         <h4 class="text-lg font-semibold">Tips</h4>
         <p>Overview: See your dispatches or team status. Route: Start your patrol route. Use the sidebar toggles on mobile.</p>
+        <p>Example: Use 10-codes like "10-42" to mark yourself off duty.</p>
     </div>
 
     <div class="dashboard-container">
         <div class="sidebar" id="unitsSidebar">
-            <button class="toggle-sidebar" onclick="toggleSidebar('unitsSidebar')">Toggle Units</button>
+            <button class="toggle-sidebar tooltip" onclick="toggleSidebar('unitsSidebar')">
+                Toggle Units
+                <span class="tooltip-text">Show/hide the Active Units sidebar</span>
+            </button>
             <h3 class="text-lg font-semibold mb-2">Active Units</h3>
-            <select id="unitFilter" class="bg-gray-700 text-white p-2 rounded w-full mb-2" onchange="updateUnitsList()">
+            <select id="unitFilter" class="bg-gray-700 text-white p-2 rounded w-full mb-2 tooltip" onchange="updateUnitsList()">
                 <option value="">All Departments</option>
                 <option value="Supervisors">Supervisors</option>
                 <option value="Dispatchers">Dispatchers</option>
                 <option value="Officers">Officers</option>
+                <span class="tooltip-text">Filter units by department</span>
             </select>
             <div id="unitsList"></div>
         </div>
         <div class="main-content">
             <div class="flex space-x-4 mb-4">
-                <button onclick="showTab('overview')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Overview</button>
-                <button onclick="showTab('route')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Route</button>
+                <button onclick="showTab('overview')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow tooltip">
+                    Overview
+                    <span class="tooltip-text">View team status and active dispatches</span>
+                </button>
+                <button onclick="showTab('route')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow tooltip">
+                    Route
+                    <span class="tooltip-text">Manage your assigned patrol route</span>
+                </button>
             </div>
             <div id="dashboardContent"></div>
+            <div class="nato-cheat-sheet">
+                <h4 class="text-lg font-semibold mb-2">NATO Phonetic Cheat Sheet</h4>
+                <p>A - Alpha | B - Bravo | C - Charlie | D - Delta | E - Echo | F - Foxtrot | G - Golf | H - Hotel | I - India | J - Juliet | K - Kilo | L - Lima | M - Mike</p>
+                <p>N - November | O - Oscar | P - Papa | Q - Quebec | R - Romeo | S - Sierra | T - Tango | U - Uniform | V - Victor | W - Whiskey | X - Xray | Y - Yankee | Z - Zulu</p>
+            </div>
         </div>
         <div class="sidebar" id="dispatchSidebar">
-            <button class="toggle-sidebar" onclick="toggleSidebar('dispatchSidebar')">Toggle Dispatches</button>
+            <button class="toggle-sidebar tooltip" onclick="toggleSidebar('dispatchSidebar')">
+                Toggle Dispatches
+                <span class="tooltip-text">Show/hide the Active Dispatches sidebar</span>
+            </button>
             <h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>
             <div id="dispatchList"></div>
         </div>
@@ -185,9 +215,18 @@
                         html += `<p><strong>Location:</strong> ${emp.location || 'N/A'}</p>`;
                         html += `<p><strong>Department:</strong> ${emp.department || 'N/A'}</p>`;
                         html += `<div class="flex space-x-2 mt-2">
-                            <button onclick="messageUnit('${emp.name}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow">Message</button>
-                            <button onclick="setStatus('${emp.name}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Set Status</button>
-                            <button onclick="assignCall('${emp.name}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Assign Call</button>
+                            <button onclick="messageUnit('${emp.name}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow tooltip">
+                                Message
+                                <span class="tooltip-text">Send a message to this unit</span>
+                            </button>
+                            <button onclick="setStatus('${emp.name}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow tooltip">
+                                Set Status
+                                <span class="tooltip-text">Update the unit's status</span>
+                            </button>
+                            <button onclick="assignCall('${emp.name}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow tooltip">
+                                Assign Call
+                                <span class="tooltip-text">Assign a dispatch to this unit</span>
+                            </button>
                         </div></div>`;
                     });
                     html += '</div></div>';
@@ -274,8 +313,14 @@
                 routeProps.forEach(prop => {
                     const hitsDone = reportsData.filter(r => r.property === prop.id && r.type === 'Patrol Hit').length;
                     html += `<tr><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${hitsDone}/${prop.minHits}</td><td class="p-2 space-x-2">`;
-                    html += `<button onclick="navigate('${prop.address}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow">Navigate</button>`;
-                    html += `<button onclick="arrive('${prop.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Arrived</button>`;
+                    html += `<button onclick="navigate('${prop.address}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow tooltip">
+                        Navigate
+                        <span class="tooltip-text">Open Google Maps to navigate to this property</span>
+                    </button>`;
+                    html += `<button onclick="arrive('${prop.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow tooltip">
+                        Arrived
+                        <span class="tooltip-text">Mark arrival and log a patrol hit</span>
+                    </button>`;
                     html += `</td></tr>`;
                 });
                 html += '</table>';
