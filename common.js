@@ -29,9 +29,8 @@ function updateOfficerStatus(officerName, newStatus, currentUser) {
 }
 
 function navigateToPage(page) {
-    // Update URL without reloading
     history.pushState({ page: page }, '', page);
-    loadPageContent(page); // Load content dynamically
+    loadPageContent(page);
 }
 
 function loadPageContent(page) {
@@ -40,6 +39,36 @@ function loadPageContent(page) {
         window.location.href = 'login.html';
         return;
     }
+
+    const nav = `
+        <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="hamburger">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <button id="darkModeToggle"></button>
+                </div>
+                <div class="nav-tabs">
+                    <a href="#" data-page="index.html">Dashboard</a>
+                    <a href="#" data-page="properties.html">Properties</a>
+                    <a href="#" data-page="people.html">People</a>
+                    <a href="#" data-page="dispatch.html">Dispatch</a>
+                    <a href="#" data-page="reports.html">Reports</a>
+                    <a href="#" data-page="officers.html">Officers</a>
+                    <a href="#" data-page="manager.html" id="managerLink">Manager</a>
+                </div>
+                <div class="flex flex-col items-end space-y-2">
+                    <span id="userInfo" class="text-sm"></span>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    `;
 
     let content = '';
     switch (page) {
@@ -348,6 +377,8 @@ function loadPageContent(page) {
                 <div id="peopleResults" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
                 <div id="alert" class="hidden"></div>
                 <script>
+                    loadData(() => {});
+
                     function searchPeople() {
                         const simple = document.getElementById('simpleSearch').value.toLowerCase();
                         const ctn = document.getElementById('ctnFilter').value;
@@ -400,285 +431,6 @@ function loadPageContent(page) {
                         if (peopleResults) {
                             peopleResults.innerHTML = html;
                         }
-                    }
-                </script>
-            `;
-            break;
-        case 'dispatch.html':
-            content = `
-                <div class="tips">
-                    <h4 class="text-lg font-semibold">Tips</h4>
-                    <p>Active: View and manage current calls (assign officers, mark clear). History: See completed calls (restore if needed). Officers see only their assigned calls.</p>
-                </div>
-                <div class="flex space-x-4 mb-4">
-                    <button onclick="showTab('active')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Active</button>
-                    <button onclick="showTab('history')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">History</button>
-                </div>
-                <div id="dispatchContent" class="bg-gray-800 p-4 rounded-lg shadow"></div>
-                <div id="alert" class="hidden"></div>
-                <script>
-                    loadData(() => showTab('active'));
-
-                    function showTab(tab) {
-                        const user = JSON.parse(localStorage.getItem('user'));
-                        if (!user) {
-                            window.location.href = 'login.html';
-                            return;
-                        }
-
-                        const isOfficer = user.group === 'Officers';
-                        const isDispatcher = ['Dispatchers', 'Managers', 'Supervisors'].includes(user.group);
-                        let html = '';
-
-                        if (tab === 'active') {
-                            const activeDispatches = dispatchData ? dispatchData.filter(d => d.status !== 'Completed') : [];
-                            html += '<h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>';
-                            if (activeDispatches.length) {
-                                html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
-                                activeDispatches.forEach(disp => {
-                                    if (!isOfficer || disp.assignedOfficer === user.username) {
-                                        const callTime = new Date(disp.dateTime).toLocaleString();
-                                        const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
-                                        const statusColor = { Pending: 'yellow-500', Assigned: 'blue-500', 'In Progress': 'orange-500' }[disp.status];
-                                        html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td>`;
-                                        if (isDispatcher) {
-                                            html += '<td class="p-2 space-x-2"><select onchange="assignOfficer(this, \'' + disp.id + '\')" class="bg-gray-700 text-white p-1 rounded">';
-                                            html += '<option value="">Assign</option>';
-                                            if (employeesData) {
-                                                employeesData.forEach(emp => {
-                                                    html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`;
-                                                });
-                                            }
-                                            html += '</select><button onclick="clearDispatch(\'' + disp.id + '\')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Clear</button></td>';
-                                        }
-                                        html += '</tr>';
-                                    }
-                                });
-                                html += '</table>';
-                            } else {
-                                html += '<p class="text-center">No active dispatches.</p>';
-                            }
-                        } else if (tab === 'history') {
-                            const completedDispatches = dispatchData ? dispatchData.filter(d => d.status === 'Completed') : [];
-                            html += '<h3 class="text-lg font-semibold mb-2">Dispatch History</h3>';
-                            if (completedDispatches.length) {
-                                html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Resolve Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
-                                completedDispatches.forEach(disp => {
-                                    if (!isOfficer || disp.assignedOfficer === user.username) {
-                                        const callTime = new Date(disp.dateTime).toLocaleString();
-                                        const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
-                                        const resolveTime = disp.resolveTime ? new Date(disp.resolveTime).toLocaleString() : 'N/A';
-                                        html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td><td class="p-2">${resolveTime}</td>`;
-                                        if (isDispatcher) {
-                                            html += '<td class="p-2"><button onclick="restoreDispatch(\'' + disp.id + '\')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow">Restore</button></td>';
-                                        }
-                                        html += '</tr>';
-                                    }
-                                });
-                                html += '</table>';
-                            } else {
-                                html += '<p class="text-center">No completed dispatches.</p>';
-                            }
-                        }
-                        const dispatchContent = document.getElementById('dispatchContent');
-                        if (dispatchContent) {
-                            dispatchContent.innerHTML = html;
-                        }
-                    }
-
-                    function assignOfficer(select, dispatchId) {
-                        const officer = select.value;
-                        const dispatch = dispatchData.find(d => d.id === dispatchId);
-                        if (dispatch) {
-                            dispatch.assignedOfficer = officer || null;
-                            dispatch.status = officer ? 'Assigned' : 'Pending';
-                            dispatch.assignedTime = officer ? new Date().toISOString() : null;
-                            saveDispatch();
-                            showTab('active');
-                        } else {
-                            showAlert('Dispatch not found', 'bg-red-600');
-                        }
-                    }
-
-                    function clearDispatch(dispatchId) {
-                        const dispatch = dispatchData.find(d => d.id === dispatchId);
-                        if (dispatch) {
-                            dispatch.status = 'Completed';
-                            dispatch.resolveTime = new Date().toISOString();
-                            saveDispatch();
-                            showAlert('Dispatch cleared and moved to history', 'bg-green-600');
-                            showTab('active');
-                        } else {
-                            showAlert('Dispatch not found', 'bg-red-600');
-                        }
-                    }
-
-                    function restoreDispatch(dispatchId) {
-                        const dispatch = dispatchData.find(d => d.id === dispatchId);
-                        if (dispatch) {
-                            dispatch.status = 'Pending';
-                            dispatch.resolveTime = null;
-                            saveDispatch();
-                            showAlert('Dispatch restored to active', 'bg-green-600');
-                            showTab('history');
-                        } else {
-                            showAlert('Dispatch not found', 'bg-red-600');
-                        }
-                    }
-                </script>
-            `;
-            break;
-        case 'reports.html':
-            content = `
-                <div class="tips">
-                    <h4 class="text-lg font-semibold">Tips</h4>
-                    <p>Submit a report below (e.g., Patrol Hit, Incident). View all reports in the table. Filter by person via URL (e.g., ?personId=P001). Click Case Number to view details.</p>
-                </div>
-                <h3 class="text-xl font-semibold mb-2">Submit Report</h3>
-                <div class="bg-gray-800 p-4 rounded-lg mb-4 shadow">
-                    <div class="flex flex-wrap gap-2">
-                        <input type="text" id="personId" placeholder="Person ID (e.g., P001)" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/4">
-                        <input type="text" id="property" placeholder="Property ID (e.g., PROP001)" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/4">
-                        <select id="type" class="bg-gray-700 text-white p-2 rounded"><option value="Patrol Hit">Patrol Hit</option><option value="Incident">Incident</option><option value="CTN Update">CTN Update</option></select>
-                        <input type="text" id="narrative" placeholder="Narrative" class="bg-gray-700 text-white p-2 rounded w-full sm:w-1/3">
-                        <button onclick="submitReport()" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Submit</button>
-                    </div>
-                </div>
-                <h3 class="text-xl font-semibold mb-2">Reports</h3>
-                <div id="reportsList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
-                <div id="alert" class="hidden"></div>
-                <script>
-                    loadData(() => {
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const personId = urlParams.get('personId');
-                        showReports(personId);
-                    });
-
-                    function submitReport() {
-                        const personId = document.getElementById('personId').value || 'N/A';
-                        const property = document.getElementById('property').value;
-                        const type = document.getElementById('type').value;
-                        const narrative = document.getElementById('narrative').value;
-
-                        if (!property && !narrative) {
-                            showAlert('Property or narrative required', 'bg-red-600');
-                            return;
-                        }
-
-                        const now = new Date();
-                        const caseNumber = `${now.getFullYear().toString().slice(2)}-${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}`;
-                        const user = JSON.parse(localStorage.getItem('user'));
-                        const report = {
-                            caseNumber,
-                            dateTime: now.toISOString(),
-                            personId,
-                            property,
-                            type,
-                            narrative: `${user.username}: ${narrative}`,
-                            officer: user.username
-                        };
-                        if (!reportsData) reportsData = [];
-                        reportsData.push(report);
-                        saveReports();
-
-                        if (type === 'CTN Update' && personId !== 'N/A') {
-                            const person = peopleData.find(p => p.id === personId);
-                            if (person) {
-                                person.ctnStatus = 'CTN Issued';
-                            }
-                        }
-
-                        showAlert('Report submitted', 'bg-green-600');
-                        showReports();
-                        document.getElementById('personId').value = '';
-                        document.getElementById('property').value = '';
-                        document.getElementById('narrative').value = '';
-                    }
-
-                    function showReports(filterPersonId = null) {
-                        const filteredReports = reportsData ? (filterPersonId ? reportsData.filter(r => r.personId === filterPersonId) : reportsData) : [];
-                        let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Case Number</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Person ID</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
-                        if (filteredReports.length) {
-                            filteredReports.forEach(report => {
-                                const canView = user.username === report.officer || ['Managers', 'Supervisors'].includes(user.group);
-                                if (canView) {
-                                    html += `<tr><td class="p-2"><a href="javascript:showReportDetails('${report.caseNumber}')" class="underline">${report.caseNumber}</a></td><td class="p-2">${report.dateTime}</td><td class="p-2">${report.personId}</td><td class="p-2">${report.property}</td><td class="p-2">${report.type}</td><td class="p-2">${report.narrative}</td></tr>`;
-                                }
-                            });
-                        } else {
-                            html += '<tr><td colspan="6" class="p-2 text-center">No reports found. Data may have failed to load.</td></tr>';
-                        }
-                        html += '</table>';
-                        const reportsList = document.getElementById('reportsList');
-                        if (reportsList) {
-                            reportsList.innerHTML = html;
-                        }
-                    }
-
-                    function showReportDetails(caseNumber) {
-                        const report = reportsData.find(r => r.caseNumber === caseNumber);
-                        if (!report) {
-                            showAlert('Report not found', 'bg-red-600');
-                            return;
-                        }
-
-                        const isOfficer = user.group === 'Officers' && user.username === report.officer;
-                        const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
-                        let html = `<div class="bg-gray-800 p-4 rounded-lg shadow">`;
-                        html += `<h4 class="text-lg font-semibold mb-2">Report Details</h4>`;
-                        html += `<p><strong>Case Number:</strong> ${report.caseNumber}</p>`;
-                        html += `<p><strong>Date/Time:</strong> ${report.dateTime}</p>`;
-                        html += `<p><strong>Person ID:</strong> ${report.personId}</p>`;
-                        html += `<p><strong>Property:</strong> ${report.property}</p>`;
-                        html += `<p><strong>Type:</strong> ${report.type}</p>`;
-                        html += `<p><strong>Narrative:</strong> ${report.narrative}</p>`;
-                        html += `<p><strong>Officer:</strong> ${report.officer}</p>`;
-
-                        if (isOfficer || isManagerOrSupervisor) {
-                            if (isOfficer) {
-                                const hasRequested = editRequests.some(req => req.caseNumber === caseNumber && req.officer === user.username);
-                                html += `<button onclick="requestEdit('${caseNumber}')" class="bg-yellow-600 hover:bg-yellow-700 p-2 rounded shadow mt-2" ${hasRequested ? 'disabled' : ''}>${hasRequested ? 'Edit Requested' : 'Request Edit'}</button>`;
-                            }
-                            if (isManagerOrSupervisor) {
-                                const pendingRequest = editRequests.find(req => req.caseNumber === caseNumber);
-                                if (pendingRequest) {
-                                    html += `<div class="mt-2 p-2 bg-yellow-600 rounded"><p><strong>Edit Request from ${pendingRequest.officer}:</strong> ${pendingRequest.reason}</p>`;
-                                    html += `<button onclick="approveEdit('${caseNumber}', '${pendingRequest.officer}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow mr-2">Approve</button>`;
-                                    html += `<button onclick="denyEdit('${caseNumber}', '${pendingRequest.officer}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Deny</button></div>`;
-                                }
-                            }
-                        }
-                        html += `</div>`;
-                        const reportsList = document.getElementById('reportsList');
-                        if (reportsList) {
-                            reportsList.innerHTML = html;
-                        }
-                    }
-
-                    let editRequests = JSON.parse(localStorage.getItem('editRequests')) || [];
-
-                    function requestEdit(caseNumber) {
-                        const reason = prompt('Reason for edit request:');
-                        if (reason) {
-                            editRequests.push({ caseNumber, officer: user.username, reason });
-                            localStorage.setItem('editRequests', JSON.stringify(editRequests));
-                            showAlert('Edit request submitted', 'bg-green-600');
-                            showReports();
-                        }
-                    }
-
-                    function approveEdit(caseNumber, officer) {
-                        editRequests = editRequests.filter(req => req.caseNumber !== caseNumber);
-                        localStorage.setItem('editRequests', JSON.stringify(editRequests));
-                        showAlert(`Edit request approved for ${officer}`, 'bg-green-600');
-                        showReports();
-                    }
-
-                    function denyEdit(caseNumber, officer) {
-                        editRequests = editRequests.filter(req => req.caseNumber !== caseNumber);
-                        localStorage.setItem('editRequests', JSON.stringify(editRequests));
-                        showAlert(`Edit request denied for ${officer}`, 'bg-red-600');
-                        showReports();
                     }
                 </script>
             `;
@@ -887,16 +639,15 @@ function loadPageContent(page) {
             `;
             break;
         case 'login.html':
-            // Handle login separately as it’s a full page load
             window.location.href = 'login.html';
             return;
         default:
             content = '<p>Page not found</p>';
     }
 
-    // Inject content into the main area (replace document.body with a specific container if needed)
-    document.body.innerHTML = nav.outerHTML + content;
-    // Re-initialize scripts or handle dynamic loading as needed
+    // Inject content into the body, preserving the navigation bar
+    document.body.innerHTML = nav + content;
+    // Re-initialize scripts or handle dynamic loading
     if (typeof window.initializePage === 'function') {
         window.initializePage();
     }
@@ -912,10 +663,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const user = JSON.parse(localStorage.getItem('user'));
     const nav = document.querySelector('nav.sticky-nav');
     if (nav) {
-        // Initial navigation setup
         loadPageContent(window.location.pathname.split('/').pop() || 'index.html');
 
-        // Event delegation for navigation
         nav.addEventListener('click', (e) => {
             const link = e.target.closest('a[data-page]');
             if (link) {
@@ -926,7 +675,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Manager link visibility: Only visible for Managers
     const managerLink = document.getElementById('managerLink');
     if (managerLink) {
         if (!user || user.group !== 'Managers') {
@@ -934,13 +682,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Set user info safely
     const userInfo = document.getElementById('userInfo');
     if (userInfo) {
         userInfo.textContent = user && user.username ? `Logged in as ${user.username}` : 'Logged in as Guest';
     }
 
-    // Hamburger toggle
     const hamburger = document.querySelector('.hamburger');
     const navTabs = document.querySelector('.nav-tabs');
     if (hamburger && navTabs) {
@@ -953,7 +699,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Dark mode toggle
     const toggleBtn = document.getElementById('darkModeToggle');
     if (toggleBtn) {
         toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
