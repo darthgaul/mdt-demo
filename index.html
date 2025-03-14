@@ -180,6 +180,7 @@
         if (!isLoaded) {
             loadData(() => {
                 isLoaded = true;
+                console.log('index.html: Data loaded successfully');
                 showTab('overview');
                 updateUnitsList();
                 updateDispatchList();
@@ -226,11 +227,15 @@
 
             const unitsList = document.getElementById('unitsList');
             if (unitsList) {
-                unitsList.innerHTML = html || '<p class="text-center">No units found.</p>';
+                unitsList.innerHTML = html || '<p class="text-center">No units found. Data may have failed to load.</p>';
             }
         }
 
         function updateDispatchList() {
+            if (!dispatchData) {
+                console.error('dispatchData is not loaded');
+                return;
+            }
             const active = dispatchData.filter(d => d.status !== 'Completed');
             let html = active.length ? '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th></tr>' : '<p class="text-center">No active dispatches.</p>';
             active.forEach(disp => {
@@ -255,19 +260,24 @@
 
             if (tab === 'overview') {
                 if (isManagerOrSupervisor) {
-                    const activeCalls = dispatchData.filter(d => d.status !== 'Completed').length;
-                    const loggedInOfficers = usersData.filter(u => employeesData.some(e => e.name === u.username && new Date() >= new Date(e.schedule.start) && new Date() <= new Date(e.schedule.end))).length;
+                    const activeCalls = dispatchData ? dispatchData.filter(d => d.status !== 'Completed').length : 0;
+                    const loggedInOfficers = usersData && employeesData ? usersData.filter(u => employeesData.some(e => e.name === u.username && new Date() >= new Date(e.schedule.start) && new Date() <= new Date(e.schedule.end))).length : 0;
                     html += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Active Calls:</strong> ${activeCalls}</p></div><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Officers Online:</strong> ${loggedInOfficers}</p></div></div>`;
-                    html += '<h3 class="text-lg font-semibold mb-2">Officer Status</h3><table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Route</th><th class="p-2 bg-gray-700">Start</th><th class="p-2 bg-gray-700">End</th><th class="p-2 bg-gray-700">Status</th></tr>';
-                    employeesData.forEach(emp => {
-                        const isOnline = usersData.some(u => u.username === emp.name);
-                        const statusColor = isOnline ? 'text-green-500' : 'text-red-500';
-                        html += `<tr><td class="p-2 ${statusColor}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2">${isOnline ? 'Online' : 'Offline'}</td></tr>`;
-                    });
-                    html += '</table>';
+                    html += '<h3 class="text-lg font-semibold mb-2">Officer Status</h3>';
+                    if (employeesData && employeesData.length > 0) {
+                        html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Route</th><th class="p-2 bg-gray-700">Start</th><th class="p-2 bg-gray-700">End</th><th class="p-2 bg-gray-700">Status</th></tr>';
+                        employeesData.forEach(emp => {
+                            const isOnline = usersData.some(u => u.username === emp.name);
+                            const statusColor = isOnline ? 'text-green-500' : 'text-red-500';
+                            html += `<tr><td class="p-2 ${statusColor}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2">${isOnline ? 'Online' : 'Offline'}</td></tr>`;
+                        });
+                        html += '</table>';
+                    } else {
+                        html += '<p class="text-center">No officer data available.</p>';
+                    }
                     setInterval(checkDispatchTimeouts, 60000);
                 } else {
-                    const active = dispatchData.filter(d => d.assignedOfficer === user.username && d.status !== 'Completed');
+                    const active = dispatchData ? dispatchData.filter(d => d.assignedOfficer === user.username && d.status !== 'Completed') : [];
                     html += '<h3 class="text-lg font-semibold mb-2">Your Active Dispatches</h3>';
                     html += active.length ? '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' : '<p class="text-center">No active dispatches assigned to you.</p>';
                     active.forEach(disp => {
@@ -280,27 +290,31 @@
                 const officer = employeesData.find(e => e.name === user.username);
                 const routeNum = officer ? parseInt(officer.route.split('-')[1]) : 5;
                 const hitsPerOfficer = routeNum === 5 ? 40 : (routeNum === 4 ? 50 : 60);
-                const activeProps = propertiesData.filter(p => !p.suspended);
+                const activeProps = propertiesData ? propertiesData.filter(p => !p.suspended) : [];
                 const propsPerOfficer = Math.ceil(activeProps.length / routeNum);
                 const startIdx = employeesData.findIndex(e => e.name === user.username) * propsPerOfficer;
                 const routeProps = activeProps.slice(startIdx, startIdx + propsPerOfficer);
 
                 html += `<h3 class="text-lg font-semibold mb-2">Your Route: ${officer ? officer.route : 'Unassigned'} (${hitsPerOfficer} hits)</h3>`;
-                html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Hits Done</th><th class="p-2 bg-gray-700">Actions</th></tr>';
-                routeProps.forEach(prop => {
-                    const hitsDone = reportsData.filter(r => r.property === prop.id && r.type === 'Patrol Hit').length;
-                    html += `<tr><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${hitsDone}/${prop.minHits}</td><td class="p-2 space-x-2">`;
-                    html += `<button onclick="navigate('${prop.address}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow tooltip">
-                        Navigate
-                        <span class="tooltip-text">Open Google Maps to navigate to this property</span>
-                    </button>`;
-                    html += `<button onclick="arrive('${prop.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow tooltip">
-                        Arrived
-                        <span class="tooltip-text">Mark arrival and log a patrol hit</span>
-                    </button>`;
-                    html += `</td></tr>`;
-                });
-                html += '</table>';
+                if (routeProps.length > 0) {
+                    html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Hits Done</th><th class="p-2 bg-gray-700">Actions</th></tr>';
+                    routeProps.forEach(prop => {
+                        const hitsDone = reportsData ? reportsData.filter(r => r.property === prop.id && r.type === 'Patrol Hit').length : 0;
+                        html += `<tr><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${hitsDone}/${prop.minHits}</td><td class="p-2 space-x-2">`;
+                        html += `<button onclick="navigate('${prop.address}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow tooltip">
+                            Navigate
+                            <span class="tooltip-text">Open Google Maps to navigate to this property</span>
+                        </button>`;
+                        html += `<button onclick="arrive('${prop.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow tooltip">
+                            Arrived
+                            <span class="tooltip-text">Mark arrival and log a patrol hit</span>
+                        </button>`;
+                        html += `</td></tr>`;
+                    });
+                    html += '</table>';
+                } else {
+                    html += '<p class="text-center">No properties assigned to your route.</p>';
+                }
             }
             const dashboardContent = document.getElementById('dashboardContent');
             if (dashboardContent) {
@@ -323,7 +337,7 @@
             };
             reportsData.push(report);
             saveReports();
-            const hits = reportsData.filter(r => r.property === propId && r.type === 'Patrol Hit').length;
+            const hits = reportsData ? reportsData.filter(r => r.property === propId && r.type === 'Patrol Hit').length : 0;
             const prop = propertiesData.find(p => p.id === propId);
             if (hits >= prop.minHits * 2) {
                 const nextProp = propertiesData.find(p => p.id > propId && !p.suspended);
@@ -334,16 +348,18 @@
 
         function checkDispatchTimeouts() {
             if (user && ['Managers', 'Supervisors'].includes(user.group)) {
-                dispatchData.forEach(disp => {
-                    const elapsed = calculateElapsed(disp.dateTime);
-                    const now = new Date();
-                    const dispatchDate = new Date(disp.dateTime);
-                    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-                    const dispatchDay = new Date(dispatchDate.getFullYear(), dispatchDate.getMonth(), dispatchDate.getDate());
-                    if (elapsed.minutes >= 15 && disp.status !== 'Completed' && today.getTime() === dispatchDay.getTime()) {
-                        showAlert(`Dispatch ${disp.id} overdue (${elapsed.minutes}m)`, 'bg-red-600');
-                    }
-                });
+                if (dispatchData) {
+                    dispatchData.forEach(disp => {
+                        const elapsed = calculateElapsed(disp.dateTime);
+                        const now = new Date();
+                        const dispatchDate = new Date(disp.dateTime);
+                        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                        const dispatchDay = new Date(dispatchDate.getFullYear(), dispatchDate.getMonth(), dispatchDate.getDate());
+                        if (elapsed.minutes >= 15 && disp.status !== 'Completed' && today.getTime() === dispatchDay.getTime()) {
+                            showAlert(`Dispatch ${disp.id} overdue (${elapsed.minutes}m)`, 'bg-red-600');
+                        }
+                    });
+                }
             }
         }
     </script>
