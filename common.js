@@ -96,14 +96,8 @@ function loadPageContent(page) {
                     </div>
                     <div class="main-content">
                         <div class="flex space-x-4 mb-4">
-                            <button onclick="showTab('overview')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow tooltip">
-                                Overview
-                                <span class="tooltip-text">View team status and active dispatches</span>
-                            </button>
-                            <button onclick="showTab('route')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow tooltip">
-                                Route
-                                <span class="tooltip-text">Manage your assigned patrol route</span>
-                            </button>
+                            <button onclick="showTab('overview')">Overview</button>
+                            <button onclick="showTab('route')">Route</button>
                         </div>
                         <div id="dashboardContent"></div>
                         <div class="nato-cheat-sheet">
@@ -160,7 +154,7 @@ function loadPageContent(page) {
 
                         Object.keys(groups).forEach(group => {
                             if (!filter || filter === group) {
-                                html += `<div class="unit-group" id="group-${group}"><h4 onclick="toggleUnitGroup('group-${group}')">${group}</h4><div class="unit-list">`;
+                                html += '<div class="unit-group" id="group-' + group + '"><h4 onclick="toggleUnitGroup(\'group-' + group + '\')">' + group + '</h4><div class="unit-list">';
                                 groups[group].forEach(emp => {
                                     const status = getOfficerStatus(emp.name);
                                     const statusColor = {
@@ -170,9 +164,9 @@ function loadPageContent(page) {
                                         '10-42': 'bg-red-500'
                                     }[status] || 'bg-gray-500';
                                     const nameColor = group === 'Online' ? 'text-green-500' : 'text-red-500';
-                                    html += `<div class="unit-card"><p><strong class="${nameColor}">${emp.name}</strong> <span class="status-tag ${statusColor}">[${status}]</span></p>`;
-                                    html += `<p><strong>Location:</strong> ${emp.location}</p>`;
-                                    html += `<p><strong>Department:</strong> ${emp.department}</p></div>`;
+                                    html += '<div class="unit-card"><p><strong class="' + nameColor + '">' + emp.name + '</strong> <span class="status-tag ' + statusColor + '">[' + status + ']</span></p>';
+                                    html += '<p><strong>Location:</strong> ' + (emp.location || 'N/A') + '</p>';
+                                    html += '<p><strong>Department:</strong> ' + (emp.department || 'N/A') + '</p></div>';
                                 });
                                 html += '</div></div>';
                             }
@@ -193,7 +187,7 @@ function loadPageContent(page) {
                         let html = active.length ? '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th></tr>' : '<p class="text-center">No active dispatches.</p>';
                         active.forEach(disp => {
                             const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500' }[disp.status] || 'text-gray-500';
-                            html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td></tr>`;
+                            html += '<tr><td class="p-2">' + disp.issue + '</td><td class="p-2">' + disp.property + '</td><td class="p-2">' + (disp.assignedOfficer || 'Unassigned') + '</td></tr>';
                         });
                         if (active.length) html += '</table>';
                         const dispatchList = document.getElementById('dispatchList');
@@ -216,7 +210,7 @@ function loadPageContent(page) {
                             if (isManagerOrSupervisor) {
                                 const activeCalls = dispatchData ? dispatchData.filter(d => d.status !== 'Completed').length : 0;
                                 const loggedInOfficers = usersData && employeesData ? usersData.filter(u => employeesData.some(e => e.name === u.username && ['10-8', '10-6', '10-100'].includes(getOfficerStatus(e.name)))).length : 0;
-                                html += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Active Calls:</strong> ${activeCalls}</p></div><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Officers Online:</strong> ${loggedInOfficers}</p></div></div>`;
+                                html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Active Calls:</strong> ' + activeCalls + '</p></div><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Officers Online:</strong> ' + loggedInOfficers + '</p></div></div>';
                                 html += '<h3 class="text-lg font-semibold mb-2">Officer Status</h3>';
                                 if (employeesData && employeesData.length > 0) {
                                     html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Route</th><th class="p-2 bg-gray-700">Start</th><th class="p-2 bg-gray-700">End</th><th class="p-2 bg-gray-700">Status</th></tr>';
@@ -229,7 +223,7 @@ function loadPageContent(page) {
                                             '10-100': 'text-yellow-500',
                                             '10-42': 'text-red-500'
                                         }[status] || 'text-gray-500';
-                                        html += `<tr><td class="p-2 ${isOnline ? 'text-green-500' : 'text-red-500'}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2 ${statusColor}">${status}</td></tr>`;
+                                        html += '<tr><td class="p-2 ' + (isOnline ? 'text-green-500' : 'text-red-500') + '">' + emp.name + '</td><td class="p-2">' + emp.route + '</td><td class="p-2">' + new Date(emp.schedule.start).toLocaleTimeString() + '</td><td class="p-2">' + new Date(emp.schedule.end).toLocaleTimeString() + '</td><td class="p-2 ' + statusColor + '">' + status + '</td></tr>';
                                     });
                                     html += '</table>';
                                 } else {
@@ -242,7 +236,7 @@ function loadPageContent(page) {
                                 html += active.length ? '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' : '<p class="text-center">No active dispatches assigned to you.</p>';
                                 active.forEach(disp => {
                                     const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500', Completed: 'text-green-500' }[disp.status];
-                                    html += `<div class="bg-gray-700 p-3 rounded shadow"><p><strong>Issue:</strong> ${disp.issue}</p><p><strong>Property:</strong> ${disp.property}</p><p><strong>Status:</strong> <span class="${statusColor}">${disp.status}</span></p></div>`;
+                                    html += '<div class="bg-gray-700 p-3 rounded shadow"><p><strong>Issue:</strong> ' + disp.issue + '</p><p><strong>Property:</strong> ' + disp.property + '</p><p><strong>Status:</strong> <span class="' + statusColor + '">' + disp.status + '</span></p></div>';
                                 });
                                 if (active.length) html += '</div>';
                             }
@@ -255,21 +249,15 @@ function loadPageContent(page) {
                             const startIdx = employeesData.findIndex(e => e.name === user.username) * propsPerOfficer;
                             const routeProps = activeProps.slice(startIdx, startIdx + propsPerOfficer);
 
-                            html += `<h3 class="text-lg font-semibold mb-2">Your Route: ${officer ? officer.route : 'Unassigned'} (${hitsPerOfficer} hits)</h3>`;
+                            html += '<h3 class="text-lg font-semibold mb-2">Your Route: ' + (officer ? officer.route : 'Unassigned') + ' (' + hitsPerOfficer + ' hits)</h3>';
                             if (routeProps.length > 0) {
                                 html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Hits Done</th><th class="p-2 bg-gray-700">Actions</th></tr>';
                                 routeProps.forEach(prop => {
                                     const hitsDone = reportsData ? reportsData.filter(r => r.property === prop.id && r.type === 'Patrol Hit').length : 0;
-                                    html += `<tr><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${hitsDone}/${prop.minHits}</td><td class="p-2 space-x-2">`;
-                                    html += `<button onclick="navigate('${prop.address}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow tooltip">
-                                        Navigate
-                                        <span class="tooltip-text">Open Google Maps to navigate to this property</span>
-                                    </button>`;
-                                    html += `<button onclick="arrive('${prop.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow tooltip">
-                                        Arrived
-                                        <span class="tooltip-text">Mark arrival and log a patrol hit</span>
-                                    </button>`;
-                                    html += `</td></tr>`;
+                                    html += '<tr><td class="p-2">' + prop.propertyName + '</td><td class="p-2">' + prop.address + '</td><td class="p-2">' + hitsDone + '/' + prop.minHits + '</td><td class="p-2 space-x-2">';
+                                    html += '<button onclick="navigate(\'' + prop.address + '\')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow tooltip">Navigate<span class="tooltip-text">Open Google Maps to navigate to this property</span></button>';
+                                    html += '<button onclick="arrive(\'' + prop.id + '\')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow tooltip">Arrived<span class="tooltip-text">Mark arrival and log a patrol hit</span></button>';
+                                    html += '</td></tr>';
                                 });
                                 html += '</table>';
                             } else {
@@ -283,18 +271,18 @@ function loadPageContent(page) {
                     }
 
                     function navigate(address) {
-                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`, '_blank');
+                        window.open('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(address), '_blank');
                     }
 
                     function arrive(propId) {
                         const user = JSON.parse(localStorage.getItem('user'));
                         const report = {
-                            id: `R${(reportsData.length + 1).toString().padStart(3, '0')}`,
+                            id: 'R' + (reportsData.length + 1).toString().padStart(3, '0'),
                             dateTime: new Date().toISOString(),
                             personId: 'N/A',
                             property: propId,
                             type: 'Patrol Hit',
-                            narrative: `${user ? user.username : 'Unknown'} arrived at property`
+                            narrative: (user ? user.username : 'Unknown') + ' arrived at property'
                         };
                         reportsData.push(report);
                         saveReports();
@@ -302,7 +290,7 @@ function loadPageContent(page) {
                         const prop = propertiesData.find(p => p.id === propId);
                         if (hits >= prop.minHits * 2) {
                             const nextProp = propertiesData.find(p => p.id > propId && !p.suspended);
-                            if (nextProp) alert(`Property ${prop.propertyName} complete! Navigate to ${nextProp.propertyName}?`);
+                            if (nextProp) alert('Property ' + prop.propertyName + ' complete! Navigate to ' + nextProp.propertyName + '?');
                             showTab('route');
                         }
                     }
@@ -318,7 +306,7 @@ function loadPageContent(page) {
                                     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                                     const dispatchDay = new Date(dispatchDate.getFullYear(), dispatchDate.getMonth(), dispatchDate.getDate());
                                     if (elapsed.minutes >= 15 && disp.status !== 'Completed' && today.getTime() === dispatchDay.getTime()) {
-                                        showAlert(`Dispatch ${disp.id} overdue (${elapsed.minutes}m)`, 'bg-red-600');
+                                        showAlert('Dispatch ' + disp.id + ' overdue (' + elapsed.minutes + 'm)', 'bg-red-600');
                                     }
                                 });
                             }
@@ -345,8 +333,8 @@ function loadPageContent(page) {
 
                         let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Property Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Apt</th><th class="p-2 bg-gray-700">Min. Hits</th><th class="p-2 bg-gray-700">Notes</th></tr>';
                         propertiesData.forEach(prop => {
-                            const link = (prop.id === 'PROP001' || prop.id === 'PROP002' || prop.id === 'PROP003') ? `<a href="${prop.id.toLowerCase()}.html" class="underline">${prop.propertyName}</a>` : prop.propertyName;
-                            html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${link}${prop.suspended ? ' (Suspended)' : ''}</td><td class="p-2">${prop.address}</td><td class="p-2">${prop.apt}</td><td class="p-2">${prop.minHits}</td><td class="p-2">${prop.notes}</td></tr>`;
+                            const link = (prop.id === 'PROP001' || prop.id === 'PROP002' || prop.id === 'PROP003') ? '<a href="' + prop.id.toLowerCase() + '.html" class="underline">' + prop.propertyName + '</a>' : prop.propertyName;
+                            html += '<tr><td class="p-2">' + prop.id + '</td><td class="p-2">' + link + (prop.suspended ? ' (Suspended)' : '') + '</td><td class="p-2">' + prop.address + '</td><td class="p-2">' + prop.apt + '</td><td class="p-2">' + prop.minHits + '</td><td class="p-2">' + prop.notes + '</td></tr>';
                         });
                         html += '</table>';
                         const propertiesList = document.getElementById('propertiesList');
@@ -407,8 +395,8 @@ function loadPageContent(page) {
                                 const behaviorClass = person.behavior.toLowerCase() + '-text';
                                 const ctnClass = person.ctnStatus === 'CTN Issued' ? 'ctn-active' : (person.ctnStatus === 'VCTW' ? 'vctw-highlight' : '');
                                 const hasReports = reportsData.some(r => r.personId === person.id);
-                                const nameText = hasReports ? `<a href="javascript:showPerson('${person.id}')" class="underline">${person.name}${person.ctnStatus !== 'N/A' ? ' <span class="ctn-icon">⚠️</span>' : ''}</a>` : person.name;
-                                html += `<tr class="${ctnClass}"><td class="p-2">${person.id}</td><td class="p-2">${nameText}</td><td class="p-2">${person.dob}</td><td class="p-2">${person.status}</td><td class="p-2">${person.property}</td><td class="p-2"><span class="${behaviorClass}">${person.behavior}</span></td><td class="p-2">${person.ctnStatus}</td></tr>`;
+                                const nameText = hasReports ? '<a href="javascript:showPerson(\'' + person.id + '\')" class="underline">' + person.name + (person.ctnStatus !== 'N/A' ? ' <span class="ctn-icon">⚠️</span>' : '') + '</a>' : person.name;
+                                html += '<tr class="' + ctnClass + '"><td class="p-2">' + person.id + '</td><td class="p-2">' + nameText + '</td><td class="p-2">' + person.dob + '</td><td class="p-2">' + person.status + '</td><td class="p-2">' + person.property + '</td><td class="p-2"><span class="' + behaviorClass + '">' + person.behavior + '</span></td><td class="p-2">' + person.ctnStatus + '</td></tr>';
                             });
                         } else {
                             html += '<tr><td colspan="7" class="p-2 text-center">No results found</td></tr>';
@@ -423,9 +411,9 @@ function loadPageContent(page) {
                     function showPerson(id) {
                         const person = peopleData.find(p => p.id === id);
                         const reports = reportsData.filter(r => r.personId === id);
-                        let html = `<div class="bg-gray-800 p-4 rounded-lg shadow"><img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png" alt="${person.name}" class="w-32 h-32 rounded mb-4"><p><strong>Name:</strong> ${person.name}</p><p><strong>DoB:</strong> ${person.dob}</p><p><strong>Status:</strong> ${person.status}</p><p><strong>Property:</strong> ${person.property}</p><p><strong>Behavior:</strong> ${person.behavior}</p><p><strong>CTN Status:</strong> ${person.ctnStatus}</p>`;
+                        let html = '<div class="bg-gray-800 p-4 rounded-lg shadow"><img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png" alt="' + person.name + '" class="w-32 h-32 rounded mb-4"><p><strong>Name:</strong> ' + person.name + '</p><p><strong>DoB:</strong> ' + person.dob + '</p><p><strong>Status:</strong> ' + person.status + '</p><p><strong>Property:</strong> ' + person.property + '</p><p><strong>Behavior:</strong> ' + person.behavior + '</p><p><strong>CTN Status:</strong> ' + person.ctnStatus + '</p>';
                         html += '<h4 class="text-lg font-semibold mt-4">Reports</h4><table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Case Number</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
-                        reports.forEach(r => html += `<tr><td class="p-2">${r.caseNumber}</td><td class="p-2">${r.dateTime}</td><td class="p-2">${r.type}</td><td class="p-2">${r.narrative}</td></tr>`);
+                        reports.forEach(r => html += '<tr><td class="p-2">' + r.caseNumber + '</td><td class="p-2">' + r.dateTime + '</td><td class="p-2">' + r.type + '</td><td class="p-2">' + r.narrative + '</td></tr>');
                         html += '</table></div>';
                         const peopleResults = document.getElementById('peopleResults');
                         if (peopleResults) {
@@ -461,7 +449,7 @@ function loadPageContent(page) {
                                     '10-100': 'text-yellow-500',
                                     '10-42': 'text-red-500'
                                 }[status] || 'text-gray-500';
-                                html += `<tr><td class="p-2">${emp.name}</td><td class="p-2">${userData.role || 'Unknown'}</td><td class="p-2 ${statusColor}">${status}</td><td class="p-2">`;
+                                html += '<tr><td class="p-2">' + emp.name + '</td><td class="p-2">' + (userData.role || 'Unknown') + '</td><td class="p-2 ' + statusColor + '">' + status + '</td><td class="p-2">';
                                 html += '<select onchange="updateOfficerStatus(\'' + emp.name + '\', this.value, user)" class="bg-gray-700 text-white p-1 rounded">';
                                 const statuses = [
                                     { code: '10-8', label: 'Available' },
@@ -470,7 +458,7 @@ function loadPageContent(page) {
                                     { code: '10-42', label: 'Off Duty' }
                                 ];
                                 statuses.forEach(s => {
-                                    html += `<option value="${s.code}" ${status === s.code ? 'selected' : ''}>${s.code} (${s.label})</option>`;
+                                    html += '<option value="' + s.code + '" ' + (status === s.code ? 'selected' : '') + '>' + s.code + ' (' + s.label + ')</option>';
                                 });
                                 html += '</select>';
                                 html += '</td></tr>';
@@ -555,11 +543,11 @@ function loadPageContent(page) {
                         if (employeesData && employeesData.length > 0) {
                             employeesData.forEach(emp => {
                                 const userData = usersData.find(u => u.username === emp.name) || {};
-                                html += `<tr><td class="p-2">${emp.name}</td><td class="p-2"><select onchange="editGroup(this, '${emp.name}')" class="bg-gray-700 text-white p-1 rounded">`;
+                                html += '<tr><td class="p-2">' + emp.name + '</td><td class="p-2"><select onchange="editGroup(this, \'' + emp.name + '\')" class="bg-gray-700 text-white p-1 rounded">';
                                 ['Managers', 'Supervisors', 'Dispatchers', 'Officers'].forEach(group => {
-                                    html += `<option value="${group}" ${userData.group === group ? 'selected' : ''}>${group}</option>`;
+                                    html += '<option value="' + group + '" ' + (userData.group === group ? 'selected' : '') + '>' + group + '</option>';
                                 });
-                                html += `</select></td><td class="p-2"><button onclick="deleteEmployee('${emp.name}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button></td></tr>`;
+                                html += '</select></td><td class="p-2"><button onclick="deleteEmployee(\'' + emp.name + '\')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button></td></tr>';
                             });
                         } else {
                             html += '<tr><td colspan="3" class="p-2 text-center">No employees found. Data may have failed to load.</td></tr>';
@@ -575,8 +563,8 @@ function loadPageContent(page) {
                         let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
                         if (propertiesData && propertiesData.length > 0) {
                             propertiesData.forEach(prop => {
-                                html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${prop.suspended ? 'Suspended' : 'Active'}</td><td class="p-2">`;
-                                html += `<button onclick="${prop.suspended ? 'activateProperty' : 'suspendProperty'}('${prop.id}')" class="bg-${prop.suspended ? 'green' : 'yellow'}-600 hover:bg-${prop.suspended ? 'green' : 'yellow'}-700 p-1 rounded text-sm shadow">${prop.suspended ? 'Activate' : 'Suspend'}</button></td></tr>`;
+                                html += '<tr><td class="p-2">' + prop.id + '</td><td class="p-2">' + prop.propertyName + '</td><td class="p-2">' + prop.address + '</td><td class="p-2">' + (prop.suspended ? 'Suspended' : 'Active') + '</td><td class="p-2">';
+                                html += '<button onclick="' + (prop.suspended ? 'activateProperty' : 'suspendProperty') + '(\'' + prop.id + '\')" class="bg-' + (prop.suspended ? 'green' : 'yellow') + '-600 hover:bg-' + (prop.suspended ? 'green' : 'yellow') + '-700 p-1 rounded text-sm shadow">' + (prop.suspended ? 'Activate' : 'Suspend') + '</button></td></tr>';
                             });
                         } else {
                             html += '<tr><td colspan="5" class="p-2 text-center">No properties found. Data may have failed to load.</td></tr>';
@@ -589,12 +577,12 @@ function loadPageContent(page) {
                     }
 
                     function editGroup(select, name) {
-                        if (confirm(`Change ${name}'s group to ${select.value}?`)) {
+                        if (confirm('Change ' + name + '\'s group to ' + select.value + '?')) {
                             const userData = usersData.find(u => u.username === name);
                             if (userData) {
                                 userData.group = select.value;
                                 localStorage.setItem('users', JSON.stringify(usersData));
-                                showAlert(`Group updated for ${name}`, 'bg-green-600');
+                                showAlert('Group updated for ' + name, 'bg-green-600');
                             }
                         } else {
                             select.value = usersData.find(u => u.username === name).group;
@@ -602,35 +590,35 @@ function loadPageContent(page) {
                     }
 
                     function deleteEmployee(name) {
-                        if (confirm(`Delete ${name}? This cannot be undone.`)) {
+                        if (confirm('Delete ' + name + '? This cannot be undone.')) {
                             employeesData = employeesData.filter(e => e.name !== name);
                             usersData = usersData.filter(u => u.username !== name);
                             localStorage.setItem('employees', JSON.stringify(employeesData));
                             localStorage.setItem('users', JSON.stringify(usersData));
-                            showAlert(`${name} deleted`, 'bg-green-600');
+                            showAlert(name + ' deleted', 'bg-green-600');
                             showEmployees();
                         }
                     }
 
                     function suspendProperty(id) {
-                        if (confirm(`Suspend property ${id}?`)) {
+                        if (confirm('Suspend property ' + id + '?')) {
                             const prop = propertiesData.find(p => p.id === id);
                             if (prop) {
                                 prop.suspended = true;
                                 saveProperties();
-                                showAlert(`Property ${id} suspended`, 'bg-green-600');
+                                showAlert('Property ' + id + ' suspended', 'bg-green-600');
                                 showProperties();
                             }
                         }
                     }
 
                     function activateProperty(id) {
-                        if (confirm(`Activate property ${id}?`)) {
+                        if (confirm('Activate property ' + id + '?')) {
                             const prop = propertiesData.find(p => p.id === id);
                             if (prop) {
                                 prop.suspended = false;
                                 saveProperties();
-                                showAlert(`Property ${id} activated`, 'bg-green-600');
+                                showAlert('Property ' + id + ' activated', 'bg-green-600');
                                 showProperties();
                             }
                         }
@@ -645,7 +633,7 @@ function loadPageContent(page) {
             content = '<p>Page not found</p>';
     }
 
-    // Inject content into the body, preserving the navigation bar
+    // Inject content into the body, ensuring the navigation bar is included
     document.body.innerHTML = nav + content;
     // Re-initialize scripts or handle dynamic loading
     if (typeof window.initializePage === 'function') {
