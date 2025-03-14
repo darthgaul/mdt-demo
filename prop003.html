@@ -3,61 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MDT - Cedar Heights</title>
+    <title>Property PROP003</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="bg-gray-900 text-white min-h-screen p-6">
-    <h2 class="text-2xl font-bold mb-4">MDT - Cedar Heights (PROP003)</h2>
-    <nav class="flex space-x-4 mb-6">
-        <a href="index.html" class="hover:underline">Dashboard</a>
-        <a href="properties.html" class="text-blue-400 font-semibold">Properties</a>
-        <a href="people.html" class="hover:underline">People</a>
-        <a href="dispatch.html" class="hover:underline">Dispatch</a>
-        <a href="reports.html" class="hover:underline">Reports</a>
-    </nav>
+<body class="min-h-screen p-6">
+    <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
 
-    <div class="bg-gray-800 p-4 rounded-lg mb-4">
-        <p><strong>Name:</strong> Cedar Heights</p>
-        <p><strong>Address:</strong> 789 Test Ave, Austin, TX 78703</p>
-        <p><strong>Apartment:</strong> Apt 2C</p>
-        <p><strong>Minimum Hits:</strong> 1</p>
-        <p><strong>Notes:</strong> Near park, high foot traffic</p>
-        <p><strong>Emergency Contact:</strong> Property Owner - (512) 555-0303</p>
-        <p><strong>Access Code:</strong> 9012</p>
+    <div class="tips">
+        <h4 class="text-lg font-semibold">Tips</h4>
+        <p>View details for PROP003 (Gamma Towers). See recent dispatches, reports, and associated people.</p>
     </div>
 
-    <h3 class="text-xl font-semibold mb-2">Associated People</h3>
-    <div id="peopleList" class="bg-gray-800 p-4 rounded-lg mb-4 overflow-x-auto"></div>
+    <h3 class="text-xl font-semibold mb-2">Property PROP003 - Gamma Towers</h3>
+    <div class="bg-gray-800 p-4 rounded-lg shadow">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div>
+                <p><strong>ID:</strong> PROP003</p>
+                <p><strong>Address:</strong> 789 Gamma Ave</p>
+                <p><strong>Apt:</strong> Apt 202</p>
+                <p><strong>Min Hits:</strong> 4</p>
+                <p><strong>Notes:</strong> Check parking lot security</p>
+            </div>
+            <div id="map" style="height: 200px;"></div>
+        </div>
 
-    <h3 class="text-xl font-semibold mb-2">Recent Dispatches</h3>
-    <div id="dispatchList" class="bg-gray-800 p-4 rounded-lg mb-4 overflow-x-auto"></div>
+        <h4 class="text-lg font-semibold mb-2">Associated People</h4>
+        <table class="w-full text-left mb-4">
+            <tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Status</th></tr>
+            <!-- Populated by script -->
+        </table>
 
-    <h3 class="text-xl font-semibold mb-2">Recent Reports</h3>
-    <div id="reportList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto"></div>
+        <h4 class="text-lg font-semibold mb-2">Recent Dispatches</h4>
+        <table class="w-full text-left mb-4">
+            <tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th></tr>
+            <!-- Populated by script -->
+        </table>
+
+        <h4 class="text-lg font-semibold mb-2">Recent Reports</h4>
+        <table class="w-full text-left">
+            <tr><th class="p-2 bg-gray-700">Case Number</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>
+            <!-- Populated by script -->
+        </table>
+    </div>
+
+    <div id="alert" class="hidden"></div>
 
     <script src="scripts.js"></script>
+    <script src="common.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
     <script>
-        loadData(() => {
-            const propId = 'PROP003';
+        let map;
 
-            const people = peopleData.filter(p => p.property === propId);
-            let peopleHtml = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Status</th></tr>';
-            people.forEach(p => peopleHtml += `<tr><td class="p-2">${p.id}</td><td class="p-2">${p.name}</td><td class="p-2">${p.status}</td></tr>`);
-            peopleHtml += '</table>';
-            document.getElementById('peopleList').innerHTML = peopleHtml;
+        function initMap() {
+            loadData(() => {
+                const prop = propertiesData.find(p => p.id === 'PROP003');
+                if (prop && prop.address) {
+                    map = new google.maps.Map(document.getElementById('map'), {
+                        center: { lat: 37.7749, lng: -122.4194 }, // Placeholder: San Francisco
+                        zoom: 15
+                    });
+                    new google.maps.Marker({
+                        position: { lat: 37.7749, lng: -122.4194 }, // Replace with actual coordinates if available
+                        map: map,
+                        title: prop.propertyName
+                    });
+                }
 
-            const dispatches = dispatchData.filter(d => d.property === propId).slice(0, 5);
-            let dispatchHtml = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Issue</th></tr>';
-            dispatches.forEach(d => dispatchHtml += `<tr><td class="p-2">${d.id}</td><td class="p-2">${d.dateTime}</td><td class="p-2">${d.issue}</td></tr>`);
-            dispatchHtml += '</table>';
-            document.getElementById('dispatchList').innerHTML = dispatchHtml;
+                // Associated People
+                const peopleHtml = peopleData.filter(p => p.property === 'PROP003')
+                    .map(p => `<tr><td class="p-2">${p.id}</td><td class="p-2">${p.name}</td><td class="p-2">${p.status}</td></tr>`)
+                    .join('');
+                document.querySelector('table:nth-child(3)').innerHTML += peopleHtml || '<tr><td colspan="3" class="p-2 text-center">No associated people</td></tr>';
 
-            const reports = reportsData.filter(r => r.property === propId).slice(0, 5);
-            let reportHtml = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Type</th></tr>';
-            reports.forEach(r => reportHtml += `<tr><td class="p-2">${r.id}</td><td class="p-2">${r.dateTime}</td><td class="p-2">${r.type}</td></tr>`);
-            reportHtml += '</table>';
-            document.getElementById('reportList').innerHTML = reportHtml;
-        });
+                // Recent Dispatches
+                const dispatchesHtml = dispatchData.filter(d => d.property === 'PROP003' && d.status !== 'Completed')
+                    .map(d => `<tr><td class="p-2">${d.issue}</td><td class="p-2">${d.assignedOfficer || 'Unassigned'}</td><td class="p-2">${new Date(d.dateTime).toLocaleString()}</td></tr>`)
+                    .join('');
+                document.querySelector('table:nth-child(5)').innerHTML += dispatchesHtml || '<tr><td colspan="3" class="p-2 text-center">No recent dispatches</td></tr>';
+
+                // Recent Reports
+                const reportsHtml = reportsData.filter(r => r.property === 'PROP003')
+                    .map(r => `<tr><td class="p-2">${r.caseNumber}</td><td class="p-2">${r.dateTime}</td><td class="p-2">${r.type}</td><td class="p-2">${r.narrative}</td></tr>`)
+                    .join('');
+                document.querySelector('table:nth-child(7)').innerHTML += reportsHtml || '<tr><td colspan="4" class="p-2 text-center">No recent reports</td></tr>';
+            });
+        }
     </script>
 </body>
 </html>
