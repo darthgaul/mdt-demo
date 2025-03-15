@@ -1,5 +1,12 @@
-let isInitialized = false;
+// Global data (assuming these are defined elsewhere or loaded via officers.js/scripts.js)
+let usersData = [];
+let employeesData = [];
+let propertiesData = [];
+let dispatchData = [];
+let reportsData = [];
+let peopleData = [];
 
+// Check if user is authenticated
 function checkAuthentication() {
     const user = JSON.parse(localStorage.getItem('user'));
     if (!user && window.location.pathname.split('/').pop() !== 'login.html') {
@@ -10,6 +17,7 @@ function checkAuthentication() {
     return true;
 }
 
+// Update officer status (placeholder for officers.js functionality)
 function updateOfficerStatus(officerName, newStatus, currentUser) {
     if (!currentUser) return false;
     const isOfficer = currentUser.group === 'Officers';
@@ -18,6 +26,7 @@ function updateOfficerStatus(officerName, newStatus, currentUser) {
         return false;
     }
     if (['Managers', 'Supervisors', 'Dispatchers'].includes(currentUser.group) || (isOfficer && officerName === currentUser.username)) {
+        // Assuming setOfficerStatus is defined in officers.js
         window.setOfficerStatus(officerName, newStatus);
         showAlert(`Status for ${officerName} updated to ${newStatus}`, 'bg-green-600');
         return true;
@@ -26,24 +35,27 @@ function updateOfficerStatus(officerName, newStatus, currentUser) {
     return false;
 }
 
-function navigateToPage(page) {
-    console.log(`Navigating to: ${page}`);
-    history.pushState({ page }, '', page);
-    loadPageContent(page);
-    highlightActiveTab(page);
+// Navigate to a page using hash
+function navigateToPage(pagePath) {
+    const page = pagePath.replace('.html', '');
+    window.location.hash = `#/${page}`;
+    loadPageContent(pagePath);
+    highlightActiveTab(pagePath);
 }
 
-function highlightActiveTab(page) {
+// Highlight the active navigation tab
+function highlightActiveTab(pagePath) {
     const navLinks = document.querySelectorAll('.nav-tabs a');
     navLinks.forEach(link => {
-        link.classList.remove('text-blue-400');
-        if (link.getAttribute('data-page') === page) {
-            link.classList.add('text-blue-400');
+        link.classList.remove('active-tab');
+        if (link.getAttribute('data-page') === pagePath) {
+            link.classList.add('active-tab');
         }
     });
 }
 
-function loadPageContent(page) {
+// Load content into the content-area div
+function loadPageContent(pagePath) {
     const contentArea = document.getElementById('content-area');
     if (!contentArea) {
         console.error('Content area not found in DOM');
@@ -51,7 +63,9 @@ function loadPageContent(page) {
     }
 
     let content = '';
-    switch (page) {
+    const user = JSON.parse(localStorage.getItem('user'));
+
+    switch (pagePath) {
         case 'index.html':
             content = `
                 <div class="tips">
@@ -511,7 +525,6 @@ function loadPageContent(page) {
                             dispatch.status = 'Completed';
                             dispatch.resolveTime = new Date().toISOString();
                             saveDispatch();
-                            showAlert('Dispatch cleared and moved to history', 'bg-green-600');
                             showTab('active');
                         } else {
                             showAlert('Dispatch not found', 'bg-red-600');
@@ -524,7 +537,6 @@ function loadPageContent(page) {
                             dispatch.status = 'Pending';
                             dispatch.resolveTime = null;
                             saveDispatch();
-                            showAlert('Dispatch restored to active', 'bg-green-600');
                             showTab('history');
                         } else {
                             showAlert('Dispatch not found', 'bg-red-600');
@@ -715,7 +727,7 @@ function loadPageContent(page) {
                                     '10-42': 'text-red-500'
                                 }[status] || 'text-gray-500';
                                 html += '<tr><td class="p-2">' + emp.name + '</td><td class="p-2">' + (userData.role || 'Unknown') + '</td><td class="p-2 ' + statusColor + '">' + status + '</td><td class="p-2">';
-                                html += '<select onchange="updateOfficerStatus(\'' + emp.name + '\', this.value, user)" class="bg-gray-700 text-white p-1 rounded">';
+                                html += '<select onchange="updateOfficerStatus(\'' + emp.name + '\', this.value, ' + JSON.stringify(user) + ')" class="bg-gray-700 text-white p-1 rounded">';
                                 const statuses = [
                                     { code: '10-8', label: 'Available' },
                                     { code: '10-6', label: 'Busy' },
@@ -808,4 +820,193 @@ function loadPageContent(page) {
                         if (employeesData && employeesData.length > 0) {
                             employeesData.forEach(emp => {
                                 const userData = usersData.find(u => u.username === emp.name) || {};
-                                html += '<tr><td class="p-2">' + emp.name + '</td><td class="p-2"><select onchange="editGroup(this, \'' + emp.name + '\
+                                html += '<tr><td class="p-2">' + emp.name + '</td><td class="p-2"><select onchange="editGroup(this, \'' + emp.name + '\')" class="bg-gray-700 text-white p-1 rounded">';
+                                ['Managers', 'Supervisors', 'Dispatchers', 'Officers'].forEach(group => {
+                                    html += '<option value="' + group + '" ' + (userData.group === group ? 'selected' : '') + '>' + group + '</option>';
+                                });
+                                html += '</select></td><td class="p-2"><button onclick="deleteEmployee(\'' + emp.name + '\')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button></td></tr>';
+                            });
+                        } else {
+                            html += '<tr><td colspan="3" class="p-2 text-center">No employees found. Data may have failed to load.</td></tr>';
+                        }
+                        html += '</table>';
+                        const employeeList = document.getElementById('employeeList');
+                        if (employeeList) {
+                            employeeList.innerHTML = html;
+                        }
+                    }
+
+                    function showProperties() {
+                        let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
+                        if (propertiesData && propertiesData.length > 0) {
+                            propertiesData.forEach(prop => {
+                                html += '<tr><td class="p-2">' + prop.id + '</td><td class="p-2">' + prop.propertyName + '</td><td class="p-2">' + prop.address + '</td><td class="p-2">' + (prop.suspended ? 'Suspended' : 'Active') + '</td><td class="p-2">';
+                                html += '<button onclick="' + (prop.suspended ? 'activateProperty' : 'suspendProperty') + '(\'' + prop.id + '\')" class="bg-' + (prop.suspended ? 'green' : 'yellow') + '-600 hover:bg-' + (prop.suspended ? 'green' : 'yellow') + '-700 p-1 rounded text-sm shadow">' + (prop.suspended ? 'Activate' : 'Suspend') + '</button></td></tr>';
+                            });
+                        } else {
+                            html += '<tr><td colspan="5" class="p-2 text-center">No properties found. Data may have failed to load.</td></tr>';
+                        }
+                        html += '</table>';
+                        const propertyList = document.getElementById('propertyList');
+                        if (propertyList) {
+                            propertyList.innerHTML = html;
+                        }
+                    }
+
+                    function editGroup(select, name) {
+                        if (confirm('Change ' + name + '\'s group to ' + select.value + '?')) {
+                            const userData = usersData.find(u => u.username === name);
+                            if (userData) {
+                                userData.group = select.value;
+                                localStorage.setItem('users', JSON.stringify(usersData));
+                                showAlert('Group updated for ' + name, 'bg-green-600');
+                            }
+                        } else {
+                            select.value = usersData.find(u => u.username === name).group;
+                        }
+                    }
+
+                    function deleteEmployee(name) {
+                        if (confirm('Delete ' + name + '? This cannot be undone.')) {
+                            employeesData = employeesData.filter(e => e.name !== name);
+                            usersData = usersData.filter(u => u.username !== name);
+                            localStorage.setItem('employees', JSON.stringify(employeesData));
+                            localStorage.setItem('users', JSON.stringify(usersData));
+                            showAlert(name + ' deleted', 'bg-green-600');
+                            showEmployees();
+                        }
+                    }
+
+                    function suspendProperty(id) {
+                        if (confirm('Suspend property ' + id + '?')) {
+                            const prop = propertiesData.find(p => p.id === id);
+                            if (prop) {
+                                prop.suspended = true;
+                                saveProperties();
+                                showAlert('Property ' + id + ' suspended', 'bg-green-600');
+                                showProperties();
+                            }
+                        }
+                    }
+
+                    function activateProperty(id) {
+                        if (confirm('Activate property ' + id + '?')) {
+                            const prop = propertiesData.find(p => p.id === id);
+                            if (prop) {
+                                prop.suspended = false;
+                                saveProperties();
+                                showAlert('Property ' + id + ' activated', 'bg-green-600');
+                                showProperties();
+                            }
+                        }
+                    }
+                </script>
+            `;
+            break;
+        case 'login.html':
+            window.location.href = 'login.html';
+            return;
+        default:
+            content = '<p class="text-red-400">Page not found.</p>';
+    }
+    contentArea.innerHTML = content;
+    console.log(`Loaded content for: ${pagePath}`);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM fully loaded');
+
+    if (!checkAuthentication()) return;
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    const nav = document.getElementById('main-nav');
+    if (!nav) {
+        console.error('Navigation header not found in DOM');
+        return;
+    }
+
+    const userInfo = document.getElementById('userInfo');
+    if (userInfo) {
+        userInfo.textContent = user ? `Logged in as ${user.username}` : 'Logged in as Guest';
+    }
+
+    const managerLink = document.getElementById('managerLink');
+    if (managerLink && (!user || user.group !== 'Managers')) {
+        managerLink.style.display = 'none';
+    }
+
+    const hamburger = document.querySelector('.hamburger');
+    const navTabs = document.querySelector('.nav-tabs');
+    if (hamburger && navTabs) {
+        hamburger.addEventListener('click', () => {
+            navTabs.classList.toggle('active');
+            const isOpen = navTabs.classList.contains('active');
+            hamburger.children[0].style.transform = isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none';
+            hamburger.children[1].style.opacity = isOpen ? '0' : '1';
+            hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
+        });
+    }
+
+    const toggleBtn = document.getElementById('darkModeToggle');
+    if (toggleBtn) {
+        toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
+        const label = document.createElement('span');
+        label.className = 'ml-2 text-sm';
+        label.textContent = 'Dark Mode';
+        toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
+
+        toggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            const isLightMode = document.body.classList.contains('light-mode');
+            toggleBtn.classList.toggle('bg-blue-600', isLightMode);
+            toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
+            toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
+            label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
+            localStorage.setItem('lightMode', isLightMode);
+        });
+
+        if (localStorage.getItem('lightMode') === 'true') {
+            document.body.classList.add('light-mode');
+            toggleBtn.classList.add('bg-blue-600');
+            toggleBtn.classList.remove('bg-gray-700');
+            toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
+            label.textContent = 'Light Mode';
+        }
+    }
+
+    const hash = window.location.hash.substr(2) || 'index';
+    const page = hash + '.html';
+    loadPageContent(page);
+    highlightActiveTab(page);
+
+    nav.addEventListener('click', (e) => {
+        const link = e.target.closest('a[data-page]');
+        if (link) {
+            e.preventDefault();
+            const pagePath = link.getAttribute('data-page');
+            navigateToPage(pagePath);
+        }
+    });
+});
+
+function logout() {
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+function showAlert(message, color = 'bg-green-600') {
+    const alert = document.getElementById('alert');
+    if (alert) {
+        alert.textContent = message;
+        alert.className = `fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000]`;
+        alert.classList.remove('hidden');
+        setTimeout(() => alert.classList.add('hidden'), 3000);
+    }
+}
+
+window.addEventListener('hashchange', () => {
+    const hash = window.location.hash.substr(2) || 'index';
+    const page = hash + '.html';
+    loadPageContent(page);
+    highlightActiveTab(page);
+});
