@@ -1,10 +1,67 @@
-// Global data (assuming these are defined elsewhere or loaded via officers.js/scripts.js)
-let usersData = [];
-let employeesData = [];
-let propertiesData = [];
-let dispatchData = [];
-let reportsData = [];
-let peopleData = [];
+// Initialize global data with sample data as a fallback
+let usersData = JSON.parse(localStorage.getItem('users')) || [
+    { username: 'JohnSmith', password: 'john123', group: 'Officers' },
+    { username: 'JaneDoe', password: 'jane123', group: 'Managers' }
+];
+let employeesData = JSON.parse(localStorage.getItem('employees')) || [
+    { name: 'JohnSmith', route: 'Route-1', location: 'Downtown', department: 'Patrol', schedule: { start: '2025-03-15T08:00:00Z', end: '2025-03-15T16:00:00Z' } },
+    { name: 'JaneDoe', route: 'Route-2', location: 'Uptown', department: 'Patrol', schedule: { start: '2025-03-15T09:00:00Z', end: '2025-03-15T17:00:00Z' } }
+];
+let propertiesData = JSON.parse(localStorage.getItem('properties')) || [
+    { id: 'PROP001', propertyName: 'Axel Apartments', address: '123 Main St', apt: 'Apt 1', minHits: 3, notes: 'High security area', suspended: false },
+    { id: 'PROP002', propertyName: 'Baker Plaza', address: '456 Oak Ave', apt: '', minHits: 2, notes: '', suspended: false }
+];
+let dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [
+    { id: 'D001', issue: 'Suspicious activity', property: 'PROP001', assignedOfficer: 'JohnSmith', status: 'Assigned', dateTime: '2025-03-15T10:00:00Z', assignedTime: '2025-03-15T10:05:00Z', resolveTime: null }
+];
+let reportsData = JSON.parse(localStorage.getItem('reports')) || [
+    { id: 'R001', caseNumber: '2503151000', dateTime: '2025-03-15T10:00:00Z', personId: 'P001', property: 'PROP001', type: 'Patrol Hit', narrative: 'JohnSmith: Arrived at property', officer: 'JohnSmith' }
+];
+let peopleData = JSON.parse(localStorage.getItem('people')) || [
+    { id: 'P001', name: 'John Doe', dob: '1990-01-01', status: 'Resident', property: 'PROP001', behavior: 'Friendly', ctnStatus: 'N/A' }
+];
+
+// Placeholder for loadData (should be defined in officers.js or scripts.js)
+function loadData(callback) {
+    // If loadData is not defined elsewhere, use the fallback data
+    console.log('loadData called with fallback data');
+    localStorage.setItem('users', JSON.stringify(usersData));
+    localStorage.setItem('employees', JSON.stringify(employeesData));
+    localStorage.setItem('properties', JSON.stringify(propertiesData));
+    localStorage.setItem('dispatches', JSON.stringify(dispatchData));
+    localStorage.setItem('reports', JSON.stringify(reportsData));
+    localStorage.setItem('people', JSON.stringify(peopleData));
+    if (callback) callback();
+}
+
+// Placeholder for functions assumed to be in officers.js or scripts.js
+function getOfficerStatus(officerName) {
+    return localStorage.getItem(`status-${officerName}`) || '10-8';
+}
+
+function setOfficerStatus(officerName, status) {
+    localStorage.setItem(`status-${officerName}`, status);
+}
+
+function saveProperties() {
+    localStorage.setItem('properties', JSON.stringify(propertiesData));
+}
+
+function saveReports() {
+    localStorage.setItem('reports', JSON.stringify(reportsData));
+}
+
+function saveDispatch() {
+    localStorage.setItem('dispatches', JSON.stringify(dispatchData));
+}
+
+function calculateElapsed(startTime) {
+    const start = new Date(startTime);
+    const now = new Date();
+    const diffMs = now - start;
+    const minutes = Math.floor(diffMs / 1000 / 60);
+    return { minutes };
+}
 
 // Check if user is authenticated
 function checkAuthentication() {
@@ -17,7 +74,7 @@ function checkAuthentication() {
     return true;
 }
 
-// Update officer status (placeholder for officers.js functionality)
+// Update officer status
 function updateOfficerStatus(officerName, newStatus, currentUser) {
     if (!currentUser) return false;
     const isOfficer = currentUser.group === 'Officers';
@@ -26,8 +83,7 @@ function updateOfficerStatus(officerName, newStatus, currentUser) {
         return false;
     }
     if (['Managers', 'Supervisors', 'Dispatchers'].includes(currentUser.group) || (isOfficer && officerName === currentUser.username)) {
-        // Assuming setOfficerStatus is defined in officers.js
-        window.setOfficerStatus(officerName, newStatus);
+        setOfficerStatus(officerName, newStatus);
         showAlert(`Status for ${officerName} updated to ${newStatus}`, 'bg-green-600');
         return true;
     }
@@ -582,16 +638,17 @@ function loadPageContent(pagePath) {
                             return;
                         }
 
+                        // Define now before using it
                         const now = new Date();
-                        const caseNumber = \`${now.getFullYear().toString().slice(2)}-${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}\`;
+                        const caseNumber = now.getFullYear().toString().slice(2) + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + now.getDate().toString().padStart(2, '0') + now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
                         const user = JSON.parse(localStorage.getItem('user'));
                         const report = {
-                            caseNumber,
+                            caseNumber: caseNumber,
                             dateTime: now.toISOString(),
-                            personId,
-                            property,
-                            type,
-                            narrative: \`${user.username}: ${narrative}\`,
+                            personId: personId,
+                            property: property,
+                            type: type,
+                            narrative: user.username + ': ' + narrative,
                             officer: user.username
                         };
                         if (!reportsData) reportsData = [];
