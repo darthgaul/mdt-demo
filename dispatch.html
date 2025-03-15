@@ -7,7 +7,6 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
-    <script src="officers.js"></script>
 </head>
 <body class="min-h-screen p-6">
     <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
@@ -109,9 +108,9 @@
                 if (dispatch) {
                     dispatch.assignedOfficer = officer || null;
                     dispatch.status = officer ? 'Assigned' : 'Pending';
-                    dispatch.assignedTime = officer ? new Date().toISOString() : null;
+                    dispatch.assignedTime = officer ? new Date().toISOString() : null; // Set assignedTime only if an officer is selected
                     saveDispatch();
-                    showTab('active');
+                    showTab('active'); // Refresh the active tab to show updated data
                 } else {
                     showAlert('Dispatch not found', 'bg-red-600');
                 }
@@ -124,7 +123,7 @@
                     dispatch.resolveTime = new Date().toISOString();
                     saveDispatch();
                     showAlert('Dispatch cleared and moved to history', 'bg-green-600');
-                    showTab('active');
+                    showTab('active'); // Refresh the active tab to remove the cleared dispatch
                 } else {
                     showAlert('Dispatch not found', 'bg-red-600');
                 }
@@ -137,7 +136,7 @@
                     dispatch.resolveTime = null;
                     saveDispatch();
                     showAlert('Dispatch restored to active', 'bg-green-600');
-                    showTab('history');
+                    showTab('history'); // Refresh the history tab
                 } else {
                     showAlert('Dispatch not found', 'bg-red-600');
                 }
