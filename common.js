@@ -1,25 +1,45 @@
-// Initialize global data with sample data as a fallback
-let usersData = JSON.parse(localStorage.getItem('users')) || [
-    { username: 'JohnSmith', password: 'john123', group: 'Officers' },
-    { username: 'JaneDoe', password: 'jane123', group: 'Managers' }
-];
-let employeesData = JSON.parse(localStorage.getItem('employees')) || [
-    { name: 'JohnSmith', route: 'Route-1', location: 'Downtown', department: 'Patrol', schedule: { start: '2025-03-15T08:00:00Z', end: '2025-03-15T16:00:00Z' } },
-    { name: 'JaneDoe', route: 'Route-2', location: 'Uptown', department: 'Patrol', schedule: { start: '2025-03-15T09:00:00Z', end: '2025-03-15T17:00:00Z' } }
-];
-let propertiesData = JSON.parse(localStorage.getItem('properties')) || [
-    { id: 'PROP001', propertyName: 'Axel Apartments', address: '123 Main St', apt: 'Apt 1', minHits: 3, notes: 'High security area', suspended: false },
-    { id: 'PROP002', propertyName: 'Baker Plaza', address: '456 Oak Ave', apt: '', minHits: 2, notes: '', suspended: false }
-];
-let dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [
-    { id: 'D001', issue: 'Suspicious activity', property: 'PROP001', assignedOfficer: 'JohnSmith', status: 'Assigned', dateTime: '2025-03-15T10:00:00Z', assignedTime: '2025-03-15T10:05:00Z', resolveTime: null }
-];
-let reportsData = JSON.parse(localStorage.getItem('reports')) || [
-    { id: 'R001', caseNumber: '2503151000', dateTime: '2025-03-15T10:00:00Z', personId: 'P001', property: 'PROP001', type: 'Patrol Hit', narrative: 'JohnSmith: Arrived at property', officer: 'JohnSmith' }
-];
-let peopleData = JSON.parse(localStorage.getItem('people')) || [
-    { id: 'P001', name: 'John Doe', dob: '1990-01-01', status: 'Resident', property: 'PROP001', behavior: 'Friendly', ctnStatus: 'N/A' }
-];
+// Sample data for testing
+const sampleData = {
+    usersData: [
+        { username: 'JohnSmith', password: 'john123', group: 'Officers' },
+        { username: 'JaneDoe', password: 'jane123', group: 'Managers' }
+    ],
+    employeesData: [
+        { name: 'JohnSmith', route: 'Route-1', location: 'Downtown', department: 'Patrol', schedule: { start: '2025-03-15T08:00:00Z', end: '2025-03-15T16:00:00Z' } },
+        { name: 'JaneDoe', route: 'Route-2', location: 'Uptown', department: 'Patrol', schedule: { start: '2025-03-15T09:00:00Z', end: '2025-03-15T17:00:00Z' } }
+    ],
+    propertiesData: [
+        { id: 'PROP001', propertyName: 'Axel Apartments', address: '123 Main St', apt: 'Apt 1', minHits: 3, notes: 'High security area', suspended: false },
+        { id: 'PROP002', propertyName: 'Baker Plaza', address: '456 Oak Ave', apt: '', minHits: 2, notes: '', suspended: false }
+    ],
+    dispatchData: [
+        { id: 'D001', issue: 'Suspicious activity', property: 'PROP001', assignedOfficer: 'JohnSmith', status: 'Assigned', dateTime: '2025-03-15T10:00:00Z', assignedTime: '2025-03-15T10:05:00Z', resolveTime: null }
+    ],
+    reportsData: [
+        { id: 'R001', caseNumber: '2503151000', dateTime: '2025-03-15T10:00:00Z', personId: 'P001', property: 'PROP001', type: 'Patrol Hit', narrative: 'JohnSmith: Arrived at property', officer: 'JohnSmith' }
+    ],
+    peopleData: [
+        { id: 'P001', name: 'John Doe', dob: '1990-01-01', status: 'Resident', property: 'PROP001', behavior: 'Friendly', ctnStatus: 'N/A' }
+    ]
+};
+
+// Initialize global data with sample data if localStorage is empty
+let usersData = JSON.parse(localStorage.getItem('users')) || sampleData.usersData;
+let employeesData = JSON.parse(localStorage.getItem('employees')) || sampleData.employeesData;
+let propertiesData = JSON.parse(localStorage.getItem('properties')) || sampleData.propertiesData;
+let dispatchData = JSON.parse(localStorage.getItem('dispatches')) || sampleData.dispatchData;
+let reportsData = JSON.parse(localStorage.getItem('reports')) || sampleData.reportsData;
+let peopleData = JSON.parse(localStorage.getItem('people')) || sampleData.peopleData;
+
+// Ensure data is saved to localStorage
+function saveDataToLocalStorage() {
+    localStorage.setItem('users', JSON.stringify(usersData));
+    localStorage.setItem('employees', JSON.stringify(employeesData));
+    localStorage.setItem('properties', JSON.stringify(propertiesData));
+    localStorage.setItem('dispatches', JSON.stringify(dispatchData));
+    localStorage.setItem('reports', JSON.stringify(reportsData));
+    localStorage.setItem('people', JSON.stringify(peopleData));
+}
 
 // Enhanced loadData function with logging
 function loadData(callback) {
@@ -32,13 +52,8 @@ function loadData(callback) {
     console.log('  reportsData:', reportsData);
     console.log('  peopleData:', peopleData);
 
-    // Save sample data to localStorage as a fallback
-    localStorage.setItem('users', JSON.stringify(usersData));
-    localStorage.setItem('employees', JSON.stringify(employeesData));
-    localStorage.setItem('properties', JSON.stringify(propertiesData));
-    localStorage.setItem('dispatches', JSON.stringify(dispatchData));
-    localStorage.setItem('reports', JSON.stringify(reportsData));
-    localStorage.setItem('people', JSON.stringify(peopleData));
+    // Ensure data is saved to localStorage
+    saveDataToLocalStorage();
 
     console.log('loadData: Data saved to localStorage');
     console.log('loadData: Final state of global arrays after load:');
@@ -57,65 +72,7 @@ function loadData(callback) {
     }
 }
 
-// Placeholder for other functions (assumed to exist elsewhere)
-function getOfficerStatus(officerName) {
-    return localStorage.getItem(`status-${officerName}`) || '10-8';
-}
-
-function setOfficerStatus(officerName, status) {
-    localStorage.setItem(`status-${officerName}`, status);
-}
-
-function saveProperties() {
-    localStorage.setItem('properties', JSON.stringify(propertiesData));
-}
-
-function saveReports() {
-    localStorage.setItem('reports', JSON.stringify(reportsData));
-}
-
-function saveDispatch() {
-    localStorage.setItem('dispatches', JSON.stringify(dispatchData));
-}
-
-// Note: Include your existing functions like checkAuthentication, updateOfficerStatus, etc., here if they are part of common.js
-// Initialize global data with sample data as a fallback
-let usersData = JSON.parse(localStorage.getItem('users')) || [
-    { username: 'JohnSmith', password: 'john123', group: 'Officers' },
-    { username: 'JaneDoe', password: 'jane123', group: 'Managers' }
-];
-let employeesData = JSON.parse(localStorage.getItem('employees')) || [
-    { name: 'JohnSmith', route: 'Route-1', location: 'Downtown', department: 'Patrol', schedule: { start: '2025-03-15T08:00:00Z', end: '2025-03-15T16:00:00Z' } },
-    { name: 'JaneDoe', route: 'Route-2', location: 'Uptown', department: 'Patrol', schedule: { start: '2025-03-15T09:00:00Z', end: '2025-03-15T17:00:00Z' } }
-];
-let propertiesData = JSON.parse(localStorage.getItem('properties')) || [
-    { id: 'PROP001', propertyName: 'Axel Apartments', address: '123 Main St', apt: 'Apt 1', minHits: 3, notes: 'High security area', suspended: false },
-    { id: 'PROP002', propertyName: 'Baker Plaza', address: '456 Oak Ave', apt: '', minHits: 2, notes: '', suspended: false }
-];
-let dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [
-    { id: 'D001', issue: 'Suspicious activity', property: 'PROP001', assignedOfficer: 'JohnSmith', status: 'Assigned', dateTime: '2025-03-15T10:00:00Z', assignedTime: '2025-03-15T10:05:00Z', resolveTime: null }
-];
-let reportsData = JSON.parse(localStorage.getItem('reports')) || [
-    { id: 'R001', caseNumber: '2503151000', dateTime: '2025-03-15T10:00:00Z', personId: 'P001', property: 'PROP001', type: 'Patrol Hit', narrative: 'JohnSmith: Arrived at property', officer: 'JohnSmith' }
-];
-let peopleData = JSON.parse(localStorage.getItem('people')) || [
-    { id: 'P001', name: 'John Doe', dob: '1990-01-01', status: 'Resident', property: 'PROP001', behavior: 'Friendly', ctnStatus: 'N/A' }
-];
-
-// Placeholder for loadData (should be defined in officers.js or scripts.js)
-function loadData(callback) {
-    // If loadData is not defined elsewhere, use the fallback data
-    console.log('loadData called with fallback data');
-    localStorage.setItem('users', JSON.stringify(usersData));
-    localStorage.setItem('employees', JSON.stringify(employeesData));
-    localStorage.setItem('properties', JSON.stringify(propertiesData));
-    localStorage.setItem('dispatches', JSON.stringify(dispatchData));
-    localStorage.setItem('reports', JSON.stringify(reportsData));
-    localStorage.setItem('people', JSON.stringify(peopleData));
-    if (callback) callback();
-}
-
-// Placeholder for functions assumed to be in officers.js or scripts.js
+// Placeholder functions
 function getOfficerStatus(officerName) {
     return localStorage.getItem(`status-${officerName}`) || '10-8';
 }
@@ -255,28 +212,49 @@ function loadPageContent(pagePath) {
                 <div id="alert" class="hidden"></div>
                 <script>
                     let isLoaded = false;
+                    console.log('Index: Checking if data is loaded, isLoaded:', isLoaded);
                     if (!isLoaded) {
+                        console.log('Index: Calling loadData for Dashboard');
                         loadData(() => {
                             isLoaded = true;
-                            console.log('index.html: Data loaded successfully');
+                            console.log('Index: loadData callback executed, isLoaded:', isLoaded);
+                            console.log('Index: employeesData after load:', employeesData);
+                            console.log('Index: dispatchData after load:', dispatchData);
                             showTab('overview');
                             updateUnitsList();
                             updateDispatchList();
                         });
+                    } else {
+                        console.log('Index: Data already loaded, skipping loadData');
                     }
 
                     function toggleSidebar(id) {
+                        console.log('Index: Toggling sidebar with id:', id);
                         const sidebar = document.getElementById(id);
-                        if (sidebar) sidebar.classList.toggle('active');
+                        if (sidebar) {
+                            sidebar.classList.toggle('active');
+                            console.log('Index: Sidebar toggled, new classList:', sidebar.classList.toString());
+                        } else {
+                            console.error('Index: Sidebar not found for id:', id);
+                        }
                     }
 
                     function toggleUnitGroup(groupId) {
+                        console.log('Index: Toggling unit group with id:', groupId);
                         const group = document.getElementById(groupId);
-                        if (group) group.classList.toggle('collapsed');
+                        if (group) {
+                            group.classList.toggle('collapsed');
+                            console.log('Index: Unit group toggled, new classList:', group.classList.toString());
+                        } else {
+                            console.error('Index: Unit group not found for id:', groupId);
+                        }
                     }
 
                     function updateUnitsList() {
+                        console.log('Index: Updating units list');
                         const filter = document.getElementById('unitFilter')?.value;
+                        console.log('Index: Filter value:', filter);
+                        console.log('Index: employeesData in updateUnitsList:', employeesData);
                         const onlineUnits = employeesData.filter(emp => {
                             const status = getOfficerStatus(emp.name);
                             return ['10-8', '10-6', '10-100'].includes(status);
@@ -285,6 +263,8 @@ function loadPageContent(pagePath) {
                             const status = getOfficerStatus(emp.name);
                             return status === '10-42';
                         });
+                        console.log('Index: Online units:', onlineUnits);
+                        console.log('Index: Offline units:', offlineUnits);
 
                         let html = '';
                         const groups = { Online: onlineUnits, Offline: offlineUnits };
@@ -311,16 +291,27 @@ function loadPageContent(pagePath) {
 
                         const unitsList = document.getElementById('unitsList');
                         if (unitsList) {
-                            unitsList.innerHTML = html || '<p class="text-center">No units found. Data may have failed to load.</p>';
+                            if (html) {
+                                console.log('Index: Rendering units list with HTML:', html);
+                                unitsList.innerHTML = html;
+                            } else {
+                                console.log('Index: No units to render, showing empty message');
+                                unitsList.innerHTML = '<p class="text-center">No units found. Data may have failed to load.</p>';
+                            }
+                        } else {
+                            console.error('Index: unitsList element not found');
                         }
                     }
 
                     function updateDispatchList() {
+                        console.log('Index: Updating dispatch list');
+                        console.log('Index: dispatchData in updateDispatchList:', dispatchData);
                         if (!dispatchData) {
-                            console.error('dispatchData is not loaded');
+                            console.error('Index: dispatchData is not loaded');
                             return;
                         }
                         const active = dispatchData.filter(d => d.status !== 'Completed');
+                        console.log('Index: Active dispatches:', active);
                         let html = active.length ? '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th></tr>' : '<p class="text-center">No active dispatches.</p>';
                         active.forEach(disp => {
                             const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500' }[disp.status] || 'text-gray-500';
@@ -329,27 +320,35 @@ function loadPageContent(pagePath) {
                         if (active.length) html += '</table>';
                         const dispatchList = document.getElementById('dispatchList');
                         if (dispatchList) {
+                            console.log('Index: Rendering dispatch list with HTML:', html);
                             dispatchList.innerHTML = html;
+                        } else {
+                            console.error('Index: dispatchList element not found');
                         }
                     }
 
                     function showTab(tab) {
+                        console.log('Index: Showing tab:', tab);
                         const user = JSON.parse(localStorage.getItem('user'));
                         if (!user) {
+                            console.log('Index: User not logged in, redirecting to login.html');
                             window.location.href = 'login.html';
                             return;
                         }
 
                         const isManagerOrSupervisor = user && ['Managers', 'Supervisors'].includes(user.group);
+                        console.log('Index: isManagerOrSupervisor:', isManagerOrSupervisor);
                         let html = '';
 
                         if (tab === 'overview') {
                             if (isManagerOrSupervisor) {
                                 const activeCalls = dispatchData ? dispatchData.filter(d => d.status !== 'Completed').length : 0;
                                 const loggedInOfficers = usersData && employeesData ? usersData.filter(u => employeesData.some(e => e.name === u.username && ['10-8', '10-6', '10-100'].includes(getOfficerStatus(e.name)))).length : 0;
+                                console.log('Index: Active calls:', activeCalls, 'Logged-in officers:', loggedInOfficers);
                                 html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Active Calls:</strong> ' + activeCalls + '</p></div><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Officers Online:</strong> ' + loggedInOfficers + '</p></div></div>';
                                 html += '<h3 class="text-lg font-semibold mb-2">Officer Status</h3>';
                                 if (employeesData && employeesData.length > 0) {
+                                    console.log('Index: Rendering officer status table with employeesData:', employeesData);
                                     html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Route</th><th class="p-2 bg-gray-700">Start</th><th class="p-2 bg-gray-700">End</th><th class="p-2 bg-gray-700">Status</th></tr>';
                                     employeesData.forEach(emp => {
                                         const status = getOfficerStatus(emp.name);
@@ -364,11 +363,13 @@ function loadPageContent(pagePath) {
                                     });
                                     html += '</table>';
                                 } else {
+                                    console.log('Index: No employees data available for officer status');
                                     html += '<p class="text-center">No officer data available.</p>';
                                 }
                                 setInterval(checkDispatchTimeouts, 60000);
                             } else {
                                 const active = dispatchData ? dispatchData.filter(d => d.assignedOfficer === user.username && d.status !== 'Completed') : [];
+                                console.log('Index: Active dispatches for user', user.username, ':', active);
                                 html += '<h3 class="text-lg font-semibold mb-2">Your Active Dispatches</h3>';
                                 html += active.length ? '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' : '<p class="text-center">No active dispatches assigned to you.</p>';
                                 active.forEach(disp => {
@@ -379,12 +380,15 @@ function loadPageContent(pagePath) {
                             }
                         } else if (tab === 'route') {
                             const officer = employeesData.find(e => e.name === user.username);
+                            console.log('Index: Officer for route:', officer);
                             const routeNum = officer ? parseInt(officer.route.split('-')[1]) : 5;
                             const hitsPerOfficer = routeNum === 5 ? 40 : (routeNum === 4 ? 50 : 60);
                             const activeProps = propertiesData ? propertiesData.filter(p => !p.suspended) : [];
                             const propsPerOfficer = Math.ceil(activeProps.length / routeNum);
                             const startIdx = employeesData.findIndex(e => e.name === user.username) * propsPerOfficer;
                             const routeProps = activeProps.slice(startIdx, startIdx + propsPerOfficer);
+                            console.log('Index: Active properties for route:', activeProps);
+                            console.log('Index: Route properties:', routeProps);
 
                             html += '<h3 class="text-lg font-semibold mb-2">Your Route: ' + (officer ? officer.route : 'Unassigned') + ' (' + hitsPerOfficer + ' hits)</h3>';
                             if (routeProps.length > 0) {
@@ -398,20 +402,26 @@ function loadPageContent(pagePath) {
                                 });
                                 html += '</table>';
                             } else {
+                                console.log('Index: No properties assigned to route');
                                 html += '<p class="text-center">No properties assigned to your route.</p>';
                             }
                         }
                         const dashboardContent = document.getElementById('dashboardContent');
                         if (dashboardContent) {
+                            console.log('Index: Rendering dashboard content with HTML:', html);
                             dashboardContent.innerHTML = html;
+                        } else {
+                            console.error('Index: dashboardContent element not found');
                         }
                     }
 
                     function navigate(address) {
+                        console.log('Index: Navigating to address:', address);
                         window.open('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(address), '_blank');
                     }
 
                     function arrive(propId) {
+                        console.log('Index: Marking arrival for property:', propId);
                         const user = JSON.parse(localStorage.getItem('user'));
                         const report = {
                             id: 'R' + (reportsData.length + 1).toString().padStart(3, '0'),
@@ -423,16 +433,22 @@ function loadPageContent(pagePath) {
                         };
                         reportsData.push(report);
                         saveReports();
+                        console.log('Index: Report added:', report);
+                        console.log('Index: Updated reportsData:', reportsData);
                         const hits = reportsData ? reportsData.filter(r => r.property === propId && r.type === 'Patrol Hit').length : 0;
                         const prop = propertiesData.find(p => p.id === propId);
                         if (hits >= prop.minHits * 2) {
                             const nextProp = propertiesData.find(p => p.id > propId && !p.suspended);
-                            if (nextProp) alert('Property ' + prop.propertyName + ' complete! Navigate to ' + nextProp.propertyName + '?');
+                            if (nextProp) {
+                                console.log('Index: Property complete, prompting to navigate to next:', nextProp);
+                                alert('Property ' + prop.propertyName + ' complete! Navigate to ' + nextProp.propertyName + '?');
+                            }
                             showTab('route');
                         }
                     }
 
                     function checkDispatchTimeouts() {
+                        console.log('Index: Checking dispatch timeouts');
                         const user = JSON.parse(localStorage.getItem('user'));
                         if (user && ['Managers', 'Supervisors'].includes(user.group)) {
                             if (dispatchData) {
@@ -462,21 +478,32 @@ function loadPageContent(pagePath) {
                 <div id="propertiesList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
                 <div id="alert" class="hidden"></div>
                 <script>
+                    console.log('Properties: Calling loadData for Properties');
                     loadData(() => {
+                        console.log('Properties: loadData callback executed');
+                        console.log('Properties: propertiesData after load:', propertiesData);
                         const customProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
                         customProperties.forEach(prop => {
                             if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
                         });
 
                         let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Property Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Apt</th><th class="p-2 bg-gray-700">Min. Hits</th><th class="p-2 bg-gray-700">Notes</th></tr>';
-                        propertiesData.forEach(prop => {
-                            const link = (prop.id === 'PROP001' || prop.id === 'PROP002' || prop.id === 'PROP003') ? '<a href="' + prop.id.toLowerCase() + '.html" class="underline">' + prop.propertyName + '</a>' : prop.propertyName;
-                            html += '<tr><td class="p-2">' + prop.id + '</td><td class="p-2">' + link + (prop.suspended ? ' (Suspended)' : '') + '</td><td class="p-2">' + prop.address + '</td><td class="p-2">' + prop.apt + '</td><td class="p-2">' + prop.minHits + '</td><td class="p-2">' + prop.notes + '</td></tr>';
-                        });
+                        if (propertiesData && propertiesData.length > 0) {
+                            propertiesData.forEach(prop => {
+                                const link = (prop.id === 'PROP001' || prop.id === 'PROP002' || prop.id === 'PROP003') ? '<a href="' + prop.id.toLowerCase() + '.html" class="underline">' + prop.propertyName + '</a>' : prop.propertyName;
+                                html += '<tr><td class="p-2">' + prop.id + '</td><td class="p-2">' + link + (prop.suspended ? ' (Suspended)' : '') + '</td><td class="p-2">' + prop.address + '</td><td class="p-2">' + prop.apt + '</td><td class="p-2">' + prop.minHits + '</td><td class="p-2">' + prop.notes + '</td></tr>';
+                            });
+                        } else {
+                            console.log('Properties: No properties data available');
+                            html += '<tr><td colspan="6" class="p-2 text-center">No properties found. Data may have failed to load.</td></tr>';
+                        }
                         html += '</table>';
                         const propertiesList = document.getElementById('propertiesList');
                         if (propertiesList) {
+                            console.log('Properties: Rendering properties list with HTML:', html);
                             propertiesList.innerHTML = html;
+                        } else {
+                            console.error('Properties: propertiesList element not found');
                         }
                     });
                 </script>
@@ -502,22 +529,30 @@ function loadPageContent(pagePath) {
                 <div id="peopleResults" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
                 <div id="alert" class="hidden"></div>
                 <script>
-                    loadData(() => {});
+                    console.log('People: Calling loadData for People');
+                    loadData(() => {
+                        console.log('People: loadData callback executed');
+                        console.log('People: peopleData after load:', peopleData);
+                    });
 
                     function searchPeople() {
+                        console.log('People: Searching people');
                         const simple = document.getElementById('simpleSearch').value.toLowerCase();
                         const ctn = document.getElementById('ctnFilter').value;
                         const behavior = document.getElementById('behaviorFilter').value;
                         const property = document.getElementById('propertyFilter').value.toUpperCase();
+                        console.log('People: Search criteria - simple:', simple, 'ctn:', ctn, 'behavior:', behavior, 'property:', property);
 
                         if (!simple && !ctn && !behavior && !property) {
                             const peopleResults = document.getElementById('peopleResults');
                             if (peopleResults) {
                                 peopleResults.innerHTML = '<p class="text-center">Enter search criteria above to see results.</p>';
                             }
+                            console.log('People: No search criteria provided, showing message');
                             return;
                         }
 
+                        console.log('People: peopleData before filtering:', peopleData);
                         const filtered = peopleData.filter(person => {
                             const matchesSimple = !simple || person.id.toLowerCase().includes(simple) || person.name.toLowerCase().includes(simple);
                             const matchesCtn = !ctn || person.ctnStatus === ctn;
@@ -525,6 +560,7 @@ function loadPageContent(pagePath) {
                             const matchesProperty = !property || person.property === property;
                             return matchesSimple && matchesCtn && matchesBehavior && matchesProperty;
                         });
+                        console.log('People: Filtered people:', filtered);
 
                         let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">DoB</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Behavior</th><th class="p-2 bg-gray-700">CTN Status</th></tr>';
                         if (filtered.length) {
@@ -536,25 +572,35 @@ function loadPageContent(pagePath) {
                                 html += '<tr class="' + ctnClass + '"><td class="p-2">' + person.id + '</td><td class="p-2">' + nameText + '</td><td class="p-2">' + person.dob + '</td><td class="p-2">' + person.status + '</td><td class="p-2">' + person.property + '</td><td class="p-2"><span class="' + behaviorClass + '">' + person.behavior + '</span></td><td class="p-2">' + person.ctnStatus + '</td></tr>';
                             });
                         } else {
+                            console.log('People: No results found after filtering');
                             html += '<tr><td colspan="7" class="p-2 text-center">No results found</td></tr>';
                         }
                         html += '</table>';
                         const peopleResults = document.getElementById('peopleResults');
                         if (peopleResults) {
+                            console.log('People: Rendering people results with HTML:', html);
                             peopleResults.innerHTML = html;
+                        } else {
+                            console.error('People: peopleResults element not found');
                         }
                     }
 
                     function showPerson(id) {
+                        console.log('People: Showing person details for id:', id);
                         const person = peopleData.find(p => p.id === id);
                         const reports = reportsData.filter(r => r.personId === id);
+                        console.log('People: Person found:', person);
+                        console.log('People: Reports for person:', reports);
                         let html = '<div class="bg-gray-800 p-4 rounded-lg shadow"><img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png" alt="' + person.name + '" class="w-32 h-32 rounded mb-4"><p><strong>Name:</strong> ' + person.name + '</p><p><strong>DoB:</strong> ' + person.dob + '</p><p><strong>Status:</strong> ' + person.status + '</p><p><strong>Property:</strong> ' + person.property + '</p><p><strong>Behavior:</strong> ' + person.behavior + '</p><p><strong>CTN Status:</strong> ' + person.ctnStatus + '</p>';
                         html += '<h4 class="text-lg font-semibold mt-4">Reports</h4><table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Case Number</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
                         reports.forEach(r => html += '<tr><td class="p-2">' + r.caseNumber + '</td><td class="p-2">' + r.dateTime + '</td><td class="p-2">' + r.type + '</td><td class="p-2">' + r.narrative + '</td></tr>');
                         html += '</table></div>';
                         const peopleResults = document.getElementById('peopleResults');
                         if (peopleResults) {
+                            console.log('People: Rendering person details with HTML:', html);
                             peopleResults.innerHTML = html;
+                        } else {
+                            console.error('People: peopleResults element not found');
                         }
                     }
                 </script>
@@ -573,21 +619,30 @@ function loadPageContent(pagePath) {
                 <div id="dispatchContent" class="bg-gray-800 p-4 rounded-lg shadow"></div>
                 <div id="alert" class="hidden"></div>
                 <script>
-                    loadData(() => showTab('active'));
+                    console.log('Dispatch: Calling loadData for Dispatch');
+                    loadData(() => {
+                        console.log('Dispatch: loadData callback executed');
+                        console.log('Dispatch: dispatchData after load:', dispatchData);
+                        showTab('active');
+                    });
 
                     function showTab(tab) {
+                        console.log('Dispatch: Showing tab:', tab);
                         const user = JSON.parse(localStorage.getItem('user'));
                         if (!user) {
+                            console.log('Dispatch: User not logged in, redirecting to login.html');
                             window.location.href = 'login.html';
                             return;
                         }
 
                         const isOfficer = user.group === 'Officers';
                         const isDispatcher = ['Dispatchers', 'Managers', 'Supervisors'].includes(user.group);
+                        console.log('Dispatch: isOfficer:', isOfficer, 'isDispatcher:', isDispatcher);
                         let html = '';
 
                         if (tab === 'active') {
                             const activeDispatches = dispatchData ? dispatchData.filter(d => d.status !== 'Completed') : [];
+                            console.log('Dispatch: Active dispatches:', activeDispatches);
                             html += '<h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>';
                             if (activeDispatches.length) {
                                 html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
@@ -612,10 +667,12 @@ function loadPageContent(pagePath) {
                                 });
                                 html += '</table>';
                             } else {
+                                console.log('Dispatch: No active dispatches found');
                                 html += '<p class="text-center">No active dispatches.</p>';
                             }
                         } else if (tab === 'history') {
                             const completedDispatches = dispatchData ? dispatchData.filter(d => d.status === 'Completed') : [];
+                            console.log('Dispatch: Completed dispatches:', completedDispatches);
                             html += '<h3 class="text-lg font-semibold mb-2">Dispatch History</h3>';
                             if (completedDispatches.length) {
                                 html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Resolve Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
@@ -633,16 +690,21 @@ function loadPageContent(pagePath) {
                                 });
                                 html += '</table>';
                             } else {
+                                console.log('Dispatch: No completed dispatches found');
                                 html += '<p class="text-center">No completed dispatches.</p>';
                             }
                         }
                         const dispatchContent = document.getElementById('dispatchContent');
                         if (dispatchContent) {
+                            console.log('Dispatch: Rendering dispatch content with HTML:', html);
                             dispatchContent.innerHTML = html;
+                        } else {
+                            console.error('Dispatch: dispatchContent element not found');
                         }
                     }
 
                     function assignOfficer(select, dispatchId) {
+                        console.log('Dispatch: Assigning officer for dispatch:', dispatchId);
                         const officer = select.value;
                         const dispatch = dispatchData.find(d => d.id === dispatchId);
                         if (dispatch) {
@@ -650,6 +712,7 @@ function loadPageContent(pagePath) {
                             dispatch.status = officer ? 'Assigned' : 'Pending';
                             dispatch.assignedTime = officer ? new Date().toISOString() : null;
                             saveDispatch();
+                            console.log('Dispatch: Updated dispatch:', dispatch);
                             showTab('active');
                         } else {
                             showAlert('Dispatch not found', 'bg-red-600');
@@ -657,11 +720,13 @@ function loadPageContent(pagePath) {
                     }
 
                     function clearDispatch(dispatchId) {
+                        console.log('Dispatch: Clearing dispatch:', dispatchId);
                         const dispatch = dispatchData.find(d => d.id === dispatchId);
                         if (dispatch) {
                             dispatch.status = 'Completed';
                             dispatch.resolveTime = new Date().toISOString();
                             saveDispatch();
+                            console.log('Dispatch: Cleared dispatch:', dispatch);
                             showTab('active');
                         } else {
                             showAlert('Dispatch not found', 'bg-red-600');
@@ -669,11 +734,13 @@ function loadPageContent(pagePath) {
                     }
 
                     function restoreDispatch(dispatchId) {
+                        console.log('Dispatch: Restoring dispatch:', dispatchId);
                         const dispatch = dispatchData.find(d => d.id === dispatchId);
                         if (dispatch) {
                             dispatch.status = 'Pending';
                             dispatch.resolveTime = null;
                             saveDispatch();
+                            console.log('Dispatch: Restored dispatch:', dispatch);
                             showTab('history');
                         } else {
                             showAlert('Dispatch not found', 'bg-red-600');
@@ -702,24 +769,28 @@ function loadPageContent(pagePath) {
                 <div id="reportsList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
                 <div id="alert" class="hidden"></div>
                 <script>
+                    console.log('Reports: Calling loadData for Reports');
                     loadData(() => {
+                        console.log('Reports: loadData callback executed');
+                        console.log('Reports: reportsData after load:', reportsData);
                         const urlParams = new URLSearchParams(window.location.search);
                         const personId = urlParams.get('personId');
                         showReports(personId);
                     });
 
                     function submitReport() {
+                        console.log('Reports: Submitting report');
                         const personId = document.getElementById('personId').value || 'N/A';
                         const property = document.getElementById('property').value;
                         const type = document.getElementById('type').value;
                         const narrative = document.getElementById('narrative').value;
+                        console.log('Reports: Form data - personId:', personId, 'property:', property, 'type:', type, 'narrative:', narrative);
 
                         if (!property && !narrative) {
                             showAlert('Property or narrative required', 'bg-red-600');
                             return;
                         }
 
-                        // Define now before using it
                         const now = new Date();
                         const caseNumber = now.getFullYear().toString().slice(2) + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + now.getDate().toString().padStart(2, '0') + now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
                         const user = JSON.parse(localStorage.getItem('user'));
@@ -735,13 +806,8 @@ function loadPageContent(pagePath) {
                         if (!reportsData) reportsData = [];
                         reportsData.push(report);
                         saveReports();
-
-                        if (type === 'CTN Update' && personId !== 'N/A') {
-                            const person = peopleData.find(p => p.id === personId);
-                            if (person) {
-                                person.ctnStatus = 'CTN Issued';
-                            }
-                        }
+                        console.log('Reports: Report submitted:', report);
+                        console.log('Reports: Updated reportsData:', reportsData);
 
                         showAlert('Report submitted', 'bg-green-600');
                         showReports();
@@ -751,7 +817,10 @@ function loadPageContent(pagePath) {
                     }
 
                     function showReports(filterPersonId = null) {
+                        console.log('Reports: Showing reports, filterPersonId:', filterPersonId);
+                        console.log('Reports: reportsData:', reportsData);
                         const filteredReports = reportsData ? (filterPersonId ? reportsData.filter(r => r.personId === filterPersonId) : reportsData) : [];
+                        console.log('Reports: Filtered reports:', filteredReports);
                         let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Case Number</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Person ID</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
                         if (filteredReports.length) {
                             filteredReports.forEach(report => {
@@ -761,21 +830,27 @@ function loadPageContent(pagePath) {
                                 }
                             });
                         } else {
+                            console.log('Reports: No reports found');
                             html += '<tr><td colspan="6" class="p-2 text-center">No reports found. Data may have failed to load.</td></tr>';
                         }
                         html += '</table>';
                         const reportsList = document.getElementById('reportsList');
                         if (reportsList) {
+                            console.log('Reports: Rendering reports list with HTML:', html);
                             reportsList.innerHTML = html;
+                        } else {
+                            console.error('Reports: reportsList element not found');
                         }
                     }
 
                     function showReportDetails(caseNumber) {
+                        console.log('Reports: Showing report details for caseNumber:', caseNumber);
                         const report = reportsData.find(r => r.caseNumber === caseNumber);
                         if (!report) {
                             showAlert('Report not found', 'bg-red-600');
                             return;
                         }
+                        console.log('Reports: Report found:', report);
 
                         const isOfficer = user.group === 'Officers' && user.username === report.officer;
                         const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
@@ -806,13 +881,17 @@ function loadPageContent(pagePath) {
                         html += '</div>';
                         const reportsList = document.getElementById('reportsList');
                         if (reportsList) {
+                            console.log('Reports: Rendering report details with HTML:', html);
                             reportsList.innerHTML = html;
+                        } else {
+                            console.error('Reports: reportsList element not found');
                         }
                     }
 
                     let editRequests = JSON.parse(localStorage.getItem('editRequests') || '[]');
 
                     function requestEdit(caseNumber) {
+                        console.log('Reports: Requesting edit for caseNumber:', caseNumber);
                         const reason = prompt('Reason for edit request:');
                         if (reason) {
                             editRequests.push({ caseNumber, officer: user.username, reason });
@@ -823,6 +902,7 @@ function loadPageContent(pagePath) {
                     }
 
                     function approveEdit(caseNumber, officer) {
+                        console.log('Reports: Approving edit for caseNumber:', caseNumber, 'by officer:', officer);
                         editRequests = editRequests.filter(req => req.caseNumber !== caseNumber);
                         localStorage.setItem('editRequests', JSON.stringify(editRequests));
                         showAlert('Edit request approved for ' + officer, 'bg-green-600');
@@ -830,6 +910,7 @@ function loadPageContent(pagePath) {
                     }
 
                     function denyEdit(caseNumber, officer) {
+                        console.log('Reports: Denying edit for caseNumber:', caseNumber, 'by officer:', officer);
                         editRequests = editRequests.filter(req => req.caseNumber !== caseNumber);
                         localStorage.setItem('editRequests', JSON.stringify(editRequests));
                         showAlert('Edit request denied for ' + officer, 'bg-red-600');
@@ -848,11 +929,16 @@ function loadPageContent(pagePath) {
                 <div id="officersList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
                 <div id="alert" class="hidden"></div>
                 <script>
+                    console.log('Officers: Calling loadData for Officers');
                     loadData(() => {
+                        console.log('Officers: loadData callback executed');
+                        console.log('Officers: employeesData after load:', employeesData);
                         showOfficers();
                     });
 
                     function showOfficers() {
+                        console.log('Officers: Showing officers');
+                        console.log('Officers: employeesData:', employeesData);
                         let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Role</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
                         if (employeesData && employeesData.length > 0) {
                             employeesData.forEach(emp => {
@@ -879,12 +965,16 @@ function loadPageContent(pagePath) {
                                 html += '</td></tr>';
                             });
                         } else {
+                            console.log('Officers: No employees data available');
                             html += '<tr><td colspan="4" class="p-2 text-center">No officers found. Data may have failed to load.</td></tr>';
                         }
                         html += '</table>';
                         const officersList = document.getElementById('officersList');
                         if (officersList) {
+                            console.log('Officers: Rendering officers list with HTML:', html);
                             officersList.innerHTML = html;
+                        } else {
+                            console.error('Officers: officersList element not found');
                         }
                     }
                 </script>
@@ -914,18 +1004,24 @@ function loadPageContent(pagePath) {
                 <div id="propertyList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
                 <div id="alert" class="hidden"></div>
                 <script>
+                    console.log('Manager: Calling loadData for Manager');
                     loadData(() => {
+                        console.log('Manager: loadData callback executed');
+                        console.log('Manager: employeesData after load:', employeesData);
+                        console.log('Manager: propertiesData after load:', propertiesData);
                         showEmployees();
                         showProperties();
                     });
 
                     function addProperty() {
+                        console.log('Manager: Adding property');
                         const id = document.getElementById('propId').value.toUpperCase();
                         const name = document.getElementById('propName').value;
                         const address = document.getElementById('propAddress').value;
                         const apt = document.getElementById('propApt').value;
                         const hits = parseInt(document.getElementById('propHits').value) || 0;
                         const notes = document.getElementById('propNotes').value;
+                        console.log('Manager: Form data - id:', id, 'name:', name, 'address:', address, 'apt:', apt, 'hits:', hits, 'notes:', notes);
 
                         if (!id || !name || !address) {
                             showAlert('ID, Name, and Address are required', 'bg-red-600');
@@ -942,6 +1038,8 @@ function loadPageContent(pagePath) {
                         customProps.push(newProp);
                         localStorage.setItem('customProperties', JSON.stringify(customProps));
                         saveProperties();
+                        console.log('Manager: New property added:', newProp);
+                        console.log('Manager: Updated propertiesData:', propertiesData);
 
                         showAlert('Property added', 'bg-green-600');
                         showProperties();
@@ -954,6 +1052,8 @@ function loadPageContent(pagePath) {
                     }
 
                     function showEmployees() {
+                        console.log('Manager: Showing employees');
+                        console.log('Manager: employeesData:', employeesData);
                         let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Group</th><th class="p-2 bg-gray-700">Actions</th></tr>';
                         if (employeesData && employeesData.length > 0) {
                             employeesData.forEach(emp => {
@@ -965,186 +1065,218 @@ function loadPageContent(pagePath) {
                                 html += '</select></td><td class="p-2"><button onclick="deleteEmployee(\'' + emp.name + '\')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button></td></tr>';
                             });
                         } else {
+                            console.log('Manager: No employees data available');
                             html += '<tr><td colspan="3" class="p-2 text-center">No employees found. Data may have failed to load.</td></tr>';
                         }
                         html += '</table>';
                         const employeeList = document.getElementById('employeeList');
                         if (employeeList) {
+                            console.log('Manager: Rendering employee list with HTML:', html);
                             employeeList.innerHTML = html;
+                        } else {
+                            console.error('Manager: employeeList element not found');
                         }
                     }
 
                     function showProperties() {
+                        console.log('Manager: Showing properties');
+                        console.log('Manager: propertiesData:', propertiesData);
                         let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
                         if (propertiesData && propertiesData.length > 0) {
-                            propertiesData.forEach(prop => {
-                                html += '<tr><td class="p-2">' + prop.id + '</td><td class="p-2">' + prop.propertyName + '</td><td class="p-2">' + prop.address + '</td><td class="p-2">' + (prop.suspended ? 'Suspended' : 'Active') + '</td><td class="p-2">';
-                                html += '<button onclick="' + (prop.suspended ? 'activateProperty' : 'suspendProperty') + '(\'' + prop.id + '\')" class="bg-' + (prop.suspended ? 'green' : 'yellow') + '-600 hover:bg-' + (prop.suspended ? 'green' : 'yellow') + '-700 p-1 rounded text-sm shadow">' + (prop.suspended ? 'Activate' : 'Suspend') + '</button></td></tr>';
-                            });
-                        } else {
-                            html += '<tr><td colspan="5" class="p-2 text-center">No properties found. Data may have failed to load.</td></tr>';
-                        }
-                        html += '</table>';
-                        const propertyList = document.getElementById('propertyList');
-                        if (propertyList) {
-                            propertyList.innerHTML = html;
-                        }
-                    }
+propertiesData.forEach(prop => {
+html += '<tr><td class="p-2">' + prop.id + '</td><td class="p-2">' + prop.propertyName + '</td><td class="p-2">' + prop.address + '</td><td class="p-2">' + (prop.suspended ? 'Suspended' : 'Active') + '</td><td class="p-2">';
+html += '<button onclick="' + (prop.suspended ? 'activateProperty' : 'suspendProperty') + '(\'' + prop.id + '\')" class="bg-' + (prop.suspended ? 'green' : 'yellow') + '-600 hover:bg-' + (prop.suspended ? 'green' : 'yellow') + '-700 p-1 rounded text-sm shadow">' + (prop.suspended ? 'Activate' : 'Suspend') + '</button></td></tr>';
+});
+} else {
+console.log('Manager: No properties data available');
+html += '<tr><td colspan="5" class="p-2 text-center">No properties found. Data may have failed to load.</td></tr>';
+}
+html += '</table>';
+const propertyList = document.getElementById('propertyList');
+if (propertyList) {
+console.log('Manager: Rendering property list with HTML:', html);
+propertyList.innerHTML = html;
+} else {
+console.error('Manager: propertyList element not found');
+}
+}
 
-                    function editGroup(select, name) {
-                        if (confirm('Change ' + name + '\'s group to ' + select.value + '?')) {
-                            const userData = usersData.find(u => u.username === name);
-                            if (userData) {
-                                userData.group = select.value;
-                                localStorage.setItem('users', JSON.stringify(usersData));
-                                showAlert('Group updated for ' + name, 'bg-green-600');
-                            }
-                        } else {
-                            select.value = usersData.find(u => u.username === name).group;
-                        }
-                    }
+function editGroup(select, name) {
+console.log('Manager: Editing group for:', name);
+if (confirm('Change ' + name + ''s group to ' + select.value + '?')) {
+const userData = usersData.find(u => u.username === name);
+if (userData) {
+userData.group = select.value;
+localStorage.setItem('users', JSON.stringify(usersData));
+showAlert('Group updated for ' + name, 'bg-green-600');
+console.log('Manager: Group updated for:', name, 'to:', select.value);
+}
+} else {
+select.value = usersData.find(u => u.username === name).group;
+console.log('Manager: Group change cancelled for:', name);
+}
+}
 
-                    function deleteEmployee(name) {
-                        if (confirm('Delete ' + name + '? This cannot be undone.')) {
-                            employeesData = employeesData.filter(e => e.name !== name);
-                            usersData = usersData.filter(u => u.username !== name);
-                            localStorage.setItem('employees', JSON.stringify(employeesData));
-                            localStorage.setItem('users', JSON.stringify(usersData));
-                            showAlert(name + ' deleted', 'bg-green-600');
-                            showEmployees();
-                        }
-                    }
+function deleteEmployee(name) {
+console.log('Manager: Deleting employee:', name);
+if (confirm('Delete ' + name + '? This cannot be undone.')) {
+employeesData = employeesData.filter(e => e.name !== name);
+usersData = usersData.filter(u => u.username !== name);
+localStorage.setItem('employees', JSON.stringify(employeesData));
+localStorage.setItem('users', JSON.stringify(usersData));
+showAlert(name + ' deleted', 'bg-green-600');
+console.log('Manager: Employee deleted:', name);
+showEmployees();
+} else {
+console.log('Manager: Delete cancelled for:', name);
+}
+}
 
-                    function suspendProperty(id) {
-                        if (confirm('Suspend property ' + id + '?')) {
-                            const prop = propertiesData.find(p => p.id === id);
-                            if (prop) {
-                                prop.suspended = true;
-                                saveProperties();
-                                showAlert('Property ' + id + ' suspended', 'bg-green-600');
-                                showProperties();
-                            }
-                        }
-                    }
+function suspendProperty(id) {
+console.log('Manager: Suspending property:', id);
+if (confirm('Suspend property ' + id + '?')) {
+const prop = propertiesData.find(p => p.id === id);
+if (prop) {
+prop.suspended = true;
+saveProperties();
+showAlert('Property ' + id + ' suspended', 'bg-green-600');
+console.log('Manager: Property suspended:', id);
+showProperties();
+}
+} else {
+console.log('Manager: Suspend cancelled for:', id);
+}
+}
 
-                    function activateProperty(id) {
-                        if (confirm('Activate property ' + id + '?')) {
-                            const prop = propertiesData.find(p => p.id === id);
-                            if (prop) {
-                                prop.suspended = false;
-                                saveProperties();
-                                showAlert('Property ' + id + ' activated', 'bg-green-600');
-                                showProperties();
-                            }
-                        }
-                    }
-                </script>
-            `;
-            break;
-        case 'login.html':
-            window.location.href = 'login.html';
-            return;
-        default:
-            content = '<p class="text-red-400">Page not found.</p>';
-    }
-    contentArea.innerHTML = content;
-    console.log(`Loaded content for: ${pagePath}`);
+function activateProperty(id) {
+console.log('Manager: Activating property:', id);
+if (confirm('Activate property ' + id + '?')) {
+const prop = propertiesData.find(p => p.id === id);
+if (prop) {
+prop.suspended = false;
+saveProperties();
+showAlert('Property ' + id + ' activated', 'bg-green-600');
+console.log('Manager: Property activated:', id);
+showProperties();
+}
+} else {
+console.log('Manager: Activate cancelled for:', id);
+}
+}
+</script>
+;             break;         case 'login.html':             window.location.href = 'login.html';             return;         default:             content = '<p class="text-red-400">Page not found.</p>';     }     contentArea.innerHTML = content;     console.log(Loaded content for: ${pagePath}`);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM fully loaded');
+console.log('DOM fully loaded');
 
-    if (!checkAuthentication()) return;
+if (!checkAuthentication()) return;
 
-    const user = JSON.parse(localStorage.getItem('user'));
-    const nav = document.getElementById('main-nav');
-    if (!nav) {
-        console.error('Navigation header not found in DOM');
-        return;
-    }
+const user = JSON.parse(localStorage.getItem('user'));
+const nav = document.getElementById('main-nav');
+if (!nav) {
+console.error('Navigation header not found in DOM');
+return;
+}
 
-    const userInfo = document.getElementById('userInfo');
-    if (userInfo) {
-        userInfo.textContent = user ? `Logged in as ${user.username}` : 'Logged in as Guest';
-    }
+const userInfo = document.getElementById('userInfo');
+if (userInfo) {
+userInfo.textContent = user ? Logged in as ${user.username} : 'Logged in as Guest';
+console.log('User info set to:', userInfo.textContent);
+}
 
-    const managerLink = document.getElementById('managerLink');
-    if (managerLink && (!user || user.group !== 'Managers')) {
-        managerLink.style.display = 'none';
-    }
+const managerLink = document.getElementById('managerLink');
+if (managerLink && (!user || user.group !== 'Managers')) {
+managerLink.style.display = 'none';
+console.log('Manager link hidden for user:', user ? user.username : 'Guest');
+}
 
-    const hamburger = document.querySelector('.hamburger');
-    const navTabs = document.querySelector('.nav-tabs');
-    if (hamburger && navTabs) {
-        hamburger.addEventListener('click', () => {
-            navTabs.classList.toggle('active');
-            const isOpen = navTabs.classList.contains('active');
-            hamburger.children[0].style.transform = isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none';
-            hamburger.children[1].style.opacity = isOpen ? '0' : '1';
-            hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
-        });
-    }
+const hamburger = document.querySelector('.hamburger');
+const navTabs = document.querySelector('.nav-tabs');
+if (hamburger && navTabs) {
+hamburger.addEventListener('click', () => {
+console.log('Hamburger clicked, toggling navTabs');
+navTabs.classList.toggle('active');
+const isOpen = navTabs.classList.contains('active');
+hamburger.children[0].style.transform = isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none';
+hamburger.children[1].style.opacity = isOpen ? '0' : '1';
+hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
+console.log('NavTabs state:', isOpen ? 'open' : 'closed');
+});
+}
 
-    const toggleBtn = document.getElementById('darkModeToggle');
-    if (toggleBtn) {
-        toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
-        const label = document.createElement('span');
-        label.className = 'ml-2 text-sm';
-        label.textContent = 'Dark Mode';
-        toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
+const toggleBtn = document.getElementById('darkModeToggle');
+if (toggleBtn) {
+toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
+const label = document.createElement('span');
+label.className = 'ml-2 text-sm';
+label.textContent = 'Dark Mode';
+toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
 
-        toggleBtn.addEventListener('click', () => {
-            document.body.classList.toggle('light-mode');
-            const isLightMode = document.body.classList.contains('light-mode');
-            toggleBtn.classList.toggle('bg-blue-600', isLightMode);
-            toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
-            toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
-            label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
-            localStorage.setItem('lightMode', isLightMode);
-        });
+toggleBtn.addEventListener('click', () => {
+console.log('Dark mode toggle clicked');
+document.body.classList.toggle('light-mode');
+const isLightMode = document.body.classList.contains('light-mode');
+toggleBtn.classList.toggle('bg-blue-600', isLightMode);
+toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
+toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
+label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
+localStorage.setItem('lightMode', isLightMode);
+console.log('Dark mode state:', isLightMode ? 'Light' : 'Dark');
+});
 
-        if (localStorage.getItem('lightMode') === 'true') {
-            document.body.classList.add('light-mode');
-            toggleBtn.classList.add('bg-blue-600');
-            toggleBtn.classList.remove('bg-gray-700');
-            toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
-            label.textContent = 'Light Mode';
-        }
-    }
+if (localStorage.getItem('lightMode') === 'true') {
+document.body.classList.add('light-mode');
+toggleBtn.classList.add('bg-blue-600');
+toggleBtn.classList.remove('bg-gray-700');
+toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
+label.textContent = 'Light Mode';
+console.log('Initial dark mode state set to Light from localStorage');
+}
+}
 
-    const hash = window.location.hash.substr(2) || 'index';
-    const page = hash + '.html';
-    loadPageContent(page);
-    highlightActiveTab(page);
+const hash = window.location.hash.substr(2) || 'index';
+const page = hash + '.html';
+console.log('Initial hash:', hash, 'Loading page:', page);
+loadPageContent(page);
+highlightActiveTab(page);
 
-    nav.addEventListener('click', (e) => {
-        const link = e.target.closest('a[data-page]');
-        if (link) {
-            e.preventDefault();
-            const pagePath = link.getAttribute('data-page');
-            navigateToPage(pagePath);
-        }
-    });
+nav.addEventListener('click', (e) => {
+const link = e.target.closest('a[data-page]');
+if (link) {
+e.preventDefault();
+console.log('Nav link clicked, page:', link.getAttribute('data-page'));
+const pagePath = link.getAttribute('data-page');
+navigateToPage(pagePath);
+}
+});
 });
 
 function logout() {
-    localStorage.removeItem('user');
-    window.location.href = 'login.html';
+console.log('Logging out');
+localStorage.removeItem('user');
+window.location.href = 'login.html';
 }
 
 function showAlert(message, color = 'bg-green-600') {
-    const alert = document.getElementById('alert');
-    if (alert) {
-        alert.textContent = message;
-        alert.className = `fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000]`;
-        alert.classList.remove('hidden');
-        setTimeout(() => alert.classList.add('hidden'), 3000);
-    }
+console.log('Showing alert:', message, 'with color:', color);
+const alert = document.getElementById('alert');
+if (alert) {
+alert.textContent = message;
+alert.className = fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000];
+alert.classList.remove('hidden');
+setTimeout(() => alert.classList.add('hidden'), 3000);
+console.log('Alert displayed');
+} else {
+console.error('Alert element not found');
+}
 }
 
 window.addEventListener('hashchange', () => {
-    const hash = window.location.hash.substr(2) || 'index';
-    const page = hash + '.html';
-    loadPageContent(page);
-    highlightActiveTab(page);
+console.log('Hash changed, new hash:', window.location.hash);
+const hash = window.location.hash.substr(2) || 'index';
+const page = hash + '.html';
+console.log('Loading page from hash:', page);
+loadPageContent(page);
+highlightActiveTab(page);
 });
