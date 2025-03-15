@@ -227,6 +227,7 @@ function loadPageContent(pagePath) {
                     } else {
                         console.log('Index: Data already loaded, skipping loadData');
                     }
+
                     function toggleSidebar(id) {
                         console.log('Index: Toggling sidebar with id:', id);
                         const sidebar = document.getElementById(id);
@@ -467,7 +468,6 @@ function loadPageContent(pagePath) {
                 </script>
             `;
             break;
-    }
 
         case 'properties.html':
             content = `
@@ -510,6 +510,7 @@ function loadPageContent(pagePath) {
                 </script>
             `;
             break;
+
         case 'people.html':
             content = `
                 <div class="tips">
@@ -608,7 +609,7 @@ function loadPageContent(pagePath) {
             `;
             break;
 
-          case 'dispatch.html':
+        case 'dispatch.html':
             content = `
                 <div class="tips">
                     <h4 class="text-lg font-semibold">Tips</h4>
@@ -751,6 +752,7 @@ function loadPageContent(pagePath) {
                 </script>
             `;
             break;
+
         case 'reports.html':
             content = `
                 <div class="tips">
@@ -983,6 +985,7 @@ function loadPageContent(pagePath) {
                 </script>
             `;
             break;
+
         case 'manager.html':
             content = `
                 <div class="tips">
@@ -1087,210 +1090,4 @@ function loadPageContent(pagePath) {
                         let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
                         if (propertiesData && propertiesData.length > 0) {
                             propertiesData.forEach(prop => {
-                                html += '<tr><td class="p-2">' + prop.id + '</td><td class="p-2">' + prop.propertyName + '</td><td class="p-2">' + prop.address + '</td><td class="p-2">' + (prop.suspended ? 'Suspended' : 'Active') + '</td><td class="p-2">';
-                                html += '<button onclick="' + (prop.suspended ? 'activateProperty' : 'suspendProperty') + '(\'' + prop.id + '\')" class="bg-' + (prop.suspended ? 'green' : 'yellow') + '-600 hover:bg-' + (prop.suspended ? 'green' : 'yellow') + '-700 p-1 rounded text-sm shadow">' + (prop.suspended ? 'Activate' : 'Suspend') + '</button></td></tr>';
-                            });
-                        } else {
-                            console.log('Manager: No properties data available');
-                            html += '<tr><td colspan="5" class="p-2 text-center">No properties found. Data may have failed to load.</td></tr>';
-                        }
-                        html += '</table>';
-                        const propertyList = document.getElementById('propertyList');
-                        if (propertyList) {
-                            console.log('Manager: Rendering property list with HTML:', html);
-                            propertyList.innerHTML = html;
-                        } else {
-                            console.error('Manager: propertyList element not found');
-                        }
-                    }
-
-                    function editGroup(select, name) {
-                        console.log('Manager: Editing group for:', name);
-                        if (confirm('Change ' + name + '\'s group to ' + select.value + '?')) {
-                            const userData = usersData.find(u => u.username === name);
-                            if (userData) {
-                                userData.group = select.value;
-                                localStorage.setItem('users', JSON.stringify(usersData));
-                                showAlert('Group updated for ' + name, 'bg-green-600');
-                                console.log('Manager: Group updated for:', name, 'to:', select.value);
-                            }
-                        } else {
-                            select.value = usersData.find(u => u.username === name).group;
-                            console.log('Manager: Group change cancelled for:', name);
-                        }
-                    }
-
-                    function deleteEmployee(name) {
-                        console.log('Manager: Deleting employee:', name);
-                        if (confirm('Delete ' + name + '? This cannot be undone.')) {
-                            employeesData = employeesData.filter(e => e.name !== name);
-                            usersData = usersData.filter(u => u.username !== name);
-                            localStorage.setItem('employees', JSON.stringify(employeesData));
-                            localStorage.setItem('users', JSON.stringify(usersData));
-                            showAlert(name + ' deleted', 'bg-green-600');
-                            console.log('Manager: Employee deleted:', name);
-                            showEmployees();
-                        } else {
-                            console.log('Manager: Delete cancelled for:', name);
-                        }
-                    }
-
-                    function suspendProperty(id) {
-                        console.log('Manager: Suspending property:', id);
-                        if (confirm('Suspend property ' + id + '?')) {
-                            const prop = propertiesData.find(p => p.id === id);
-                            if (prop) {
-                                prop.suspended = true;
-                                saveProperties();
-                                showAlert('Property ' + id + ' suspended', 'bg-green-600');
-                                console.log('Manager: Property suspended:', id);
-                                showProperties();
-                            }
-                        } else {
-                            console.log('Manager: Suspend cancelled for:', id);
-                        }
-                    }
-
-                    function activateProperty(id) {
-                        console.log('Manager: Activating property:', id);
-                        if (confirm('Activate property ' + id + '?')) {
-                            const prop = propertiesData.find(p => p.id === id);
-                            if (prop) {
-                                prop.suspended = false;
-                                saveProperties();
-                                showAlert('Property ' + id + ' activated', 'bg-green-600');
-                                console.log('Manager: Property activated:', id);
-                                showProperties();
-                            }
-                        } else {
-                            console.log('Manager: Activate cancelled for:', id);
-                        }
-                    }
-                </script>
-            `;
-            break;
-
-          case 'login.html':
-            window.location.href = 'login.html';
-            return;
-        default:
-            content = '<p class="text-red-400">Page not found.</p>';
-    }
-    contentArea.innerHTML = content;
-    console.log(`Loaded content for: ${pagePath}`);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM fully loaded');
-
-    if (!checkAuthentication()) return;
-
-    const user = JSON.parse(localStorage.getItem('user'));
-    const nav = document.getElementById('main-nav');
-    if (!nav) {
-        console.error('Navigation header not found in DOM');
-        return;
-    }
-
-    const userInfo = document.getElementById('userInfo');
-    if (userInfo) {
-        userInfo.textContent = user ? `Logged in as ${user.username}` : 'Logged in as Guest';
-        console.log('User info set to:', userInfo.textContent);
-    }
-
-    const managerLink = document.getElementById('managerLink');
-    if (managerLink && (!user || user.group !== 'Managers')) {
-        managerLink.style.display = 'none';
-        console.log('Manager link hidden for user:', user ? user.username : 'Guest');
-    }
-
-    const hamburger = document.querySelector('.hamburger');
-    const navTabs = document.querySelector('.nav-tabs');
-    if (hamburger && navTabs) {
-        hamburger.addEventListener('click', () => {
-            console.log('Hamburger clicked, toggling navTabs');
-            navTabs.classList.toggle('active');
-            const isOpen = navTabs.classList.contains('active');
-            hamburger.children[0].style.transform = isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none';
-            hamburger.children[1].style.opacity = isOpen ? '0' : '1';
-            hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
-            console.log('NavTabs state:', isOpen ? 'open' : 'closed');
-        });
-    }
-
-    const toggleBtn = document.getElementById('darkModeToggle');
-    if (toggleBtn) {
-        toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
-        const label = document.createElement('span');
-        label.className = 'ml-2 text-sm';
-        label.textContent = 'Dark Mode';
-        toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
-
-        toggleBtn.addEventListener('click', () => {
-            console.log('Dark mode toggle clicked');
-            document.body.classList.toggle('light-mode');
-            const isLightMode = document.body.classList.contains('light-mode');
-            toggleBtn.classList.toggle('bg-blue-600', isLightMode);
-            toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
-            toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
-            label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
-            localStorage.setItem('lightMode', isLightMode);
-            console.log('Dark mode state:', isLightMode ? 'Light' : 'Dark');
-        });
-
-        if (localStorage.getItem('lightMode') === 'true') {
-            document.body.classList.add('light-mode');
-            toggleBtn.classList.add('bg-blue-600');
-            toggleBtn.classList.remove('bg-gray-700');
-            toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
-            label.textContent = 'Light Mode';
-            console.log('Initial dark mode state set to Light from localStorage');
-        }
-    }
-
-    const hash = window.location.hash.substr(2) || 'index';
-    const page = hash + '.html';
-    console.log('Initial hash:', hash, 'Loading page:', page);
-    loadPageContent(page);
-    highlightActiveTab(page);
-
-    nav.addEventListener('click', (e) => {
-        const link = e.target.closest('a[data-page]');
-        if (link) {
-            e.preventDefault();
-            console.log('Nav link clicked, page:', link.getAttribute('data-page'));
-            const pagePath = link.getAttribute('data-page');
-            navigateToPage(pagePath);
-        }
-    });
-});
-
-function logout() {
-    console.log('Logging out');
-    localStorage.removeItem('user');
-    window.location.href = 'login.html';
-}
-
-function showAlert(message, color = 'bg-green-600') {
-    console.log('Showing alert:', message, 'with color:', color);
-    const alert = document.getElementById('alert');
-    if (alert) {
-        alert.textContent = message;
-        alert.className = `fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000]`;
-        alert.classList.remove('hidden');
-        setTimeout(() => alert.classList.add('hidden'), 3000);
-        console.log('Alert displayed');
-    } else {
-        console.error('Alert element not found');
-    }
-}
-
-window.addEventListener('hashchange', () => {
-    console.log('Hash changed, new hash:', window.location.hash);
-    const hash = window.location.hash.substr(2) || 'index';
-    const page = hash + '.html';
-    console.log('Loading page from hash:', page);
-    loadPageContent(page);
-    highlightActiveTab(page);
-});
-  
+                                html += '<tr><td class="p-2">' + prop.id + '</td
