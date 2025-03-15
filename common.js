@@ -21,6 +21,87 @@ let peopleData = JSON.parse(localStorage.getItem('people')) || [
     { id: 'P001', name: 'John Doe', dob: '1990-01-01', status: 'Resident', property: 'PROP001', behavior: 'Friendly', ctnStatus: 'N/A' }
 ];
 
+// Enhanced loadData function with logging
+function loadData(callback) {
+    console.log('loadData: Starting data load process...');
+    console.log('loadData: Initial state of global arrays:');
+    console.log('  usersData:', usersData);
+    console.log('  employeesData:', employeesData);
+    console.log('  propertiesData:', propertiesData);
+    console.log('  dispatchData:', dispatchData);
+    console.log('  reportsData:', reportsData);
+    console.log('  peopleData:', peopleData);
+
+    // Save sample data to localStorage as a fallback
+    localStorage.setItem('users', JSON.stringify(usersData));
+    localStorage.setItem('employees', JSON.stringify(employeesData));
+    localStorage.setItem('properties', JSON.stringify(propertiesData));
+    localStorage.setItem('dispatches', JSON.stringify(dispatchData));
+    localStorage.setItem('reports', JSON.stringify(reportsData));
+    localStorage.setItem('people', JSON.stringify(peopleData));
+
+    console.log('loadData: Data saved to localStorage');
+    console.log('loadData: Final state of global arrays after load:');
+    console.log('  usersData:', usersData);
+    console.log('  employeesData:', employeesData);
+    console.log('  propertiesData:', propertiesData);
+    console.log('  dispatchData:', dispatchData);
+    console.log('  reportsData:', reportsData);
+    console.log('  peopleData:', peopleData);
+
+    if (callback) {
+        console.log('loadData: Executing callback');
+        callback();
+    } else {
+        console.log('loadData: No callback provided');
+    }
+}
+
+// Placeholder for other functions (assumed to exist elsewhere)
+function getOfficerStatus(officerName) {
+    return localStorage.getItem(`status-${officerName}`) || '10-8';
+}
+
+function setOfficerStatus(officerName, status) {
+    localStorage.setItem(`status-${officerName}`, status);
+}
+
+function saveProperties() {
+    localStorage.setItem('properties', JSON.stringify(propertiesData));
+}
+
+function saveReports() {
+    localStorage.setItem('reports', JSON.stringify(reportsData));
+}
+
+function saveDispatch() {
+    localStorage.setItem('dispatches', JSON.stringify(dispatchData));
+}
+
+// Note: Include your existing functions like checkAuthentication, updateOfficerStatus, etc., here if they are part of common.js
+// Initialize global data with sample data as a fallback
+let usersData = JSON.parse(localStorage.getItem('users')) || [
+    { username: 'JohnSmith', password: 'john123', group: 'Officers' },
+    { username: 'JaneDoe', password: 'jane123', group: 'Managers' }
+];
+let employeesData = JSON.parse(localStorage.getItem('employees')) || [
+    { name: 'JohnSmith', route: 'Route-1', location: 'Downtown', department: 'Patrol', schedule: { start: '2025-03-15T08:00:00Z', end: '2025-03-15T16:00:00Z' } },
+    { name: 'JaneDoe', route: 'Route-2', location: 'Uptown', department: 'Patrol', schedule: { start: '2025-03-15T09:00:00Z', end: '2025-03-15T17:00:00Z' } }
+];
+let propertiesData = JSON.parse(localStorage.getItem('properties')) || [
+    { id: 'PROP001', propertyName: 'Axel Apartments', address: '123 Main St', apt: 'Apt 1', minHits: 3, notes: 'High security area', suspended: false },
+    { id: 'PROP002', propertyName: 'Baker Plaza', address: '456 Oak Ave', apt: '', minHits: 2, notes: '', suspended: false }
+];
+let dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [
+    { id: 'D001', issue: 'Suspicious activity', property: 'PROP001', assignedOfficer: 'JohnSmith', status: 'Assigned', dateTime: '2025-03-15T10:00:00Z', assignedTime: '2025-03-15T10:05:00Z', resolveTime: null }
+];
+let reportsData = JSON.parse(localStorage.getItem('reports')) || [
+    { id: 'R001', caseNumber: '2503151000', dateTime: '2025-03-15T10:00:00Z', personId: 'P001', property: 'PROP001', type: 'Patrol Hit', narrative: 'JohnSmith: Arrived at property', officer: 'JohnSmith' }
+];
+let peopleData = JSON.parse(localStorage.getItem('people')) || [
+    { id: 'P001', name: 'John Doe', dob: '1990-01-01', status: 'Resident', property: 'PROP001', behavior: 'Friendly', ctnStatus: 'N/A' }
+];
+
 // Placeholder for loadData (should be defined in officers.js or scripts.js)
 function loadData(callback) {
     // If loadData is not defined elsewhere, use the fallback data
