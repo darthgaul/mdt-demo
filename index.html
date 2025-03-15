@@ -1,108 +1,149 @@
-// Load content into the content-area div
-function loadPageContent(pagePath) {
-    const contentArea = document.getElementById('content-area');
-    if (!contentArea) {
-        console.error('Content area not found in DOM');
-        return;
-    }
-
-    let content = '';
-    const user = JSON.parse(localStorage.getItem('user'));
-
-    switch (pagePath) {
-        case 'index.html':
-            content = `
-                <div class="tips">
-                    <h4 class="text-lg font-semibold">Tips</h4>
-                    <p>Overview: See your dispatches or team status. Route: Start your patrol route. Use the sidebar toggles on mobile.</p>
-                    <p>Example: Use 10-codes like "10-42" to mark yourself off duty.</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MDT Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css">
+    <script src="common.js" defer></script>
+    <style>
+        .dashboard-container {
+            display: flex;
+            gap: 1rem;
+            height: calc(100vh - 120px);
+            min-height: 400px;
+        }
+        .sidebar {
+            width: 300px;
+            min-width: 250px;
+            background-color: #2d3748;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+        .main-content {
+            flex: 1;
+            min-width: 0;
+            background-color: #2d3748;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-y: auto;
+        }
+        .light-mode .sidebar, .light-mode .main-content {
+            background-color: #e5e7eb;
+        }
+        .toggle-sidebar {
+            display: none;
+            background-color: #2563eb;
+            color: white;
+            padding: 0.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            width: 100%;
+        }
+        .toggle-sidebar:hover {
+            background-color: #1d4ed8;
+        }
+        .unit-group {
+            margin-bottom: 1rem;
+        }
+        .unit-group h4 {
+            cursor: pointer;
+            padding: 0.5rem;
+            background-color: #374151;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .unit-group.collapsed .unit-list {
+            display: none;
+        }
+        .unit-card {
+            background-color: #4b5563;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .light-mode .unit-group h4 {
+            background-color: #d1d5db;
+        }
+        .light-mode .unit-card {
+            background-color: #e5e7eb;
+        }
+        .status-tag {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-left: 0.5rem;
+        }
+        .nato-cheat-sheet {
+            background-color: #1e3a8a;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+        }
+        .light-mode .nato-cheat-sheet {
+            background-color: #dbeafe;
+            color: #1e3a8a;
+        }
+        @media (max-width: 1024px) {
+            .dashboard-container {
+                flex-direction: column;
+                height: auto;
+            }
+            .sidebar {
+                width: 100%;
+                display: none;
+            }
+            .sidebar.active {
+                display: block;
+            }
+            .toggle-sidebar {
+                display: block;
+            }
+            .main-content {
+                width: 100%;
+            }
+        }
+        .active-tab {
+            color: #3b82f6 !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6 bg-gray-800 text-white">
+    <!-- Navigation Header -->
+    <nav id="main-nav" class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow">
+        <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="hamburger cursor-pointer">
+                    <div class="w-6 h-1 bg-white mb-1 transition-transform"></div>
+                    <div class="w-6 h-1 bg-white mb-1 transition-opacity"></div>
+                    <div class="w-6 h-1 bg-white transition-transform"></div>
                 </div>
-                <div class="dashboard-container">
-                    <div class="sidebar" id="unitsSidebar">
-                        <button class="toggle-sidebar tooltip" onclick="toggleSidebar('unitsSidebar')">
-                            Toggle Units
-                            <span class="tooltip-text">Show/hide the Active Units sidebar</span>
-                        </button>
-                        <h3 class="text-lg font-semibold mb-2">Active Units</h3>
-                        <select id="unitFilter" class="bg-gray-700 text-white p-2 rounded w-full mb-2 tooltip" onchange="updateUnitsList()">
-                            <option value="">All Units</option>
-                            <option value="Online">Online</option>
-                            <option value="Offline">Offline</option>
-                            <span class="tooltip-text">Filter units by online/offline status</span>
-                        </select>
-                        <div id="unitsList"></div>
-                    </div>
-                    <div class="main-content">
-                        <div class="flex space-x-4 mb-4">
-                            <button onclick="showTab('overview')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow tooltip">
-                                Overview
-                                <span class="tooltip-text">View team status and active dispatches</span>
-                            </button>
-                            <button onclick="showTab('route')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow tooltip">
-                                Route
-                                <span class="tooltip-text">Manage your assigned patrol route</span>
-                            </button>
-                        </div>
-                        <div id="dashboardContent"></div>
-                        <Caroline: 1rem;
-                            font-size: 0.875rem;
-                        }
-                        .light-mode .nato-cheat-sheet {
-                            background-color: #dbeafe;
-                            color: #1e3a8a;
-                        }
-                        @media (max-width: 1024px) {
-                            .dashboard-container {
-                                flex-direction: column;
-                                height: auto;
-                            }
-                            .sidebar {
-                                width: 100%;
-                                display: none;
-                            }
-                            .sidebar.active {
-                                display: block;
-                            }
-                            .toggle-sidebar {
-                                display: block;
-                            }
-                            .main-content {
-                                width: 100%;
-                            }
-                        }
-                        .active-tab {
-                            color: #3b82f6 !important;
-                        }
-                    </style>
-                </head>
-                <body class="min-h-screen p-6 bg-gray-800 text-white">
-                    <!-- Navigation Header -->
-                    <nav id="main-nav" class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow">
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center space-x-4">
-                                <div class="hamburger cursor-pointer">
-                                    <div class="w-6 h-1 bg-white mb-1 transition-transform"></div>
-                                    <div class="w-6 h-1 bg-white mb-1 transition-opacity"></div>
-                                    <div class="w-6 h-1 bg-white transition-transform"></div>
-                                </div>
-                                <button id="darkModeToggle" class="relative inline-flex items-center h-6 rounded-full w-11 bg-gray-700 transition-colors duration-200"></button>
-                            </div>
-                            <div class="nav-tabs flex space-x-4">
-                                <a href="#/index" data-page="index.html" class="text-sm hover:text-blue-400">Dashboard</a>
-                                <a href="#/properties" data-page="properties.html" class="text-sm hover:text-blue-400">Properties</a>
-                                <a href="#/people" data-page="people.html" class="text-sm hover:text-blue-400">People</a>
-                                <a href="#/dispatch" data-page="dispatch.html" class="text-sm hover:text-blue-400">Dispatch</a>
-                                <a href="#/reports" data-page="reports.html" class="text-sm hover:text-blue-400">Reports</a>
-                                <a href="#/officers" data-page="officers.html" class="text-sm hover:text-blue-400">Officers</a>
-                                <a href="#/manager" data-page="manager.html" id="managerLink" class="text-sm hover:text-blue-400">Manager</a>
-                            </div>
-                            <div class="flex flex-col items-end space-y-2">
-                                <span id="userInfo" class="text-sm"></span>
-                                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
-                            </div>
-                        </div>
-                    </nav>
-                    <!-- Content Area -->
-                    <div id="content-area" class="p-4"></div>
-                </body>
-                </html>
+                <button id="darkModeToggle" class="relative inline-flex items-center h-6 rounded-full w-11 bg-gray-700 transition-colors duration-200"></button>
+            </div>
+            <div class="nav-tabs flex space-x-4">
+                <a href="#/index" data-page="index.html" class="text-sm hover:text-blue-400">Dashboard</a>
+                <a href="#/properties" data-page="properties.html" class="text-sm hover:text-blue-400">Properties</a>
+                <a href="#/people" data-page="people.html" class="text-sm hover:text-blue-400">People</a>
+                <a href="#/dispatch" data-page="dispatch.html" class="text-sm hover:text-blue-400">Dispatch</a>
+                <a href="#/reports" data-page="reports.html" class="text-sm hover:text-blue-400">Reports</a>
+                <a href="#/officers" data-page="officers.html" class="text-sm hover:text-blue-400">Officers</a>
+                <a href="#/manager" data-page="manager.html" id="managerLink" class="text-sm hover:text-blue-400">Manager</a>
+            </div>
+            <div class="flex flex-col items-end space-y-2">
+                <span id="userInfo" class="text-sm"></span>
+                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
+            </div>
+        </div>
+    </nav>
+    <!-- Content Area -->
+    <div id="content-area" class="p-4"></div>
+</body>
+</html>
