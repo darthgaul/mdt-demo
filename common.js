@@ -41,10 +41,10 @@ function saveDataToLocalStorage() {
     localStorage.setItem('people', JSON.stringify(peopleData));
 }
 
-// Enhanced loadData function with logging
-function loadData(callback) {
-    console.log('loadData: Starting data load process...');
-    console.log('loadData: Initial state of global arrays:');
+// Enhanced initializeSampleData function with logging
+function initializeSampleData(callback) {
+    console.log('initializeSampleData: Starting data load process...');
+    console.log('initializeSampleData: Initial state of global arrays:');
     console.log('  usersData:', usersData);
     console.log('  employeesData:', employeesData);
     console.log('  propertiesData:', propertiesData);
@@ -55,8 +55,8 @@ function loadData(callback) {
     // Ensure data is saved to localStorage
     saveDataToLocalStorage();
 
-    console.log('loadData: Data saved to localStorage');
-    console.log('loadData: Final state of global arrays after load:');
+    console.log('initializeSampleData: Data saved to localStorage');
+    console.log('initializeSampleData: Final state of global arrays after load:');
     console.log('  usersData:', usersData);
     console.log('  employeesData:', employeesData);
     console.log('  propertiesData:', propertiesData);
@@ -65,10 +65,10 @@ function loadData(callback) {
     console.log('  peopleData:', peopleData);
 
     if (callback) {
-        console.log('loadData: Executing callback');
+        console.log('initializeSampleData: Executing callback');
         callback();
     } else {
-        console.log('loadData: No callback provided');
+        console.log('initializeSampleData: No callback provided');
     }
 }
 
@@ -214,10 +214,10 @@ function loadPageContent(pagePath) {
                     let isLoaded = false;
                     console.log('Index: Checking if data is loaded, isLoaded:', isLoaded);
                     if (!isLoaded) {
-                        console.log('Index: Calling loadData for Dashboard');
-                        loadData(() => {
+                        console.log('Index: Calling initializeSampleData for Dashboard');
+                        initializeSampleData(() => {
                             isLoaded = true;
-                            console.log('Index: loadData callback executed, isLoaded:', isLoaded);
+                            console.log('Index: initializeSampleData callback executed, isLoaded:', isLoaded);
                             console.log('Index: employeesData after load:', employeesData);
                             console.log('Index: dispatchData after load:', dispatchData);
                             showTab('overview');
@@ -225,7 +225,7 @@ function loadPageContent(pagePath) {
                             updateDispatchList();
                         });
                     } else {
-                        console.log('Index: Data already loaded, skipping loadData');
+                        console.log('Index: Data already loaded, skipping initializeSampleData');
                     }
 
                     function toggleSidebar(id) {
@@ -498,7 +498,7 @@ function loadPageContent(pagePath) {
                     <div id="propertiesList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
                     <div id="alert" class="hidden"></div>
                     <script>
-                        loadData(() => {
+                        initializeSampleData(() => {
                             const customProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
                             customProperties.forEach(prop => {
                                 if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
@@ -539,7 +539,7 @@ function loadPageContent(pagePath) {
                     <div id="peopleResults" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
                     <div id="alert" class="hidden"></div>
                     <script>
-                        loadData(() => {});
+                        initializeSampleData(() => {});
 
                         function searchPeople() {
                             const simple = document.getElementById('simpleSearch').value.toLowerCase();
@@ -611,7 +611,7 @@ function loadPageContent(pagePath) {
                     <div id="dispatchContent" class="bg-gray-800 p-4 rounded-lg shadow"></div>
                     <div id="alert" class="hidden"></div>
                     <script>
-                        loadData(() => showTab('active'));
+                        initializeSampleData(() => showTab('active'));
 
                         function showTab(tab) {
                             const user = JSON.parse(localStorage.getItem('user'));
@@ -741,7 +741,7 @@ function loadPageContent(pagePath) {
                     <div id="reportsList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
                     <div id="alert" class="hidden"></div>
                     <script>
-                        loadData(() => {
+                        initializeSampleData(() => {
                             const urlParams = new URLSearchParams(window.location.search);
                             const personId = urlParams.get('personId');
                             showReports(personId);
@@ -887,7 +887,7 @@ function loadPageContent(pagePath) {
                     <div id="officersList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
                     <div id="alert" class="hidden"></div>
                     <script>
-                        loadData(() => {
+                        initializeSampleData(() => {
                             showOfficers();
                         });
 
@@ -954,7 +954,7 @@ function loadPageContent(pagePath) {
                     <div id="propertyList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
                     <div id="alert" class="hidden"></div>
                     <script>
-                        loadData(() => {
+                        initializeSampleData(() => {
                             showEmployees();
                             showProperties();
                         });
