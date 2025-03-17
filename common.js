@@ -106,3 +106,34 @@ window.calculateElapsed = calculateElapsed;
 window.checkAuthentication = checkAuthentication;
 window.showAlert = showAlert;
 window.logout = logout;
+
+<script>
+    let isLoaded = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (isLoaded) return;
+        isLoaded = true;
+
+        if (localStorage.getItem('lightMode') === 'true') {
+            document.body.classList.add('light-mode');
+        }
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') login();
+        });
+    });
+
+    function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        loadData(() => {
+            const user = usersData.find(u => u.username === username && u.password === password);
+            if (user) {
+                localStorage.setItem('user', JSON.stringify(user));
+                window.location.href = 'index.html';
+            } else {
+                showAlert('Invalid username or password', 'bg-red-600');
+            }
+        });
+    }
+</script>
