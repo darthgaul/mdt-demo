@@ -17,12 +17,8 @@
             margin-bottom: 0.5rem;
             font-size: 0.875rem;
         }
-        .username-text {
-            color: #34d399; /* Green that complements blue */
-        }
-        .password-text {
-            color: #facc15; /* Yellow that complements blue */
-        }
+        .username-text { color: #34d399; }
+        .password-text { color: #facc15; }
     </style>
 </head>
 <body class="bg-gray-900 text-white min-h-screen p-6 flex flex-col items-center justify-center">
@@ -49,11 +45,13 @@
 
     <div id="alert" class="hidden"></div>
 
+    <script src="common.js"></script>
     <script src="scripts.js"></script>
     <script>
         let isLoaded = false;
 
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('Login: DOM fully loaded');
             if (isLoaded) return;
             isLoaded = true;
 
@@ -66,10 +64,32 @@
         });
 
         function login() {
+            console.log('Login: Attempting login');
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
-            loadData(() => {
+            if (typeof loadData === 'function') {
+                loadData(() => {
+                    console.log('Login: Data loaded, usersData:', usersData);
+                    const user = usersData.find(u => u.username === username && u.password === password);
+                    if (user) {
+                        console.log('Login: User found, redirecting to index.html');
+                        localStorage.setItem('user', JSON.stringify(user));
+                        window.location.href = 'index.html';
+                    } else {
+                        console.log('Login: Invalid credentials');
+                        showAlert('Invalid username or password', 'bg-red-600');
+                    }
+                });
+            } else {
+                console.error('Login: loadData is not defined, using fallback');
+                window.usersData = JSON.parse(localStorage.getItem('users')) || [
+                    { username: "JohnSmith", password: "john123", group: "Managers" },
+                    { username: "TomVega", password: "tom123", group: "Supervisors" },
+                    { username: "AlexReed", password: "alex123", group: "Officers" },
+                    { username: "BellaCruz", password: "bella123", group: "Officers" },
+                    { username: "SarahJones", password: "sarah123", group: "Dispatchers" }
+                ];
                 const user = usersData.find(u => u.username === username && u.password === password);
                 if (user) {
                     localStorage.setItem('user', JSON.stringify(user));
@@ -77,16 +97,6 @@
                 } else {
                     showAlert('Invalid username or password', 'bg-red-600');
                 }
-            });
-        }
-
-        function showAlert(message, color = 'bg-green-600') {
-            const alert = document.getElementById('alert');
-            if (alert) {
-                alert.textContent = message;
-                alert.className = `fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000]`;
-                alert.classList.remove('hidden');
-                setTimeout(() => alert.classList.add('hidden'), 3000);
             }
         }
     </script>
