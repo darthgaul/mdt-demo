@@ -1,90 +1,132 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MDT Officers</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body class="min-h-screen p-6">
-    <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
+let isInitialized = false;
 
-    <div class="tips">
-        <h4 class="text-lg font-semibold">Tips</h4>
-        <p>View all officers and their current status. Update your status using the dropdown. Status updates are visible to all officers.</p>
-    </div>
+function checkAuthentication() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+        console.log('No user found, redirecting to login.html');
+        if (window.location.pathname.split('/').pop() !== 'login.html') {
+            window.location.href = 'login.html';
+        }
+        return true;
+    }
+    return false;
+}
 
-    <h3 class="text-xl font-semibold mb-2">Officers Status</h3>
-    <div id="officersList" class="bg-gray-800 p-4 rounded-lg overflow-x-auto shadow"></div>
+document.addEventListener('DOMContentLoaded', () => {
+    if (isInitialized) return;
+    isInitialized = true;
+    console.log('common.js: DOMContentLoaded triggered');
 
-    <div id="alert" class="hidden"></div>
+    if (checkAuthentication()) return;
 
-    <script src="scripts.js"></script>
-    <script src="common.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
+    const user = JSON.parse(localStorage.getItem('user'));
+    const nav = document.querySelector('nav.sticky-nav');
+    if (nav) {
+        nav.innerHTML = `
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="hamburger">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <button id="darkModeToggle"></button>
+                </div>
+                <div class="nav-tabs">
+                    <a href="index.html">Dashboard</a>
+                    <a href="properties.html">Properties</a>
+                    <a href="people.html">People</a>
+                    <a href="dispatch.html">Dispatch</a>
+                    <a href="reports.html">Reports</a>
+                    <a href="officers.html">Officers</a>
+                    <a href="manager.html" id="managerLink">Manager</a>
+                </div>
+                <div class="flex flex-col items-end space-y-2">
+                    <span id="userInfo" class="text-sm"></span>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Manager link visibility: Only visible for Managers
+        const managerLink = document.getElementById('managerLink');
+        if (managerLink) {
+            if (!user || user.group !== 'Managers') {
+                managerLink.style.display = 'none';
             }
+        }
 
-            let officerStatuses = JSON.parse(localStorage.getItem('officerStatuses')) || {};
+        // Set user info safely
+        const userInfo = document.getElementById('userInfo');
+        if (userInfo) {
+            userInfo.textContent = user && user.username ? `Logged in as ${user.username}` : 'Logged in as Guest';
+        }
 
-            loadData(() => {
-                showOfficers();
+        // Hamburger toggle
+        const hamburger = document.querySelector('.hamburger');
+        const navTabs = document.querySelector('.nav-tabs');
+        if (hamburger && navTabs) {
+            hamburger.addEventListener('click', () => {
+                navTabs.classList.toggle('active');
+                const isOpen = navTabs.classList.contains('active');
+                hamburger.children[0].style.transform = isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none';
+                hamburger.children[1].style.opacity = isOpen ? '0' : '1';
+                hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
+            });
+        }
+
+        // Dark mode toggle
+        const toggleBtn = document.getElementById('darkModeToggle');
+        if (toggleBtn) {
+            toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
+            toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
+            const label = document.createElement('span');
+            label.className = 'ml-2 text-sm';
+            label.textContent = 'Dark Mode';
+            toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
+
+            toggleBtn.addEventListener('click', () => {
+                document.body.classList.toggle('light-mode');
+                const isLightMode = document.body.classList.contains('light-mode');
+                toggleBtn.classList.toggle('bg-blue-600', isLightMode);
+                toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
+                toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
+                label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
+                localStorage.setItem('lightMode', isLightMode);
             });
 
-            function showOfficers() {
-                let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Role</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
-                if (employeesData && employeesData.length > 0) {
-                    employeesData.forEach(emp => {
-                        const userData = usersData.find(u => u.username === emp.name) || {};
-                        const status = officerStatuses[emp.name] || '10-8'; // Default to Available
-                        const statusColor = {
-                            '10-8': 'text-green-500',
-                            '10-6': 'text-blue-500',
-                            '10-100': 'text-yellow-500',
-                            '10-42': 'text-red-500'
-                        }[status] || 'text-gray-500';
-                        html += `<tr><td class="p-2">${emp.name}</td><td class="p-2">${userData.role || 'Unknown'}</td><td class="p-2 ${statusColor}">${status}</td><td class="p-2">`;
-                        if (emp.name === user.username) {
-                            html += `<select onchange="updateStatus(this, '${emp.name}')" class="bg-gray-700 text-white p-1 rounded">`;
-                            const statuses = [
-                                { code: '10-8', label: 'Available' },
-                                { code: '10-6', label: 'Busy' },
-                                { code: '10-100', label: 'Lunch Break' },
-                                { code: '10-42', label: 'Off Duty' }
-                            ];
-                            statuses.forEach(s => {
-                                html += `<option value="${s.code}" ${status === s.code ? 'selected' : ''}>${s.code} (${s.label})</option>`;
-                            });
-                            html += '</select>';
-                        } else {
-                            html += 'N/A';
-                        }
-                        html += '</td></tr>';
-                    });
-                } else {
-                    html += '<tr><td colspan="4" class="p-2 text-center">No officers found. Data may have failed to load.</td></tr>';
-                }
-                html += '</table>';
-                const officersList = document.getElementById('officersList');
-                if (officersList) {
-                    officersList.innerHTML = html;
-                }
+            if (localStorage.getItem('lightMode') === 'true') {
+                document.body.classList.add('light-mode');
+                toggleBtn.classList.remove('bg-gray-700');
+                toggleBtn.classList.add('bg-blue-600');
+                toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
+                label.textContent = 'Light Mode';
             }
+        }
 
-            function updateStatus(select, officerName) {
-                const newStatus = select.value;
-                officerStatuses[officerName] = newStatus;
-                localStorage.setItem('officerStatuses', JSON.stringify(officerStatuses));
-                showAlert(`Status updated to ${newStatus}`, 'bg-green-600');
-                showOfficers();
-            }
+        // Set active tab
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        const navLinks = document.querySelectorAll('.nav-tabs a');
+        navLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href === currentPage) link.classList.add('active');
         });
-    </script>
-</body>
-</html>
+    }
+});
+
+function logout() {
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+function showAlert(message, color = 'bg-green-600') {
+    const alert = document.getElementById('alert');
+    if (alert) {
+        alert.textContent = message;
+        alert.className = `fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000]`;
+        alert.classList.remove('hidden');
+        setTimeout(() => alert.classList.add('hidden'), 3000);
+    }
+}
