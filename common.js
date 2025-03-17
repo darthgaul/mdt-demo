@@ -1,70 +1,132 @@
-let employeesData = [];
-let dispatchData = [];
-let reportsData = [];
-let propertiesData = [];
-let peopleData = [];
-let usersData = [];
+let isInitialized = false;
 
-async function loadData(callback) {
-    try {
-        const [employees, dispatch, reports, properties, people, users] = await Promise.all([
-            fetch('employees.json').then(res => res.ok ? res.json() : Promise.reject(`Failed to load employees.json: ${res.status}`)),
-            fetch('dispatch.json').then(res => res.ok ? res.json() : Promise.reject(`Failed to load dispatch.json: ${res.status}`)),
-            fetch('reports.json').then(res => res.ok ? res.json() : Promise.reject(`Failed to load reports.json: ${res.status}`)),
-            fetch('properties.json').then(res => res.ok ? res.json() : Promise.reject(`Failed to load properties.json: ${res.status}`)),
-            fetch('people.json').then(res => res.ok ? res.json() : Promise.reject(`Failed to load people.json: ${res.status}`)),
-            fetch('users.json').then(res => res.ok ? res.json() : Promise.reject(`Failed to load users.json: ${res.status}`))
-        ]);
-        employeesData = employees || [];
-        dispatchData = dispatch || [];
-        reportsData = reports || [];
-        propertiesData = properties || [];
-        peopleData = people || [];
-        usersData = users || [];
-        console.log('Data loaded:', { employeesData, dispatchData, reportsData, propertiesData, peopleData, usersData });
-        if (callback) callback();
-    } catch (error) {
-        console.error('Failed to load data:', error);
-        employeesData = [];
-        dispatchData = [];
-        reportsData = [];
-        propertiesData = [];
-        peopleData = [];
-        usersData = [];
-        if (callback) callback();
+function checkAuthentication() {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+        console.log('No user found, redirecting to login.html');
+        if (window.location.pathname.split('/').pop() !== 'login.html') {
+            window.location.href = 'login.html';
+        }
+        return true;
+    }
+    return false;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (isInitialized) return;
+    isInitialized = true;
+    console.log('common.js: DOMContentLoaded triggered');
+
+    if (checkAuthentication()) return;
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    const nav = document.querySelector('nav.sticky-nav');
+    if (nav) {
+        nav.innerHTML = `
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <div class="hamburger">
+                        <div></div>
+                        <div></div>
+                        <div></div>
+                    </div>
+                    <button id="darkModeToggle"></button>
+                </div>
+                <div class="nav-tabs">
+                    <a href="index.html">Dashboard</a>
+                    <a href="properties.html">Properties</a>
+                    <a href="people.html">People</a>
+                    <a href="dispatch.html">Dispatch</a>
+                    <a href="reports.html">Reports</a>
+                    <a href="officers.html">Officers</a>
+                    <a href="manager.html" id="managerLink">Manager</a>
+                </div>
+                <div class="flex flex-col items-end space-y-2">
+                    <span id="userInfo" class="text-sm"></span>
+                    <div class="flex items-center space-x-4">
+                        <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        // Manager link visibility: Only visible for Managers
+        const managerLink = document.getElementById('managerLink');
+        if (managerLink) {
+            if (!user || user.group !== 'Managers') {
+                managerLink.style.display = 'none';
+            }
+        }
+
+        // Set user info safely
+        const userInfo = document.getElementById('userInfo');
+        if (userInfo) {
+            userInfo.textContent = user && user.username ? `Logged in as ${user.username}` : 'Logged in as Guest';
+        }
+
+        // Hamburger toggle
+        const hamburger = document.querySelector('.hamburger');
+        const navTabs = document.querySelector('.nav-tabs');
+        if (hamburger && navTabs) {
+            hamburger.addEventListener('click', () => {
+                navTabs.classList.toggle('active');
+                const isOpen = navTabs.classList.contains('active');
+                hamburger.children[0].style.transform = isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none';
+                hamburger.children[1].style.opacity = isOpen ? '0' : '1';
+                hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
+            });
+        }
+
+        // Dark mode toggle
+        const toggleBtn = document.getElementById('darkModeToggle');
+        if (toggleBtn) {
+            toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
+            toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
+            const label = document.createElement('span');
+            label.className = 'ml-2 text-sm';
+            label.textContent = 'Dark Mode';
+            toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
+
+            toggleBtn.addEventListener('click', () => {
+                document.body.classList.toggle('light-mode');
+                const isLightMode = document.body.classList.contains('light-mode');
+                toggleBtn.classList.toggle('bg-blue-600', isLightMode);
+                toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
+                toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
+                label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
+                localStorage.setItem('lightMode', isLightMode);
+            });
+
+            if (localStorage.getItem('lightMode') === 'true') {
+                document.body.classList.add('light-mode');
+                toggleBtn.classList.remove('bg-gray-700');
+                toggleBtn.classList.add('bg-blue-600');
+                toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
+                label.textContent = 'Light Mode';
+            }
+        }
+
+        // Set active tab
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        const navLinks = document.querySelectorAll('.nav-tabs a');
+        navLinks.forEach(link => {
+            const href = link.getAttribute('href');
+            if (href === currentPage) link.classList.add('active');
+        });
+    }
+});
+
+function logout() {
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
+
+function showAlert(message, color = 'bg-green-600') {
+    const alert = document.getElementById('alert');
+    if (alert) {
+        alert.textContent = message;
+        alert.className = `fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000]`;
+        alert.classList.remove('hidden');
+        setTimeout(() => alert.classList.add('hidden'), 3000);
     }
 }
-
-function saveDispatch() {
-    localStorage.setItem('dispatch', JSON.stringify(dispatchData));
-}
-
-function saveReports() {
-    localStorage.setItem('reports', JSON.stringify(reportsData));
-}
-
-function saveProperties() {
-    localStorage.setItem('properties', JSON.stringify(propertiesData));
-}
-
-function calculateElapsed(dateTime) {
-    const start = new Date(dateTime);
-    const now = new Date();
-    const diff = now - start;
-    const minutes = Math.floor(diff / 1000 / 60);
-    const hours = Math.floor(minutes / 60);
-    return { hours, minutes: minutes % 60 };
-}
-
-// Expose variables and functions globally
-window.employeesData = employeesData;
-window.dispatchData = dispatchData;
-window.reportsData = reportsData;
-window.propertiesData = propertiesData;
-window.peopleData = peopleData;
-window.usersData = usersData;
-window.loadData = loadData;
-window.saveDispatch = saveDispatch;
-window.saveReports = saveReports;
-window.saveProperties = saveProperties;
-window.calculateElapsed = calculateElapsed;
