@@ -72,7 +72,7 @@
                     narrative: `${user.username}: ${narrative}`,
                     officer: user.username
                 };
-                if (!reportsData) reportsData = [];
+                if (!reportsData) reportsData = []; // Ensure reportsData is initialized
                 reportsData.push(report);
                 saveReports();
 
@@ -129,7 +129,6 @@
                 html += `<p><strong>Narrative:</strong> ${report.narrative}</p>`;
                 html += `<p><strong>Officer:</strong> ${report.officer}</p>`;
 
-                // Only Officers (who authored the report), Managers, and Supervisors can request edits
                 if (isOfficer || isManagerOrSupervisor) {
                     if (isOfficer) {
                         const hasRequested = editRequests.some(req => req.caseNumber === caseNumber && req.officer === user.username);
