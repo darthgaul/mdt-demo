@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <a href="people.html">People</a>
                     <a href="dispatch.html">Dispatch</a>
                     <a href="reports.html">Reports</a>
-                    <a href="officers.html">Officers</a>
                     <a href="manager.html" id="managerLink">Manager</a>
                 </div>
                 <div class="flex flex-col items-end space-y-2">
