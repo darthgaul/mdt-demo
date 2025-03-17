@@ -166,27 +166,66 @@
 
     <div id="alert" class="hidden"></div>
 
-    <script src="scripts.js"></script>
     <script src="common.js"></script>
+    <script src="scripts.js"></script>
     <script>
-        loadData(() => {
-            showTab('overview');
-            updateUnitsList();
-            updateDispatchList();
-        });
+        let isLoaded = false;
+        console.log('Index: Checking if data is loaded, isLoaded:', isLoaded);
+        if (!isLoaded) {
+            console.log('Index: Calling loadData for Dashboard');
+            if (typeof loadData === 'function') {
+                loadData(() => {
+                    isLoaded = true;
+                    console.log('Index: loadData callback executed, isLoaded:', isLoaded);
+                    console.log('Index: employeesData after load:', employeesData);
+                    console.log('Index: dispatchData after load:', dispatchData);
+                    showTab('overview');
+                    updateUnitsList();
+                    updateDispatchList();
+                });
+            } else {
+                console.error('Index: loadData is not defined, using fallback');
+                // Fallback: Define minimal data
+                window.usersData = JSON.parse(localStorage.getItem('users')) || [];
+                window.employeesData = JSON.parse(localStorage.getItem('employees')) || [];
+                window.dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [];
+                window.propertiesData = JSON.parse(localStorage.getItem('properties')) || [];
+                window.reportsData = JSON.parse(localStorage.getItem('reports')) || [];
+                showTab('overview');
+                updateUnitsList();
+                updateDispatchList();
+            }
+        } else {
+            console.log('Index: Data already loaded, skipping loadData');
+        }
 
         function toggleSidebar(id) {
+            console.log('Index: Toggling sidebar with id:', id);
             const sidebar = document.getElementById(id);
-            sidebar.classList.toggle('active');
+            if (sidebar) {
+                sidebar.classList.toggle('active');
+                console.log('Index: Sidebar toggled, new classList:', sidebar.classList.toString());
+            } else {
+                console.error('Index: Sidebar not found for id:', id);
+            }
         }
 
         function toggleUnitGroup(groupId) {
+            console.log('Index: Toggling unit group with id:', groupId);
             const group = document.getElementById(groupId);
-            group.classList.toggle('collapsed');
+            if (group) {
+                group.classList.toggle('collapsed');
+                console.log('Index: Unit group toggled, new classList:', group.classList.toString());
+            } else {
+                console.error('Index: Unit group not found for id:', groupId);
+            }
         }
 
         function updateUnitsList() {
-            const filter = document.getElementById('unitFilter').value;
+            console.log('Index: Updating units list');
+            const filter = document.getElementById('unitFilter')?.value;
+            console.log('Index: Filter value:', filter);
+            console.log('Index: employeesData in updateUnitsList:', employeesData);
             const groupedUnits = {};
             employeesData.forEach(emp => {
                 const dept = emp.department || 'Other';
@@ -232,7 +271,18 @@
                     html += '</div></div>';
                 }
             });
-            document.getElementById('unitsList').innerHTML = html || '<p class="text-center">No units found.</p>';
+            const unitsList = document.getElementById('unitsList');
+            if (unitsList) {
+                if (html) {
+                    console.log('Index: Rendering units list with HTML:', html);
+                    unitsList.innerHTML = html;
+                } else {
+                    console.log('Index: No units to render, showing empty message');
+                    unitsList.innerHTML = '<p class="text-center">No units found.</p>';
+                }
+            } else {
+                console.error('Index: unitsList element not found');
+            }
         }
 
         function messageUnit(name) {
@@ -262,7 +312,14 @@
         }
 
         function updateDispatchList() {
+            console.log('Index: Updating dispatch list');
+            console.log('Index: dispatchData in updateDispatchList:', dispatchData);
+            if (!dispatchData) {
+                console.error('Index: dispatchData is not loaded');
+                return;
+            }
             const active = dispatchData.filter(d => d.status !== 'Completed');
+            console.log('Index: Active dispatches:', active);
             let html = active.length ? '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Actions</th></tr>' : '<p class="text-center">No active dispatches.</p>';
             active.forEach(disp => {
                 const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500' }[disp.status] || 'text-gray-500';
@@ -272,11 +329,26 @@
                 html += `<td class="p-2 space-x-2"><button onclick="assignCall('${disp.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Assign</button></td></tr>`;
             });
             if (active.length) html += '</table>';
-            document.getElementById('dispatchList').innerHTML = html;
+            const dispatchList = document.getElementById('dispatchList');
+            if (dispatchList) {
+                console.log('Index: Rendering dispatch list with HTML:', html);
+                dispatchList.innerHTML = html;
+            } else {
+                console.error('Index: dispatchList element not found');
+            }
         }
 
         function showTab(tab) {
+            console.log('Index: Showing tab:', tab);
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (!user) {
+                console.log('Index: User not logged in, redirecting to login.html');
+                window.location.href = 'login.html';
+                return;
+            }
+
             const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
+            console.log('Index: isManagerOrSupervisor:', isManagerOrSupervisor);
             let html = '';
 
             if (tab === 'overview') {
@@ -328,7 +400,13 @@
                 });
                 html += '</table>';
             }
-            document.getElementById('dashboardContent').innerHTML = html;
+            const dashboardContent = document.getElementById('dashboardContent');
+            if (dashboardContent) {
+                console.log('Index: Rendering dashboard content with HTML:', html);
+                dashboardContent.innerHTML = html;
+            } else {
+                console.error('Index: dashboardContent element not found');
+            }
         }
 
         function navigate(address) {
@@ -336,6 +414,7 @@
         }
 
         function arrive(propId) {
+            const user = JSON.parse(localStorage.getItem('user'));
             const report = {
                 id: `R${(reportsData.length + 1).toString().padStart(3, '0')}`,
                 dateTime: new Date().toISOString(),
