@@ -90,7 +90,24 @@
             background-color: #dbeafe;
             color: #1e3a8a;
         }
-        @media (max-width: 1024px) {
+        /* Responsive table for Active Dispatches */
+        .dispatch-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .dispatch-table th,
+        .dispatch-table td {
+            padding: 0.75rem;
+            text-align: left;
+            white-space: nowrap;
+        }
+        .dispatch-table th {
+            background-color: #374151;
+        }
+        .dispatch-table tr {
+            border-bottom: 1px solid #4b5563;
+        }
+        @media (max-width: 640px) {
             .dashboard-container {
                 flex-direction: column;
                 height: auto;
@@ -107,6 +124,15 @@
             }
             .main-content {
                 width: 100%;
+            }
+            .dispatch-table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+            .dispatch-table th,
+            .dispatch-table td {
+                min-width: 100px; /* Ensure columns are readable on small screens */
             }
         }
     </style>
@@ -185,7 +211,6 @@
                 });
             } else {
                 console.error('Index: loadData is not defined, using fallback');
-                // Fallback: Define minimal data
                 window.usersData = JSON.parse(localStorage.getItem('users')) || [];
                 window.employeesData = JSON.parse(localStorage.getItem('employees')) || [];
                 window.dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [];
@@ -320,15 +345,11 @@
             }
             const active = dispatchData.filter(d => d.status !== 'Completed');
             console.log('Index: Active dispatches:', active);
-            let html = active.length ? '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Actions</th></tr>' : '<p class="text-center">No active dispatches.</p>';
+            let html = active.length ? '<div class="dispatch-table-container"><table class="dispatch-table"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th></tr>' : '<p class="text-center">No active dispatches.</p>';
             active.forEach(disp => {
-                const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500' }[disp.status] || 'text-gray-500';
-                const callTime = new Date(disp.dateTime).toLocaleString();
-                const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
-                html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td>`;
-                html += `<td class="p-2 space-x-2"><button onclick="assignCall('${disp.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow">Assign</button></td></tr>`;
+                html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td></tr>`;
             });
-            if (active.length) html += '</table>';
+            if (active.length) html += '</table></div>';
             const dispatchList = document.getElementById('dispatchList');
             if (dispatchList) {
                 console.log('Index: Rendering dispatch list with HTML:', html);
