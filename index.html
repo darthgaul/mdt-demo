@@ -237,6 +237,8 @@
                     showTab('overview');
                     updateUnitsList();
                     updateDispatchList();
+                }).catch(error => {
+                    console.error('Index: Error in loadData:', error);
                 });
             } else {
                 console.error('Index: loadData is not defined, using fallback');
@@ -400,7 +402,7 @@
             }
 
             const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
-            console.log('Index: isManagerOrSupervisor:', isManagerOrSupervisor);
+            console.log('Index: isManagerOrSupervisor:', isManagerOrSupervisor, 'User:', user.username);
             let html = '';
 
             if (tab === 'overview') {
