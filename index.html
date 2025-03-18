@@ -167,7 +167,33 @@
     </style>
 </head>
 <body class="min-h-screen p-6">
-    <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
+    <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow flex justify-between items-center">
+        <div class="flex items-center space-x-4">
+            <div class="hamburger">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+            <button id="darkModeToggle"></button>
+        </div>
+        <div class="nav-tabs hidden md:flex space-x-4">
+            <a href="index.html">Dashboard</a>
+            <a href="properties.html">Properties</a>
+            <a href="people.html">People</a>
+            <a href="dispatch.html">Dispatch</a>
+            <a href="reports.html">Reports</a>
+            <a href="manager.html" id="managerLink">Manager</a>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span id="userInfo" class="text-sm"></span>
+            <select id="statusDropdown" class="bg-gray-700 text-white p-1 rounded hidden" onchange="updateStatus()">
+                <option value="10-8">10-8 Available</option>
+                <option value="10-6">10-6 Busy</option>
+                <option value="10-42">10-42 Off Duty</option>
+            </select>
+            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
+        </div>
+    </nav>
 
     <div class="tips">
         <h4 class="text-lg font-semibold">Tips</h4>
@@ -237,6 +263,7 @@
                     showTab('overview');
                     updateUnitsList();
                     updateDispatchList();
+                    updateStatusDropdown(); // Initialize status dropdown
                 }).catch(error => {
                     console.error('Index: Error in loadData:', error);
                 });
@@ -250,9 +277,11 @@
                 showTab('overview');
                 updateUnitsList();
                 updateDispatchList();
+                updateStatusDropdown(); // Initialize status dropdown
             }
         } else {
             console.log('Index: Data already loaded, skipping loadData');
+            updateStatusDropdown(); // Initialize status dropdown
         }
 
         function toggleSidebar(id) {
@@ -297,13 +326,13 @@
                         const isOnline = usersData.some(u => u.username === emp.name);
                         const currentTime = new Date();
                         const isOnDuty = currentTime >= new Date(emp.schedule.start) && currentTime <= new Date(emp.schedule.end);
-                        let status = 'Offline';
+                        let status = emp.status || 'Offline';
                         let statusClass = 'bg-red-500';
                         if (isOnline && isOnDuty) {
-                            status = 'Available';
+                            status = emp.status || '10-8';
                             statusClass = 'bg-green-500';
                         } else if (isOnline && !isOnDuty) {
-                            status = 'Off Duty';
+                            status = emp.status || '10-42';
                             statusClass = 'bg-gray-500';
                         }
                         html += `<div class="unit-card"><p><strong>${emp.name}</strong> <span class="status-tag ${statusClass}">${status}</span></p>`;
@@ -347,8 +376,14 @@
         }
 
         function setStatus(name) {
-            const status = prompt(`Set status for ${name} (e.g., Available, Busy, On Scene):`);
-            if (status) showAlert(`Status for ${name} set to ${status}`, 'bg-green-600');
+            const status = prompt(`Set status for ${name} (e.g., 10-8, 10-6, 10-42):`);
+            if (['10-8', '10-6', '10-42'].includes(status)) {
+                updateEmployee(name, { status: status });
+                showAlert(`Status for ${name} updated to ${status}`, 'bg-green-600');
+                updateUnitsList(); // Refresh the units list to reflect the new status
+            } else {
+                showAlert('Invalid status code. Use 10-8, 10-6, or 10-42.', 'bg-red-600');
+            }
         }
 
         function assignCall(name) {
@@ -414,7 +449,7 @@
                     employeesData.forEach(emp => {
                         const isOnline = usersData.some(u => u.username === emp.name);
                         const statusColor = isOnline ? 'text-green-500' : 'text-red-500';
-                        html += `<tr><td class="p-2 ${statusColor}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2">${isOnline ? 'Online' : 'Offline'}</td></tr>`;
+                        html += `<tr><td class="p-2 ${statusColor}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2">${emp.status || 'Offline'}</td></tr>`;
                     });
                     html += '</table>';
                     setInterval(checkDispatchTimeouts, 60000);
@@ -489,6 +524,7 @@
         }
 
         function checkDispatchTimeouts() {
+            const user = JSON.parse(localStorage.getItem('user')); // Re-fetch user here
             if (['Managers', 'Supervisors'].includes(user.group)) {
                 dispatchData.forEach(disp => {
                     const elapsed = calculateElapsed(disp.dateTime);
@@ -498,6 +534,38 @@
                 });
             }
         }
+
+        function updateStatusDropdown() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const statusDropdown = document.getElementById('statusDropdown');
+            if (statusDropdown) {
+                if (user && ['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
+                    statusDropdown.classList.remove('hidden');
+                    const employee = employeesData.find(e => e.name === user.username);
+                    if (employee) {
+                        statusDropdown.value = employee.status || '10-8'; // Set current status
+                    }
+                } else {
+                    statusDropdown.classList.add('hidden');
+                }
+            }
+        }
+
+        function updateStatus() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const statusDropdown = document.getElementById('statusDropdown');
+            if (user && statusDropdown) {
+                const newStatus = statusDropdown.value;
+                updateEmployee(user.username, { status: newStatus });
+                showAlert(`Status updated to ${newStatus}`, 'bg-green-600');
+                updateUnitsList(); // Refresh the units list to reflect the new status
+            }
+        }
+
+        // Initialize status dropdown on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatusDropdown();
+        });
     </script>
 </body>
 </html>
