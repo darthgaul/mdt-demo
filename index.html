@@ -294,7 +294,7 @@
                     showTab('overview');
                     updateUnitsList();
                     updateDispatchList();
-                    initializeStatusDropdown(); // Initialize status dropdown
+                    initializeDashboard(); // Call initializeDashboard instead of initializeStatusDropdown
                 });
             } else {
                 console.error('Index: loadData is not defined, using fallback');
@@ -306,11 +306,11 @@
                 showTab('overview');
                 updateUnitsList();
                 updateDispatchList();
-                initializeStatusDropdown(); // Initialize status dropdown
+                initializeDashboard(); // Call initializeDashboard instead of initializeStatusDropdown
             }
         } else {
             console.log('Index: Data already loaded, skipping loadData');
-            initializeStatusDropdown(); // Initialize status dropdown
+            initializeDashboard(); // Call initializeDashboard instead of initializeStatusDropdown
         }
 
         function toggleSidebar(id) {
@@ -570,12 +570,12 @@
             console.log('updateStatusDropdown: Checking - user:', user, 'statusDropdown:', statusDropdown);
             if (!statusDropdown) {
                 console.error('updateStatusDropdown: statusDropdown element not found in DOM');
-                // Limit retry to avoid infinite loop, retry only once
+                // Single retry with a check to avoid infinite loop
                 setTimeout(() => {
                     const retryDropdown = document.getElementById('statusDropdown');
                     if (retryDropdown) {
                         console.log('updateStatusDropdown: Retry found statusDropdown:', retryDropdown);
-                        updateStatusDropdown(); // Retry once if found
+                        updateStatusDropdown(); // Proceed with initialization
                     } else {
                         console.warn('updateStatusDropdown: Retry failed, element still not found');
                     }
