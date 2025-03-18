@@ -32,147 +32,138 @@
 
     <div id="alert" class="hidden"></div>
 
-    <script src="scripts.js"></script>
     <script src="common.js"></script>
+    <script src="scripts.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (!user) {
-                window.location.href = 'login.html';
+        loadData(() => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const personId = urlParams.get('personId');
+            showReports(personId);
+        });
+
+        function submitReport() {
+            const personId = document.getElementById('personId').value || 'N/A';
+            const property = document.getElementById('property').value;
+            const type = document.getElementById('type').value;
+            const narrative = document.getElementById('narrative').value;
+
+            if (!property && !narrative) {
+                showAlert('Property or narrative required', 'bg-red-600');
                 return;
             }
 
-            let editRequests = JSON.parse(localStorage.getItem('editRequests')) || [];
+            const now = new Date();
+            const caseNumber = now.getFullYear().toString().slice(2) + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + now.getDate().toString().padStart(2, '0') + now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
+            const user = JSON.parse(localStorage.getItem('user'));
+            const report = {
+                caseNumber,
+                dateTime: now.toISOString(),
+                personId,
+                property,
+                type,
+                narrative: user.username + ': ' + narrative,
+                officer: user.username
+            };
+            addReport(report);
 
-            loadData(() => {
-                const urlParams = new URLSearchParams(window.location.search);
-                const personId = urlParams.get('personId');
-                showReports(personId);
-            });
+            if (type === 'CTN Update' && personId !== 'N/A') {
+                const person = peopleData.find(p => p.id === personId);
+                if (person) {
+                    updatePerson(personId, { ctnStatus: 'CTN Issued' });
+                }
+            }
 
- function submitReport() {
-    const personId = document.getElementById('personId').value || 'N/A';
-    const property = document.getElementById('property').value;
-    const type = document.getElementById('type').value;
-    const narrative = document.getElementById('narrative').value;
-
-    if (!property && !narrative) {
-        showAlert('Property or narrative required', 'bg-red-600');
-        return;
-    }
-
-    const now = new Date();
-    const caseNumber = now.getFullYear().toString().slice(2) + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + now.getDate().toString().padStart(2, '0') + now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
-    const user = JSON.parse(localStorage.getItem('user'));
-    const report = {
-        caseNumber,
-        dateTime: now.toISOString(),
-        personId,
-        property,
-        type,
-        narrative: user.username + ': ' + narrative,
-        officer: user.username
-    };
-    addReport(report);
-
-    if (type === 'CTN Update' && personId !== 'N/A') {
-        const person = peopleData.find(p => p.id === personId);
-        if (person) {
-            updatePerson(personId, { ctnStatus: 'CTN Issued' });
+            showAlert('Report submitted', 'bg-green-600');
+            showReports();
+            document.getElementById('personId').value = '';
+            document.getElementById('property').value = '';
+            document.getElementById('narrative').value = '';
         }
-    }
 
-    showAlert('Report submitted', 'bg-green-600');
-    showReports();
-    document.getElementById('personId').value = '';
-    document.getElementById('property').value = '';
-    document.getElementById('narrative').value = '';
-}
+        function showReports(filterPersonId = null) {
+            const filteredReports = reportsData ? (filterPersonId ? reportsData.filter(r => r.personId === filterPersonId) : reportsData) : [];
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Case Number</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Person ID</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
+            if (filteredReports.length) {
+                filteredReports.forEach(report => {
+                    const canView = user.username === report.officer || ['Managers', 'Supervisors'].includes(user.group);
+                    if (canView) {
+                        html += '<tr><td class="p-2"><a href="javascript:showReportDetails(\'' + report.caseNumber + '\')" class="underline">' + report.caseNumber + '</a></td><td class="p-2">' + report.dateTime + '</td><td class="p-2">' + report.personId + '</td><td class="p-2">' + report.property + '</td><td class="p-2">' + report.type + '</td><td class="p-2">' + report.narrative + '</td></tr>';
+                    }
+                });
+            } else {
+                html += '<tr><td colspan="6" class="p-2 text-center">No reports found.</td></tr>';
+            }
+            html += '</table>';
+            const reportsList = document.getElementById('reportsList');
+            if (reportsList) {
+                reportsList.innerHTML = html;
+            }
+        }
 
-            function showReports(filterPersonId = null) {
-                const filteredReports = reportsData ? (filterPersonId ? reportsData.filter(r => r.personId === filterPersonId) : reportsData) : [];
-                let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Case Number</th><th class="p-2 bg-gray-700">Date/Time</th><th class="p-2 bg-gray-700">Person ID</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Type</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
-                if (filteredReports.length) {
-                    filteredReports.forEach(report => {
-                        const canView = user.username === report.officer || ['Managers', 'Supervisors'].includes(user.group);
-                        if (canView) {
-                            html += `<tr><td class="p-2"><a href="javascript:showReportDetails('${report.caseNumber}')" class="underline">${report.caseNumber}</a></td><td class="p-2">${report.dateTime}</td><td class="p-2">${report.personId}</td><td class="p-2">${report.property}</td><td class="p-2">${report.type}</td><td class="p-2">${report.narrative}</td></tr>`;
-                        }
-                    });
-                } else {
-                    html += '<tr><td colspan="6" class="p-2 text-center">No reports found. Data may have failed to load.</td></tr>';
-                }
-                html += '</table>';
-                const reportsList = document.getElementById('reportsList');
-                if (reportsList) {
-                    reportsList.innerHTML = html;
-                }
+        function showReportDetails(caseNumber) {
+            const report = reportsData.find(r => r.caseNumber === caseNumber);
+            if (!report) {
+                showAlert('Report not found', 'bg-red-600');
+                return;
             }
 
-            function showReportDetails(caseNumber) {
-                const report = reportsData.find(r => r.caseNumber === caseNumber);
-                if (!report) {
-                    showAlert('Report not found', 'bg-red-600');
-                    return;
+            const isOfficer = user.group === 'Officers' && user.username === report.officer;
+            const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
+            let html = '<div class="bg-gray-800 p-4 rounded-lg shadow">';
+            html += '<h4 class="text-lg font-semibold mb-2">Report Details</h4>';
+            html += '<p><strong>Case Number:</strong> ' + report.caseNumber + '</p>';
+            html += '<p><strong>Date/Time:</strong> ' + report.dateTime + '</p>';
+            html += '<p><strong>Person ID:</strong> ' + report.personId + '</p>';
+            html += '<p><strong>Property:</strong> ' + report.property + '</p>';
+            html += '<p><strong>Type:</strong> ' + report.type + '</p>';
+            html += '<p><strong>Narrative:</strong> ' + report.narrative + '</p>';
+            html += '<p><strong>Officer:</strong> ' + report.officer + '</p>';
+
+            if (isOfficer || isManagerOrSupervisor) {
+                if (isOfficer) {
+                    const hasRequested = editRequests.some(req => req.caseNumber === caseNumber && req.officer === user.username);
+                    html += '<button onclick="requestEdit(\'' + caseNumber + '\')" class="bg-yellow-600 hover:bg-yellow-700 p-2 rounded shadow mt-2" ' + (hasRequested ? 'disabled' : '') + '>' + (hasRequested ? 'Edit Requested' : 'Request Edit') + '</button>';
                 }
-
-                const isOfficer = user.group === 'Officers' && user.username === report.officer;
-                const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
-                let html = `<div class="bg-gray-800 p-4 rounded-lg shadow">`;
-                html += `<h4 class="text-lg font-semibold mb-2">Report Details</h4>`;
-                html += `<p><strong>Case Number:</strong> ${report.caseNumber}</p>`;
-                html += `<p><strong>Date/Time:</strong> ${report.dateTime}</p>`;
-                html += `<p><strong>Person ID:</strong> ${report.personId}</p>`;
-                html += `<p><strong>Property:</strong> ${report.property}</p>`;
-                html += `<p><strong>Type:</strong> ${report.type}</p>`;
-                html += `<p><strong>Narrative:</strong> ${report.narrative}</p>`;
-                html += `<p><strong>Officer:</strong> ${report.officer}</p>`;
-
-                if (isOfficer || isManagerOrSupervisor) {
-                    if (isOfficer) {
-                        const hasRequested = editRequests.some(req => req.caseNumber === caseNumber && req.officer === user.username);
-                        html += `<button onclick="requestEdit('${caseNumber}')" class="bg-yellow-600 hover:bg-yellow-700 p-2 rounded shadow mt-2" ${hasRequested ? 'disabled' : ''}>${hasRequested ? 'Edit Requested' : 'Request Edit'}</button>`;
-                    }
-                    if (isManagerOrSupervisor) {
-                        const pendingRequest = editRequests.find(req => req.caseNumber === caseNumber);
-                        if (pendingRequest) {
-                            html += `<div class="mt-2 p-2 bg-yellow-600 rounded"><p><strong>Edit Request from ${pendingRequest.officer}:</strong> ${pendingRequest.reason}</p>`;
-                            html += `<button onclick="approveEdit('${caseNumber}', '${pendingRequest.officer}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow mr-2">Approve</button>`;
-                            html += `<button onclick="denyEdit('${caseNumber}', '${pendingRequest.officer}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Deny</button></div>`;
-                        }
+                if (isManagerOrSupervisor) {
+                    const pendingRequest = editRequests.find(req => req.caseNumber === caseNumber);
+                    if (pendingRequest) {
+                        html += '<div class="mt-2 p-2 bg-yellow-600 rounded"><p><strong>Edit Request from ' + pendingRequest.officer + ':</strong> ' + pendingRequest.reason + '</p>';
+                        html += '<button onclick="approveEdit(\'' + caseNumber + '\', \'' + pendingRequest.officer + '\')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow mr-2">Approve</button>';
+                        html += '<button onclick="denyEdit(\'' + caseNumber + '\', \'' + pendingRequest.officer + '\')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Deny</button></div>';
                     }
                 }
-                html += `</div>`;
-                const reportsList = document.getElementById('reportsList');
-                if (reportsList) {
-                    reportsList.innerHTML = html;
-                }
             }
-
-            function requestEdit(caseNumber) {
-                const reason = prompt('Reason for edit request:');
-                if (reason) {
-                    editRequests.push({ caseNumber, officer: user.username, reason });
-                    localStorage.setItem('editRequests', JSON.stringify(editRequests));
-                    showAlert('Edit request submitted', 'bg-green-600');
-                    showReports();
-                }
+            html += '</div>';
+            const reportsList = document.getElementById('reportsList');
+            if (reportsList) {
+                reportsList.innerHTML = html;
             }
+        }
 
-            function approveEdit(caseNumber, officer) {
-                editRequests = editRequests.filter(req => req.caseNumber !== caseNumber);
+        let editRequests = JSON.parse(localStorage.getItem('editRequests') || '[]');
+
+        function requestEdit(caseNumber) {
+            const reason = prompt('Reason for edit request:');
+            if (reason) {
+                editRequests.push({ caseNumber, officer: user.username, reason });
                 localStorage.setItem('editRequests', JSON.stringify(editRequests));
-                showAlert(`Edit request approved for ${officer}`, 'bg-green-600');
+                showAlert('Edit request submitted', 'bg-green-600');
                 showReports();
             }
+        }
 
-            function denyEdit(caseNumber, officer) {
-                editRequests = editRequests.filter(req => req.caseNumber !== caseNumber);
-                localStorage.setItem('editRequests', JSON.stringify(editRequests));
-                showAlert(`Edit request denied for ${officer}`, 'bg-red-600');
-                showReports();
-            }
-        });
+        function approveEdit(caseNumber, officer) {
+            editRequests = editRequests.filter(req => req.caseNumber !== caseNumber);
+            localStorage.setItem('editRequests', JSON.stringify(editRequests));
+            showAlert('Edit request approved for ' + officer, 'bg-green-600');
+            showReports();
+        }
+
+        function denyEdit(caseNumber, officer) {
+            editRequests = editRequests.filter(req => req.caseNumber !== caseNumber);
+            localStorage.setItem('editRequests', JSON.stringify(editRequests));
+            showAlert('Edit request denied for ' + officer, 'bg-red-600');
+            showReports();
+        }
     </script>
-</body>
 </html>
