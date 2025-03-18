@@ -102,45 +102,36 @@
                 }
             }
 
-            function assignOfficer(select, dispatchId) {
-                const officer = select.value;
-                const dispatch = dispatchData.find(d => d.id === dispatchId);
-                if (dispatch) {
-                    dispatch.assignedOfficer = officer || null;
-                    dispatch.status = officer ? 'Assigned' : 'Pending';
-                    dispatch.assignedTime = officer ? new Date().toISOString() : null; // Set assignedTime only if an officer is selected
-                    saveDispatch();
-                    showTab('active'); // Refresh the active tab to show updated data
-                } else {
-                    showAlert('Dispatch not found', 'bg-red-600');
-                }
-            }
+           function assignOfficer(select, dispatchId) {
+    const officer = select.value;
+    const dispatch = dispatchData.find(d => d.id === dispatchId);
+    if (dispatch) {
+        updateDispatch(dispatchId, { assignedOfficer: officer || null, status: officer ? 'Assigned' : 'Pending', assignedTime: officer ? new Date().toISOString() : null });
+        showTab('active');
+    } else {
+        showAlert('Dispatch not found', 'bg-red-600');
+    }
+}
 
-            function clearDispatch(dispatchId) {
-                const dispatch = dispatchData.find(d => d.id === dispatchId);
-                if (dispatch) {
-                    dispatch.status = 'Completed';
-                    dispatch.resolveTime = new Date().toISOString();
-                    saveDispatch();
-                    showAlert('Dispatch cleared and moved to history', 'bg-green-600');
-                    showTab('active'); // Refresh the active tab to remove the cleared dispatch
-                } else {
-                    showAlert('Dispatch not found', 'bg-red-600');
-                }
-            }
+function clearDispatch(dispatchId) {
+    const dispatch = dispatchData.find(d => d.id === dispatchId);
+    if (dispatch) {
+        updateDispatch(dispatchId, { status: 'Completed', resolveTime: new Date().toISOString() });
+        showTab('active');
+    } else {
+        showAlert('Dispatch not found', 'bg-red-600');
+    }
+}
 
-            function restoreDispatch(dispatchId) {
-                const dispatch = dispatchData.find(d => d.id === dispatchId);
-                if (dispatch) {
-                    dispatch.status = 'Pending';
-                    dispatch.resolveTime = null;
-                    saveDispatch();
-                    showAlert('Dispatch restored to active', 'bg-green-600');
-                    showTab('history'); // Refresh the history tab
-                } else {
-                    showAlert('Dispatch not found', 'bg-red-600');
-                }
-            }
+function restoreDispatch(dispatchId) {
+    const dispatch = dispatchData.find(d => d.id === dispatchId);
+    if (dispatch) {
+        updateDispatch(dispatchId, { status: 'Pending', resolveTime: null });
+        showTab('history');
+    } else {
+        showAlert('Dispatch not found', 'bg-red-600');
+    }
+}
         });
     </script>
 </body>
