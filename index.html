@@ -349,19 +349,19 @@
             if (status) showAlert(`Status for ${name} set to ${status}`, 'bg-green-600');
         }
 
-function assignCall(name) {
-    const callId = prompt(`Enter dispatch ID to assign to ${name}:`);
-    if (callId) {
-        const dispatch = dispatchData.find(d => d.id === callId && d.status !== 'Completed');
-        if (dispatch) {
-            updateDispatch(callId, { assignedOfficer: name, status: 'Assigned' });
-            showAlert(`Dispatch ${callId} assigned to ${name}`, 'bg-green-600');
-            updateDispatchList();
-        } else {
-            showAlert(`Dispatch ${callId} not found or completed`, 'bg-red-600');
+        function assignCall(name) {
+            const callId = prompt(`Enter dispatch ID to assign to ${name}:`);
+            if (callId) {
+                const dispatch = dispatchData.find(d => d.id === callId && d.status !== 'Completed');
+                if (dispatch) {
+                    updateDispatch(callId, { assignedOfficer: name, status: 'Assigned' });
+                    showAlert(`Dispatch ${callId} assigned to ${name}`, 'bg-green-600');
+                    updateDispatchList();
+                } else {
+                    showAlert(`Dispatch ${callId} not found or completed`, 'bg-red-600');
+                }
+            }
         }
-    }
-}
 
         function updateDispatchList() {
             console.log('Index: Updating dispatch list');
@@ -418,6 +418,7 @@ function assignCall(name) {
                     setInterval(checkDispatchTimeouts, 60000);
                 } else {
                     const active = dispatchData.filter(d => d.assignedOfficer === user.username && d.status !== 'Completed');
+                    console.log('Index: Active dispatches for user', user.username, ':', active);
                     html += '<h3 class="text-lg font-semibold mb-2">Your Active Dispatches</h3>';
                     html += active.length ? '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' : '<p class="text-center">No active dispatches assigned to you.</p>';
                     active.forEach(disp => {
@@ -475,8 +476,7 @@ function assignCall(name) {
                 type: 'Patrol Hit',
                 narrative: `${user.username} arrived at property`
             };
-            reportsData.push(report);
-            saveReports();
+            addReport(report);
             const hits = reportsData.filter(r => r.property === propId && r.type === 'Patrol Hit').length;
             const prop = propertiesData.find(p => p.id === propId);
             if (hits >= prop.minHits * 2) {
