@@ -138,18 +138,19 @@
             .sticky-nav {
                 flex-direction: column;
                 align-items: stretch;
-                padding: 1rem;
+                padding: 1rem 1.5rem; /* Increased padding for better spacing */
             }
             .nav-tabs {
                 flex-direction: column;
                 align-items: center;
                 padding: 0.5rem 0;
-                margin: 0.5rem 0;
+                margin: 0.75rem 0; /* Added margin for separation */
             }
             .nav-tabs a {
                 margin: 0.25rem 0;
                 width: 100%;
                 text-align: center;
+                padding: 0.5rem;
             }
         }
         @media (max-width: 640px) {
@@ -182,14 +183,16 @@
             .sticky-nav .flex.items-center.space-x-4:last-child {
                 flex-direction: column;
                 align-items: flex-end;
-                margin-top: 0.5rem;
+                margin-top: 0.75rem; /* Increased margin for spacing */
             }
             #statusDropdown {
                 margin-bottom: 0.5rem;
                 width: 100%;
+                padding: 0.25rem;
             }
             #userInfo {
                 margin-bottom: 0.5rem;
+                padding: 0.25rem 0;
             }
         }
     </style>
@@ -288,12 +291,8 @@
                     console.log('Index: loadData callback executed, isLoaded:', isLoaded);
                     console.log('Index: employeesData after load:', employeesData);
                     console.log('Index: dispatchData after load:', dispatchData);
-                    showTab('overview');
-                    updateUnitsList();
-                    updateDispatchList();
-                    updateStatusDropdown(); // Initialize status dropdown
+                    initializeDashboard();
                 });
-                // Removed .catch since loadData doesn't return a promise
             } else {
                 console.error('Index: loadData is not defined, using fallback');
                 window.usersData = JSON.parse(localStorage.getItem('users')) || [];
@@ -301,14 +300,63 @@
                 window.dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [];
                 window.propertiesData = JSON.parse(localStorage.getItem('properties')) || [];
                 window.reportsData = JSON.parse(localStorage.getItem('reports')) || [];
-                showTab('overview');
-                updateUnitsList();
-                updateDispatchList();
-                updateStatusDropdown(); // Initialize status dropdown
+                initializeDashboard();
             }
         } else {
             console.log('Index: Data already loaded, skipping loadData');
+            initializeDashboard();
+        }
+
+        function initializeDashboard() {
+            showTab('overview');
+            updateUnitsList();
+            updateDispatchList();
             updateStatusDropdown(); // Initialize status dropdown
+            const userInfo = document.getElementById('userInfo');
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (userInfo && user) {
+                userInfo.textContent = `Logged in as ${user.username}`;
+                const managerLink = document.getElementById('managerLink');
+                if (managerLink && user.group !== 'Managers') managerLink.style.display = 'none';
+            }
+            const hamburger = document.querySelector('.hamburger');
+            const navTabs = document.querySelector('.nav-tabs');
+            if (hamburger && navTabs) {
+                hamburger.addEventListener('click', () => {
+                    navTabs.classList.toggle('active');
+                    const isOpen = navTabs.classList.contains('active');
+                    hamburger.children[0].style.transform = isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none';
+                    hamburger.children[1].style.opacity = isOpen ? '0' : '1';
+                    hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
+                });
+            }
+            const toggleBtn = document.getElementById('darkModeToggle');
+            if (toggleBtn) {
+                toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
+                toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
+                const label = document.createElement('span');
+                label.className = 'ml-2 text-sm';
+                label.textContent = 'Dark Mode';
+                toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
+
+                toggleBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('light-mode');
+                    const isLightMode = document.body.classList.contains('light-mode');
+                    toggleBtn.classList.toggle('bg-blue-600', isLightMode);
+                    toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
+                    toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
+                    label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
+                    localStorage.setItem('lightMode', isLightMode);
+                });
+
+                if (localStorage.getItem('lightMode') === 'true') {
+                    document.body.classList.add('light-mode');
+                    toggleBtn.classList.add('bg-blue-600');
+                    toggleBtn.classList.remove('bg-gray-700');
+                    toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
+                    label.textContent = 'Light Mode';
+                }
+            }
         }
 
         function toggleSidebar(id) {
@@ -565,10 +613,10 @@
         function updateStatusDropdown() {
             const user = JSON.parse(localStorage.getItem('user'));
             const statusDropdown = document.getElementById('statusDropdown');
-            console.log('updateStatusDropdown: Checking user and dropdown', { user, statusDropdown });
+            console.log('updateStatusDropdown: Initial check - user:', user, 'statusDropdown:', statusDropdown);
             if (!statusDropdown) {
-                console.error('updateStatusDropdown: statusDropdown element not found');
-                return;
+                console.error('updateStatusDropdown: statusDropdown element not found in DOM');
+                return; // Exit if element not found
             }
             if (!user) {
                 console.warn('updateStatusDropdown: No user logged in, hiding dropdown');
@@ -576,10 +624,11 @@
                 return;
             }
 
+            console.log('updateStatusDropdown: Processing for user:', user.username, 'group:', user.group);
             if (['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
                 statusDropdown.classList.remove('hidden');
                 const employee = employeesData.find(e => e.name === user.username);
-                console.log('updateStatusDropdown: Employee data:', employee);
+                console.log('updateStatusDropdown: Employee found:', employee);
                 if (employee) {
                     statusDropdown.value = employee.status || '10-8'; // Set current status
                     console.log('updateStatusDropdown: Set value to:', employee.status);
@@ -596,7 +645,7 @@
         function updateStatus() {
             const user = JSON.parse(localStorage.getItem('user'));
             const statusDropdown = document.getElementById('statusDropdown');
-            console.log('updateStatus: Checking user and dropdown', { user, statusDropdown });
+            console.log('updateStatus: Initial check - user:', user, 'statusDropdown:', statusDropdown);
             if (!statusDropdown || !user) {
                 console.error('updateStatus: statusDropdown or user is null', { statusDropdown, user });
                 return;
@@ -613,9 +662,12 @@
             }
         }
 
-        // Initialize status dropdown on page load
+        // Initialize status dropdown and other elements after DOM and data are ready
         document.addEventListener('DOMContentLoaded', () => {
-            updateStatusDropdown();
+            initializeDashboard();
+        });
+
+        function initializeDashboard() {
             const userInfo = document.getElementById('userInfo');
             const user = JSON.parse(localStorage.getItem('user'));
             if (userInfo && user) {
@@ -661,7 +713,8 @@
                     label.textContent = 'Light Mode';
                 }
             }
-        });
+            updateStatusDropdown(); // Call after DOM is ready
+        }
     </script>
 </body>
 </html>
