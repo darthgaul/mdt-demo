@@ -511,7 +511,7 @@
             }
         }
 
-                function showTab(tab) {
+                        function showTab(tab) {
             console.log('Index: Showing tab:', tab);
             const user = JSON.parse(localStorage.getItem('user'));
             if (!user) {
@@ -724,10 +724,14 @@
             if (toggleBtn) {
                 toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
                 toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
-                const label = document.createElement('span');
-                label.className = 'ml-2 text-sm';
-                label.textContent = 'Dark Mode';
-                toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
+                // Check for existing label before adding
+                let existingLabel = toggleBtn.parentNode.querySelector('span.ml-2');
+                if (!existingLabel) {
+                    const label = document.createElement('span');
+                    label.className = 'ml-2 text-sm';
+                    label.textContent = 'Dark Mode';
+                    toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
+                }
 
                 toggleBtn.addEventListener('click', () => {
                     document.body.classList.toggle('light-mode');
@@ -735,7 +739,8 @@
                     toggleBtn.classList.toggle('bg-blue-600', isLightMode);
                     toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
                     toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
-                    label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
+                    const label = toggleBtn.parentNode.querySelector('span.ml-2');
+                    if (label) label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
                     localStorage.setItem('lightMode', isLightMode);
                 });
 
@@ -744,7 +749,8 @@
                     toggleBtn.classList.add('bg-blue-600');
                     toggleBtn.classList.remove('bg-gray-700');
                     toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
-                    label.textContent = 'Light Mode';
+                    const label = toggleBtn.parentNode.querySelector('span.ml-2');
+                    if (label) label.textContent = 'Light Mode';
                 }
             }
             updateStatusDropdown(); // Call after DOM is ready
