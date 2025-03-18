@@ -44,8 +44,9 @@ const sampleData = {
         {"id": "PROP002", "propertyName": "Briarwood Estates", "address": "456 Sample Rd, Austin, TX 78702", "apt": "", "minHits": 3, "notes": "Parking lot, frequent loitering", "suspended": false}
     ],
     dispatchData: [
-        {"id": "D001", "dateTime": "2025-03-11T18:00:00Z", "caller": "Jane Doe", "property": "PROP001", "issue": "Noise Complaint", "status": "Pending", "assignedOfficer": ""},
-        {"id": "D002", "dateTime": "2025-03-11T18:05:00Z", "caller": "John Smith", "property": "PROP002", "issue": "Suspicious Activity", "status": "Assigned", "assignedOfficer": "Officer Alex Reed"}
+        {"id": "D001", "dateTime": "2025-03-11T18:00:00Z", "caller": "Jane Doe", "property": "PROP001", "issue": "Noise Complaint", "status": "Assigned", "assignedOfficer": "Tom Vega", "assignedTime": "2025-03-11T18:02:00Z"},
+        {"id": "D002", "dateTime": "2025-03-11T18:05:00Z", "caller": "John Smith", "property": "PROP002", "issue": "Suspicious Activity", "status": "Assigned", "assignedOfficer": "Alex Reed", "assignedTime": "2025-03-11T18:06:00Z"},
+        {"id": "D003", "dateTime": "2025-03-11T18:10:00Z", "caller": "Property Manager", "property": "PROP001", "issue": "Trespass", "status": "Assigned", "assignedOfficer": "Bella Cruz", "assignedTime": "2025-03-11T18:12:00Z"}
     ],
     reportsData: [
         {
@@ -56,6 +57,15 @@ const sampleData = {
             "type": "Patrol Hit",
             "narrative": "JohnSmith: Patrol hit completed at Axel Apartments.",
             "officer": "JohnSmith"
+        },
+        {
+            "caseNumber": "25-03141100",
+            "dateTime": "2025-03-14T11:00:00.000Z",
+            "personId": "N/A",
+            "property": "PROP002",
+            "type": "Incident",
+            "narrative": "TomVega: Suspicious activity reported at Beta Building.",
+            "officer": "TomVega"
         }
     ],
     peopleData: [
@@ -94,6 +104,7 @@ function loadData(callback) {
     
     saveDataToLocalStorage(); // Persist initial data
     console.log('loadData: Data loaded and saved');
+    console.log('loadData: reportsData after load:', window.reportsData);
     if (callback) callback();
 }
 
