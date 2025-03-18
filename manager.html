@@ -59,38 +59,33 @@
             });
 
             function addProperty() {
-                const id = document.getElementById('propId').value.toUpperCase();
-                const name = document.getElementById('propName').value;
-                const address = document.getElementById('propAddress').value;
-                const apt = document.getElementById('propApt').value;
-                const hits = parseInt(document.getElementById('propHits').value) || 0;
-                const notes = document.getElementById('propNotes').value;
+    const id = document.getElementById('propId').value.toUpperCase();
+    const name = document.getElementById('propName').value;
+    const address = document.getElementById('propAddress').value;
+    const apt = document.getElementById('propApt').value;
+    const hits = parseInt(document.getElementById('propHits').value) || 0;
+    const notes = document.getElementById('propNotes').value;
 
-                if (!id || !name || !address) {
-                    showAlert('ID, Name, and Address are required', 'bg-red-600');
-                    return;
-                }
-                if (propertiesData.some(p => p.id === id)) {
-                    showAlert('Property ID already exists', 'bg-red-600');
-                    return;
-                }
+    if (!id || !name || !address) {
+        showAlert('ID, Name, and Address are required', 'bg-red-600');
+        return;
+    }
+    if (propertiesData.some(p => p.id === id)) {
+        showAlert('Property ID already exists', 'bg-red-600');
+        return;
+    }
 
-                const newProp = { id, propertyName: name, address, apt, minHits: hits, notes, suspended: false };
-                propertiesData.push(newProp);
-                let customProps = JSON.parse(localStorage.getItem('customProperties') || '[]');
-                customProps.push(newProp);
-                localStorage.setItem('customProperties', JSON.stringify(customProps));
-                saveProperties();
-
-                showAlert('Property added', 'bg-green-600');
-                showProperties();
-                document.getElementById('propId').value = '';
-                document.getElementById('propName').value = '';
-                document.getElementById('propAddress').value = '';
-                document.getElementById('propApt').value = '';
-                document.getElementById('propHits').value = '';
-                document.getElementById('propNotes').value = '';
-            }
+    const newProp = { id, propertyName: name, address, apt, minHits: hits, notes, suspended: false };
+    addProperty(newProp);
+    showAlert('Property added', 'bg-green-600');
+    showProperties();
+    document.getElementById('propId').value = '';
+    document.getElementById('propName').value = '';
+    document.getElementById('propAddress').value = '';
+    document.getElementById('propApt').value = '';
+    document.getElementById('propHits').value = '';
+    document.getElementById('propNotes').value = '';
+}
 
             function showEmployees() {
                 let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Group</th><th class="p-2 bg-gray-700">Actions</th></tr>';
@@ -143,39 +138,30 @@
                 }
             }
 
-            function deleteEmployee(name) {
-                if (confirm(`Delete ${name}? This cannot be undone.`)) {
-                    employeesData = employeesData.filter(e => e.name !== name);
-                    usersData = usersData.filter(u => u.username !== name);
-                    localStorage.setItem('employees', JSON.stringify(employeesData));
-                    localStorage.setItem('users', JSON.stringify(usersData));
-                    showAlert(`${name} deleted`, 'bg-green-600');
-                    showEmployees();
-                }
-            }
+function deleteEmployee(name) {
+    if (confirm(`Delete ${name}? This cannot be undone.`)) {
+        deleteEmployee(name);
+        deleteUser(name); // Remove from usersData if exists
+        showAlert(`${name} deleted`, 'bg-green-600');
+        showEmployees();
+    }
+}
 
-            function suspendProperty(id) {
-                if (confirm(`Suspend property ${id}?`)) {
-                    const prop = propertiesData.find(p => p.id === id);
-                    if (prop) {
-                        prop.suspended = true;
-                        saveProperties();
-                        showAlert(`Property ${id} suspended`, 'bg-green-600');
-                        showProperties();
-                    }
-                }
-            }
+function suspendProperty(id) {
+    if (confirm(`Suspend property ${id}?`)) {
+        updateProperty(id, { suspended: true });
+        showAlert(`Property ${id} suspended`, 'bg-green-600');
+        showProperties();
+    }
+}
 
-            function activateProperty(id) {
-                if (confirm(`Activate property ${id}?`)) {
-                    const prop = propertiesData.find(p => p.id === id);
-                    if (prop) {
-                        prop.suspended = false;
-                        saveProperties();
-                        showAlert(`Property ${id} activated`, 'bg-green-600');
-                        showProperties();
-                    }
-                }
+function activateProperty(id) {
+    if (confirm(`Activate property ${id}?`)) {
+        updateProperty(id, { suspended: false });
+        showAlert(`Property ${id} activated`, 'bg-green-600');
+        showProperties();
+    }
+}
             }
         });
     </script>
