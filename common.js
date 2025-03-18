@@ -15,28 +15,32 @@ const sampleData = {
             "route": "Alpha-1",
             "schedule": { "start": "2025-03-13T08:00:00", "end": "2025-03-13T16:00:00" },
             "location": "317 East Joshua Road",
-            "department": "Supervisors"
+            "department": "Supervisors",
+            "status": "10-8" // Initial status
         },
         {
             "name": "Alex Reed",
             "route": "Alpha-5",
             "schedule": { "start": "2025-03-13T09:00:00", "end": "2025-03-13T17:00:00" },
             "location": "294 Alhambra Dr",
-            "department": "Officers"
+            "department": "Officers",
+            "status": "10-8" // Initial status
         },
         {
             "name": "Bella Cruz",
             "route": "Alpha-4",
             "schedule": { "start": "2025-03-13T07:00:00", "end": "2025-03-13T15:00:00" },
             "location": "239 Zancudo Ave",
-            "department": "Officers"
+            "department": "Officers",
+            "status": "10-8" // Initial status
         },
         {
             "name": "dispatch1",
             "route": "N/A",
             "schedule": { "start": "2025-03-13T06:00:00", "end": "2025-03-13T18:00:00" },
             "location": "Dispatch HQ",
-            "department": "Dispatchers"
+            "department": "Dispatchers",
+            "status": "10-8" // Initial status
         }
     ],
     propertiesData: [
@@ -143,6 +147,7 @@ function updateEmployee(name, updates) {
     if (employee) {
         Object.assign(employee, updates);
         saveDataToLocalStorage();
+        console.log('updateEmployee: Status updated for', name, 'to', updates.status);
     }
 }
 
@@ -259,7 +264,7 @@ function showAlert(message, color = 'bg-green-600') {
     const alert = document.getElementById('alert');
     if (alert) {
         alert.textContent = message;
-        alert.className = `fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000]`;
+        alert.className = `fixed bottom-4 right-4 ${color} text-white p-2 rounded shadow z-[1000]`;
         alert.classList.remove('hidden');
         setTimeout(() => alert.classList.add('hidden'), 3000);
     }
