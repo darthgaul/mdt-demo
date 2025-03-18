@@ -570,7 +570,16 @@
             console.log('updateStatusDropdown: Checking - user:', user, 'statusDropdown:', statusDropdown);
             if (!statusDropdown) {
                 console.error('updateStatusDropdown: statusDropdown element not found in DOM');
-                setTimeout(() => updateStatusDropdown(), 100); // Retry after a short delay
+                // Limit retry to avoid infinite loop, retry only once
+                setTimeout(() => {
+                    const retryDropdown = document.getElementById('statusDropdown');
+                    if (retryDropdown) {
+                        console.log('updateStatusDropdown: Retry found statusDropdown:', retryDropdown);
+                        updateStatusDropdown(); // Retry once if found
+                    } else {
+                        console.warn('updateStatusDropdown: Retry failed, element still not found');
+                    }
+                }, 100);
                 return;
             }
             if (!user) {
