@@ -7,7 +7,6 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
-    <script src="officers.js"></script>
 </head>
 <body class="min-h-screen p-6">
     <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
@@ -22,34 +21,31 @@
 
     <div id="alert" class="hidden"></div>
 
-    <script src="scripts.js"></script>
     <script src="common.js"></script>
+    <script src="scripts.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
+        loadData(() => {
+            const customProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
+            customProperties.forEach(prop => {
+                if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
+            });
 
-            loadData(() => {
-                const customProperties = JSON.parse(localStorage.getItem('customProperties') || '[]');
-                customProperties.forEach(prop => {
-                    if (!propertiesData.some(p => p.id === prop.id)) propertiesData.push(prop);
-                });
-
-                let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Property Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Apt</th><th class="p-2 bg-gray-700">Min. Hits</th><th class="p-2 bg-gray-700">Notes</th></tr>';
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Property Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Apt</th><th class="p-2 bg-gray-700">Min. Hits</th><th class="p-2 bg-gray-700">Notes</th></tr>';
+            if (propertiesData && propertiesData.length > 0) {
                 propertiesData.forEach(prop => {
                     const link = (prop.id === 'PROP001' || prop.id === 'PROP002' || prop.id === 'PROP003') ? `<a href="${prop.id.toLowerCase()}.html" class="underline">${prop.propertyName}</a>` : prop.propertyName;
-                    html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${link}${prop.suspended ? ' (Suspended)' : ''}</td><td class="p-2">${prop.address}</td><td class="p-2">${prop.apt}</td><td class="p-2">${prop.minHits}</td><td class="p-2">${prop.notes}</td></tr>`;
+                    html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${link}${prop.suspended ? ' (Suspended)' : ''}</td><td class="p-2">${prop.address}</td><td class="p-2">${prop.apt || 'N/A'}</td><td class="p-2">${prop.minHits}</td><td class="p-2">${prop.notes || 'N/A'}</td></tr>`;
                 });
-                html += '</table>';
-                const propertiesList = document.getElementById('propertiesList');
-                if (propertiesList) {
-                    propertiesList.innerHTML = html;
-                }
-            });
+            } else {
+                html += '<tr><td colspan="6" class="p-2 text-center">No properties found.</td></tr>';
+            }
+            html += '</table>';
+            const propertiesList = document.getElementById('propertiesList');
+            if (propertiesList) {
+                propertiesList.innerHTML = html;
+            } else {
+                console.error('propertiesList element not found');
+            }
         });
     </script>
-</body>
 </html>
