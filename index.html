@@ -184,16 +184,26 @@
                 flex-direction: column;
                 align-items: flex-end;
                 margin-top: 0.75rem; /* Increased margin for spacing */
+                gap: 0.5rem; /* Add gap between elements */
             }
             #statusDropdown {
                 margin-bottom: 0.5rem;
                 width: 100%;
-                padding: 0.25rem;
+                padding: 0.5rem; /* Increased padding for better appearance */
+                font-size: 0.875rem; /* Adjust font size for readability */
             }
             #userInfo {
                 margin-bottom: 0.5rem;
                 padding: 0.25rem 0;
             }
+        }
+        /* Desktop and tablet adjustments */
+        .sticky-nav .flex.items-center.space-x-4:last-child {
+            gap: 1rem; /* Add spacing between elements on larger screens */
+        }
+        #statusDropdown {
+            padding: 0.25rem 0.5rem; /* Consistent padding */
+            min-width: 120px; /* Ensure minimum width to prevent squishing */
         }
     </style>
 </head>
@@ -695,14 +705,22 @@
             updateStatusDropdown(); // Call after DOM is ready
         }
 
-        // Attempt to mitigate async promise error (placeholder, adjust based on scripts.js)
+        // Enhanced async error mitigation
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.addEventListener('message', (event) => {
                 console.log('Service worker message received:', event.data);
                 if (event.ports && event.ports.length > 0) {
-                    event.ports[0].postMessage('ACK'); // Acknowledge to prevent channel closure
+                    event.ports[0].postMessage('ACK').catch((err) => {
+                        console.error('Failed to send ACK to service worker:', err);
+                    });
                 }
                 return false; // Avoid indicating async response
+            });
+
+            navigator.serviceWorker.ready.then((registration) => {
+                console.log('Service Worker registered:', registration);
+            }).catch((err) => {
+                console.error('Service Worker registration failed:', err);
             });
         }
     </script>
