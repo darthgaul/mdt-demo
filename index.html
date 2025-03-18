@@ -117,107 +117,71 @@
         .dispatch-table tr {
             border-bottom: 1px solid #4b5563;
         }
-        @media (max-width: 1024px) {
-            .dashboard-container {
-                flex-direction: column;
-                height: auto;
-            }
-            .sidebar {
-                width: 100%;
-                display: none;
-            }
-            .sidebar.active {
-                display: block;
-            }
-            .toggle-sidebar {
-                display: block;
-            }
-            .main-content {
-                width: 100%;
-            }
+        /* Navigation bar styling for even spacing */
+        .sticky-nav {
+            display: flex;
+            justify-content: space-between; /* Evenly distribute sections */
+            align-items: center;
+            padding: 1rem 2rem; /* Increased padding for side spacing */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            background-color: #1f2937; /* bg-gray-900 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* shadow */
+        }
+
+        /* Center section (nav tabs) */
+        .nav-tabs {
+            display: flex;
+            justify-content: center; /* Center the tabs */
+            gap: 1rem; /* Consistent spacing between tabs */
+        }
+
+        /* Right section adjustments */
+        .sticky-nav .flex.items-center.space-x-4:last-child {
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* Consistent spacing between elements */
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 768px) {
             .sticky-nav {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 1rem 1.5rem; /* Increased padding for better spacing */
+                flex-direction: column; /* Stack sections vertically */
+                align-items: center;
+                gap: 1rem; /* Vertical spacing between sections */
             }
             .nav-tabs {
-                flex-direction: column;
-                align-items: center;
-                padding: 0.5rem 0;
-                margin: 0.75rem 0; /* Added margin for separation */
+                display: none; /* Hide nav tabs on mobile */
             }
-            .nav-tabs a {
-                margin: 0.25rem 0;
-                width: 100%;
-                text-align: center;
-                padding: 0.5rem;
-            }
-        }
-        @media (max-width: 640px) {
-            .dispatch-table th,
-            .dispatch-table td {
-                font-size: 0.75rem; /* Smaller font on mobile */
-                padding: 0.5rem; /* Reduced padding for mobile */
-            }
-            .dispatch-table thead {
-                display: none; /* Hide headers on mobile */
-            }
-            .dispatch-table tbody, .dispatch-table tr {
-                display: block;
-            }
-            .dispatch-table tr {
-                margin-bottom: 1rem;
-                border-bottom: 2px solid #4b5563;
-            }
-            .dispatch-table td {
-                display: flex;
-                justify-content: space-between;
-                padding: 0.5rem 1rem;
-                border-bottom: 1px solid #4b5563;
-            }
-            .dispatch-table td::before {
-                content: attr(data-label);
-                font-weight: bold;
-                margin-right: 0.5rem;
-            }
-            .sticky-nav .flex.items-center.space-x-4:last-child {
-                flex-direction: column;
-                align-items: flex-end;
-                margin-top: 0.75rem; /* Increased margin for spacing */
-                gap: 0.5rem; /* Add gap between elements */
+            .sticky-nav .flex.items-center.space-x-4 {
+                flex-direction: column; /* Stack left/right elements */
+                gap: 0.5rem; /* Spacing between stacked items */
             }
             #statusDropdown {
-                margin-bottom: 0.5rem;
-                width: 100%;
+                width: 100%; /* Full width on mobile */
                 padding: 0.5rem; /* Increased padding for better appearance */
-                font-size: 0.875rem; /* Adjust font size for readability */
-            }
-            #userInfo {
-                margin-bottom: 0.5rem;
-                padding: 0.25rem 0;
             }
         }
         /* Desktop and tablet adjustments */
-        .sticky-nav .flex.items-center.space-x-4:last-child {
-            gap: 1rem; /* Add spacing between elements on larger screens */
-        }
         #statusDropdown {
             padding: 0.25rem 0.5rem; /* Consistent padding */
             min-width: 120px; /* Ensure minimum width to prevent squishing */
         }
     </style>
-</head>
+</body>
 <body class="min-h-screen p-6">
-    <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow flex justify-between items-center">
+    <nav class="sticky-nav mb-6">
+        <!-- Left Section -->
         <div class="flex items-center space-x-4">
             <div class="hamburger">
-                <div></div>
-                <div></div>
-                <div></div>
+                <div></div><div></div><div></div>
             </div>
             <button id="darkModeToggle"></button>
         </div>
-        <div class="nav-tabs hidden md:flex space-x-4">
+
+        <!-- Center Section (Nav Tabs) -->
+        <div class="nav-tabs hidden md:flex">
             <a href="index.html">Dashboard</a>
             <a href="properties.html">Properties</a>
             <a href="people.html">People</a>
@@ -225,6 +189,8 @@
             <a href="reports.html">Reports</a>
             <a href="manager.html" id="managerLink">Manager</a>
         </div>
+
+        <!-- Right Section -->
         <div class="flex items-center space-x-4">
             <span id="userInfo" class="text-sm"></span>
             <select id="statusDropdown" class="bg-gray-700 text-white p-1 rounded hidden" onchange="updateStatus()">
@@ -292,22 +258,23 @@
     <script src="scripts.js"></script>
     <script>
         let isLoaded = false;
-        console.log('Index: Checking if data is loaded, isLoaded:', isLoaded);
+        const originalStatusDropdown = document.getElementById('statusDropdown'); // Store original element
+
+        // Load data and initialize
         if (!isLoaded) {
             console.log('Index: Calling loadData for Dashboard');
             if (typeof loadData === 'function') {
                 loadData(() => {
                     isLoaded = true;
-                    console.log('Index: loadData callback executed, isLoaded:', isLoaded);
-                    console.log('Index: employeesData after load:', employeesData);
-                    console.log('Index: dispatchData after load:', dispatchData);
+                    console.log('Index: loadData callback executed');
                     showTab('overview');
                     updateUnitsList();
                     updateDispatchList();
-                    initializeDashboard(); // Corrected function name
+                    initializeDashboard();
+                    setupDropdownObserver(); // Start observing after load
                 });
             } else {
-                console.error('Index: loadData is not defined, using fallback');
+                console.error('Index: loadData not defined, using fallback');
                 window.usersData = JSON.parse(localStorage.getItem('users')) || [];
                 window.employeesData = JSON.parse(localStorage.getItem('employees')) || [];
                 window.dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [];
@@ -316,12 +283,90 @@
                 showTab('overview');
                 updateUnitsList();
                 updateDispatchList();
-                initializeDashboard(); // Corrected function name
+                initializeDashboard();
+                setupDropdownObserver(); // Start observing after load
             }
         } else {
-            console.log('Index: Data already loaded, skipping loadData');
-            initializeDashboard(); // Corrected function name
+            console.log('Index: Data already loaded');
+            initializeDashboard();
+            setupDropdownObserver();
         }
+
+        // Use MutationObserver to ensure statusDropdown persists
+        function setupDropdownObserver() {
+            const nav = document.querySelector('nav');
+            if (!nav) {
+                console.error('setupDropdownObserver: nav not found');
+                return;
+            }
+
+            const observer = new MutationObserver((mutations) => {
+                let statusDropdown = document.getElementById('statusDropdown');
+                if (!statusDropdown) {
+                    console.log('MutationObserver: statusDropdown missing, restoring');
+                    const logoutButton = nav.querySelector('button[onclick="logout()"]');
+                    if (logoutButton && originalStatusDropdown) {
+                        logoutButton.parentNode.insertBefore(originalStatusDropdown.cloneNode(true), logoutButton);
+                        statusDropdown = document.getElementById('statusDropdown');
+                        statusDropdown.onchange = updateStatus; // Reattach event
+                        updateStatusDropdown(); // Refresh state
+                    }
+                }
+            });
+
+            observer.observe(nav, { childList: true, subtree: true });
+            console.log('MutationObserver: Observing nav for changes');
+        }
+
+        function updateStatusDropdown() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            let statusDropdown = document.getElementById('statusDropdown');
+            console.log('updateStatusDropdown: user:', user, 'statusDropdown:', statusDropdown);
+
+            if (!statusDropdown) {
+                console.warn('updateStatusDropdown: statusDropdown not found');
+                return; // Observer will handle restoration
+            }
+
+            if (!user) {
+                statusDropdown.classList.add('hidden');
+                return;
+            }
+
+            if (['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
+                statusDropdown.classList.remove('hidden');
+                const employee = employeesData.find(e => e.name === user.username);
+                statusDropdown.value = employee?.status || '10-8';
+            } else {
+                statusDropdown.classList.add('hidden');
+            }
+        }
+
+        function initializeDashboard() {
+            const userInfo = document.getElementById('userInfo');
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (userInfo && user) {
+                userInfo.textContent = `Logged in as ${user.username}`;
+                const managerLink = document.getElementById('managerLink');
+                if (managerLink && user.group !== 'Managers') managerLink.style.display = 'none';
+            }
+            updateStatusDropdown();
+        }
+
+        // Mitigate async error (if service worker related)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                console.log('Service worker message:', event.data);
+                if (event.ports?.length > 0) {
+                    event.ports[0].postMessage('ACK');
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeDashboard();
+            setupDropdownObserver();
+        });
 
         function toggleSidebar(id) {
             console.log('Index: Toggling sidebar with id:', id);
@@ -466,7 +511,7 @@
             }
         }
 
-        function showTab(tab) {
+                function showTab(tab) {
             console.log('Index: Showing tab:', tab);
             const user = JSON.parse(localStorage.getItem('user'));
             if (!user) {
@@ -577,7 +622,7 @@
         function updateStatusDropdown() {
             const user = JSON.parse(localStorage.getItem('user'));
             let statusDropdown = document.getElementById('statusDropdown');
-            console.log('updateStatusDropdown: Checking - user:', user, 'statusDropdown:', statusDropdown, 'nav innerHTML:', document.querySelector('nav')?.innerHTML);
+            console.log('updateStatusDropdown: user:', user, 'statusDropdown:', statusDropdown, 'nav innerHTML:', document.querySelector('nav')?.innerHTML);
 
             // Recreate dropdown if not found
             if (!statusDropdown) {
