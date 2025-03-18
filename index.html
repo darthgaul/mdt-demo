@@ -349,21 +349,19 @@
             if (status) showAlert(`Status for ${name} set to ${status}`, 'bg-green-600');
         }
 
-        function assignCall(name) {
-            const callId = prompt(`Enter dispatch ID to assign to ${name}:`);
-            if (callId) {
-                const dispatch = dispatchData.find(d => d.id === callId && d.status !== 'Completed');
-                if (dispatch) {
-                    dispatch.assignedOfficer = name;
-                    dispatch.status = 'Assigned';
-                    saveDispatch();
-                    showAlert(`Dispatch ${callId} assigned to ${name}`, 'bg-green-600');
-                    updateDispatchList();
-                } else {
-                    showAlert(`Dispatch ${callId} not found or completed`, 'bg-red-600');
-                }
-            }
+function assignCall(name) {
+    const callId = prompt(`Enter dispatch ID to assign to ${name}:`);
+    if (callId) {
+        const dispatch = dispatchData.find(d => d.id === callId && d.status !== 'Completed');
+        if (dispatch) {
+            updateDispatch(callId, { assignedOfficer: name, status: 'Assigned' });
+            showAlert(`Dispatch ${callId} assigned to ${name}`, 'bg-green-600');
+            updateDispatchList();
+        } else {
+            showAlert(`Dispatch ${callId} not found or completed`, 'bg-red-600');
         }
+    }
+}
 
         function updateDispatchList() {
             console.log('Index: Updating dispatch list');
