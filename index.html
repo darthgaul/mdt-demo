@@ -138,14 +138,18 @@
             .sticky-nav {
                 flex-direction: column;
                 align-items: stretch;
+                padding: 1rem;
             }
             .nav-tabs {
                 flex-direction: column;
                 align-items: center;
                 padding: 0.5rem 0;
+                margin: 0.5rem 0;
             }
             .nav-tabs a {
                 margin: 0.25rem 0;
+                width: 100%;
+                text-align: center;
             }
         }
         @media (max-width: 640px) {
@@ -183,6 +187,9 @@
             #statusDropdown {
                 margin-bottom: 0.5rem;
                 width: 100%;
+            }
+            #userInfo {
+                margin-bottom: 0.5rem;
             }
         }
     </style>
@@ -558,48 +565,102 @@
         function updateStatusDropdown() {
             const user = JSON.parse(localStorage.getItem('user'));
             const statusDropdown = document.getElementById('statusDropdown');
-            if (statusDropdown && user) {
-                console.log('updateStatusDropdown: User:', user.username, 'Group:', user.group);
-                if (['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
-                    statusDropdown.classList.remove('hidden');
-                    const employee = employeesData.find(e => e.name === user.username);
-                    console.log('updateStatusDropdown: Employee found:', employee);
-                    if (employee) {
-                        statusDropdown.value = employee.status || '10-8'; // Set current status
-                        console.log('updateStatusDropdown: Set value to:', employee.status);
-                    } else {
-                        console.log('updateStatusDropdown: No employee found for', user.username);
-                    }
+            console.log('updateStatusDropdown: Checking user and dropdown', { user, statusDropdown });
+            if (!statusDropdown) {
+                console.error('updateStatusDropdown: statusDropdown element not found');
+                return;
+            }
+            if (!user) {
+                console.warn('updateStatusDropdown: No user logged in, hiding dropdown');
+                statusDropdown.classList.add('hidden');
+                return;
+            }
+
+            if (['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
+                statusDropdown.classList.remove('hidden');
+                const employee = employeesData.find(e => e.name === user.username);
+                console.log('updateStatusDropdown: Employee data:', employee);
+                if (employee) {
+                    statusDropdown.value = employee.status || '10-8'; // Set current status
+                    console.log('updateStatusDropdown: Set value to:', employee.status);
                 } else {
-                    statusDropdown.classList.add('hidden');
-                    console.log('updateStatusDropdown: Hidden for non-officer group');
+                    console.warn('updateStatusDropdown: No employee found for', user.username);
+                    statusDropdown.value = '10-8'; // Default to Available if no match
                 }
             } else {
-                console.error('updateStatusDropdown: statusDropdown or user is null');
+                statusDropdown.classList.add('hidden');
+                console.log('updateStatusDropdown: Hidden for non-officer group:', user.group);
             }
         }
 
         function updateStatus() {
             const user = JSON.parse(localStorage.getItem('user'));
             const statusDropdown = document.getElementById('statusDropdown');
-            if (user && statusDropdown) {
-                console.log('updateStatus: User:', user.username, 'New Status:', statusDropdown.value);
-                const newStatus = statusDropdown.value;
-                if (['10-8', '10-6', '10-42'].includes(newStatus)) {
-                    updateEmployee(user.username, { status: newStatus });
-                    showAlert(`Status updated to ${newStatus}`, 'bg-green-600');
-                    updateUnitsList(); // Refresh the units list to reflect the new status
-                } else {
-                    showAlert('Invalid status code. Use 10-8, 10-6, or 10-42.', 'bg-red-600');
-                }
+            console.log('updateStatus: Checking user and dropdown', { user, statusDropdown });
+            if (!statusDropdown || !user) {
+                console.error('updateStatus: statusDropdown or user is null', { statusDropdown, user });
+                return;
+            }
+
+            const newStatus = statusDropdown.value;
+            console.log('updateStatus: New status selected:', newStatus);
+            if (['10-8', '10-6', '10-42'].includes(newStatus)) {
+                updateEmployee(user.username, { status: newStatus });
+                showAlert(`Status updated to ${newStatus}`, 'bg-green-600');
+                updateUnitsList(); // Refresh the units list to reflect the new status
             } else {
-                console.error('updateStatus: User or statusDropdown is null');
+                showAlert('Invalid status code. Use 10-8, 10-6, or 10-42.', 'bg-red-600');
             }
         }
 
         // Initialize status dropdown on page load
         document.addEventListener('DOMContentLoaded', () => {
             updateStatusDropdown();
+            const userInfo = document.getElementById('userInfo');
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (userInfo && user) {
+                userInfo.textContent = `Logged in as ${user.username}`;
+                const managerLink = document.getElementById('managerLink');
+                if (managerLink && user.group !== 'Managers') managerLink.style.display = 'none';
+            }
+            const hamburger = document.querySelector('.hamburger');
+            const navTabs = document.querySelector('.nav-tabs');
+            if (hamburger && navTabs) {
+                hamburger.addEventListener('click', () => {
+                    navTabs.classList.toggle('active');
+                    const isOpen = navTabs.classList.contains('active');
+                    hamburger.children[0].style.transform = isOpen ? 'rotate(45deg) translate(5px, 5px)' : 'none';
+                    hamburger.children[1].style.opacity = isOpen ? '0' : '1';
+                    hamburger.children[2].style.transform = isOpen ? 'rotate(-45deg) translate(7px, -7px)' : 'none';
+                });
+            }
+            const toggleBtn = document.getElementById('darkModeToggle');
+            if (toggleBtn) {
+                toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
+                toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
+                const label = document.createElement('span');
+                label.className = 'ml-2 text-sm';
+                label.textContent = 'Dark Mode';
+                toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
+
+                toggleBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('light-mode');
+                    const isLightMode = document.body.classList.contains('light-mode');
+                    toggleBtn.classList.toggle('bg-blue-600', isLightMode);
+                    toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
+                    toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
+                    label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
+                    localStorage.setItem('lightMode', isLightMode);
+                });
+
+                if (localStorage.getItem('lightMode') === 'true') {
+                    document.body.classList.add('light-mode');
+                    toggleBtn.classList.add('bg-blue-600');
+                    toggleBtn.classList.remove('bg-gray-700');
+                    toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
+                    label.textContent = 'Light Mode';
+                }
+            }
         });
     </script>
 </body>
