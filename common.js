@@ -1,6 +1,6 @@
 // common.js - Shared utilities and data management
 
-// Sample data for testing (based on your provided JSON and tips)
+// Sample data for initial setup
 const sampleData = {
     usersData: [
         { username: "JohnSmith", password: "john123", group: "Managers" },
@@ -41,17 +41,11 @@ const sampleData = {
     ],
     propertiesData: [
         {"id": "PROP001", "propertyName": "Axel Apartments", "address": "123 Demo St, Austin, TX 78701", "apt": "Apt 4B", "minHits": 2, "notes": "Gated entry, security cameras", "suspended": false},
-        {"id": "PROP002", "propertyName": "Briarwood Estates", "address": "456 Sample Rd, Austin, TX 78702", "apt": "", "minHits": 3, "notes": "Parking lot, frequent loitering", "suspended": false},
-        {"id": "PROP003", "propertyName": "Cedar Heights", "address": "789 Test Ave, Austin, TX 78703", "apt": "Apt 2C", "minHits": 1, "notes": "Near park, high foot traffic", "suspended": false},
-        {"id": "PROP004", "propertyName": "Driftwood Towers", "address": "101 Fake Ln, Austin, TX 78704", "apt": "Apt 3A", "minHits": 4, "notes": "Quiet area, staff on-site", "suspended": false},
-        {"id": "PROP005", "propertyName": "Elmwood Place", "address": "555 Mock Blvd, Austin, TX 78705", "apt": "", "minHits": 2, "notes": "High traffic, vandalism reported", "suspended": false}
+        {"id": "PROP002", "propertyName": "Briarwood Estates", "address": "456 Sample Rd, Austin, TX 78702", "apt": "", "minHits": 3, "notes": "Parking lot, frequent loitering", "suspended": false}
     ],
     dispatchData: [
         {"id": "D001", "dateTime": "2025-03-11T18:00:00Z", "caller": "Jane Doe", "property": "PROP001", "issue": "Noise Complaint", "status": "Pending", "assignedOfficer": ""},
-        {"id": "D002", "dateTime": "2025-03-11T18:05:00Z", "caller": "John Smith", "property": "PROP002", "issue": "Suspicious Activity", "status": "Assigned", "assignedOfficer": "Officer Alex Reed"},
-        {"id": "D003", "dateTime": "2025-03-11T18:10:00Z", "caller": "Property Manager", "property": "PROP003", "issue": "Trespass", "status": "In Progress", "assignedOfficer": "Officer Bella Cruz"},
-        {"id": "D004", "dateTime": "2025-03-11T18:15:00Z", "caller": "Resident", "property": "PROP004", "issue": "Vehicle Break-In", "status": "Pending", "assignedOfficer": ""},
-        {"id": "D005", "dateTime": "2025-03-11T17:45:00Z", "caller": "Security", "property": "PROP005", "issue": "Loitering", "status": "Completed", "assignedOfficer": "Officer Chris Dunn"}
+        {"id": "D002", "dateTime": "2025-03-11T18:05:00Z", "caller": "John Smith", "property": "PROP002", "issue": "Suspicious Activity", "status": "Assigned", "assignedOfficer": "Officer Alex Reed"}
     ],
     reportsData: [
         {
@@ -62,26 +56,15 @@ const sampleData = {
             "type": "Patrol Hit",
             "narrative": "JohnSmith: Patrol hit completed at Axel Apartments.",
             "officer": "JohnSmith"
-        },
-        {
-            "caseNumber": "25-03141100",
-            "dateTime": "2025-03-14T11:00:00.000Z",
-            "personId": "N/A",
-            "property": "PROP002",
-            "type": "Incident",
-            "narrative": "TomVega: Suspicious activity reported at Beta Building.",
-            "officer": "TomVega"
         }
     ],
     peopleData: [
         {"id": "P001", "name": "Jane Smith", "dob": "1990-01-15", "status": "Staff", "property": "PROP001", "behavior": "Friendly", "ctnStatus": "N/A"},
-        {"id": "P002", "name": "John Doe", "dob": "1985-03-22", "status": "Trespasser", "property": "PROP002", "behavior": "Hostile", "ctnStatus": "CTN Issued"},
-        {"id": "P003", "name": "Alex Lee", "dob": "1995-11-10", "status": "Resident", "property": "PROP003", "behavior": "Unknown", "ctnStatus": "N/A"},
-        {"id": "P004", "name": "Mike Brown", "dob": "1988-07-08", "status": "Staff", "property": "PROP004", "behavior": "Cautious", "ctnStatus": "VCTW"}
+        {"id": "P002", "name": "John Doe", "dob": "1985-03-22", "status": "Trespasser", "property": "PROP002", "behavior": "Hostile", "ctnStatus": "CTN Issued"}
     ]
 };
 
-// Initialize global data
+// Initialize global data from localStorage or sample data
 window.usersData = JSON.parse(localStorage.getItem('users')) || sampleData.usersData;
 window.employeesData = JSON.parse(localStorage.getItem('employees')) || sampleData.employeesData;
 window.propertiesData = JSON.parse(localStorage.getItem('properties')) || sampleData.propertiesData;
@@ -97,11 +80,11 @@ function saveDataToLocalStorage() {
     localStorage.setItem('dispatches', JSON.stringify(window.dispatchData));
     localStorage.setItem('reports', JSON.stringify(window.reportsData));
     localStorage.setItem('people', JSON.stringify(window.peopleData));
+    console.log('saveDataToLocalStorage: Data saved to localStorage');
 }
 
 function loadData(callback) {
     console.log('loadData: Starting data load process...');
-    // Load from localStorage or sample data
     window.usersData = JSON.parse(localStorage.getItem('users')) || sampleData.usersData;
     window.employeesData = JSON.parse(localStorage.getItem('employees')) || sampleData.employeesData;
     window.propertiesData = JSON.parse(localStorage.getItem('properties')) || sampleData.propertiesData;
@@ -112,6 +95,117 @@ function loadData(callback) {
     saveDataToLocalStorage(); // Persist initial data
     console.log('loadData: Data loaded and saved');
     if (callback) callback();
+}
+
+// Utility functions for data manipulation
+function addUser(username, password, group) {
+    const user = { username, password, group };
+    window.usersData.push(user);
+    saveDataToLocalStorage();
+}
+
+function updateUser(username, newPassword, newGroup) {
+    const user = window.usersData.find(u => u.username === username);
+    if (user) {
+        user.password = newPassword || user.password;
+        user.group = newGroup || user.group;
+        saveDataToLocalStorage();
+    }
+}
+
+function deleteUser(username) {
+    window.usersData = window.usersData.filter(u => u.username !== username);
+    saveDataToLocalStorage();
+}
+
+function addEmployee(employee) {
+    window.employeesData.push(employee);
+    saveDataToLocalStorage();
+}
+
+function updateEmployee(name, updates) {
+    const employee = window.employeesData.find(e => e.name === name);
+    if (employee) {
+        Object.assign(employee, updates);
+        saveDataToLocalStorage();
+    }
+}
+
+function deleteEmployee(name) {
+    window.employeesData = window.employeesData.filter(e => e.name !== name);
+    saveDataToLocalStorage();
+}
+
+function addProperty(property) {
+    window.propertiesData.push(property);
+    saveDataToLocalStorage();
+}
+
+function updateProperty(id, updates) {
+    const property = window.propertiesData.find(p => p.id === id);
+    if (property) {
+        Object.assign(property, updates);
+        saveDataToLocalStorage();
+    }
+}
+
+function deleteProperty(id) {
+    window.propertiesData = window.propertiesData.filter(p => p.id !== id);
+    saveDataToLocalStorage();
+}
+
+function addDispatch(dispatch) {
+    window.dispatchData.push(dispatch);
+    saveDataToLocalStorage();
+}
+
+function updateDispatch(id, updates) {
+    const dispatch = window.dispatchData.find(d => d.id === id);
+    if (dispatch) {
+        Object.assign(dispatch, updates);
+        saveDataToLocalStorage();
+    }
+}
+
+function deleteDispatch(id) {
+    window.dispatchData = window.dispatchData.filter(d => d.id !== id);
+    saveDataToLocalStorage();
+}
+
+function addReport(report) {
+    window.reportsData.push(report);
+    saveDataToLocalStorage();
+}
+
+function updateReport(caseNumber, updates) {
+    const report = window.reportsData.find(r => r.caseNumber === caseNumber);
+    if (report) {
+        Object.assign(report, updates);
+        saveDataToLocalStorage();
+    }
+}
+
+function deleteReport(caseNumber) {
+    window.reportsData = window.reportsData.filter(r => r.caseNumber !== caseNumber);
+    saveDataToLocalStorage();
+}
+
+function addPerson(person) {
+    window.peopleData.push(person);
+    saveDataToLocalStorage();
+}
+
+function updatePerson(id, updates) {
+    const person = window.peopleData.find(p => p.id === id);
+    if (person) {
+        Object.assign(person, updates);
+        saveDataToLocalStorage();
+    }
+}
+
+function deletePerson(id) {
+    window.peopleData = window.peopleData.filter(p => p.id !== id);
+    saveDataToLocalStorage();
 }
 
 // Utility functions
@@ -171,3 +265,21 @@ window.calculateElapsed = calculateElapsed;
 window.checkAuthentication = checkAuthentication;
 window.showAlert = showAlert;
 window.logout = logout;
+window.addUser = addUser;
+window.updateUser = updateUser;
+window.deleteUser = deleteUser;
+window.addEmployee = addEmployee;
+window.updateEmployee = updateEmployee;
+window.deleteEmployee = deleteEmployee;
+window.addProperty = addProperty;
+window.updateProperty = updateProperty;
+window.deleteProperty = deleteProperty;
+window.addDispatch = addDispatch;
+window.updateDispatch = updateDispatch;
+window.deleteDispatch = deleteDispatch;
+window.addReport = addReport;
+window.updateReport = updateReport;
+window.deleteReport = deleteReport;
+window.addPerson = addPerson;
+window.updatePerson = updatePerson;
+window.deletePerson = deletePerson;
