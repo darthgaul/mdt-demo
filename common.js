@@ -11,7 +11,7 @@ const sampleData = {
     ],
     employeesData: [
         {
-            "name": "Tom Vega",
+            "name": "TomVega",
             "route": "Alpha-1",
             "schedule": { "start": "2025-03-13T08:00:00", "end": "2025-03-13T16:00:00" },
             "location": "317 East Joshua Road",
@@ -19,7 +19,7 @@ const sampleData = {
             "status": "10-8" // Initial status
         },
         {
-            "name": "Alex Reed",
+            "name": "AlexReed",
             "route": "Alpha-5",
             "schedule": { "start": "2025-03-13T09:00:00", "end": "2025-03-13T17:00:00" },
             "location": "294 Alhambra Dr",
@@ -27,7 +27,7 @@ const sampleData = {
             "status": "10-8" // Initial status
         },
         {
-            "name": "Bella Cruz",
+            "name": "BellaCruz",
             "route": "Alpha-4",
             "schedule": { "start": "2025-03-13T07:00:00", "end": "2025-03-13T15:00:00" },
             "location": "239 Zancudo Ave",
@@ -35,7 +35,7 @@ const sampleData = {
             "status": "10-8" // Initial status
         },
         {
-            "name": "dispatch1",
+            "name": "SarahJones",
             "route": "N/A",
             "schedule": { "start": "2025-03-13T06:00:00", "end": "2025-03-13T18:00:00" },
             "location": "Dispatch HQ",
