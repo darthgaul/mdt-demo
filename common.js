@@ -44,9 +44,9 @@ const sampleData = {
         {"id": "PROP002", "propertyName": "Briarwood Estates", "address": "456 Sample Rd, Austin, TX 78702", "apt": "", "minHits": 3, "notes": "Parking lot, frequent loitering", "suspended": false}
     ],
     dispatchData: [
-        {"id": "D001", "dateTime": "2025-03-11T18:00:00Z", "caller": "Jane Doe", "property": "PROP001", "issue": "Noise Complaint", "status": "Assigned", "assignedOfficer": "Tom Vega", "assignedTime": "2025-03-11T18:02:00Z"},
-        {"id": "D002", "dateTime": "2025-03-11T18:05:00Z", "caller": "John Smith", "property": "PROP002", "issue": "Suspicious Activity", "status": "Assigned", "assignedOfficer": "Alex Reed", "assignedTime": "2025-03-11T18:06:00Z"},
-        {"id": "D003", "dateTime": "2025-03-11T18:10:00Z", "caller": "Property Manager", "property": "PROP001", "issue": "Trespass", "status": "Assigned", "assignedOfficer": "Bella Cruz", "assignedTime": "2025-03-11T18:12:00Z"}
+        {"id": "D001", "dateTime": "2025-03-11T18:00:00Z", "caller": "Jane Doe", "property": "PROP001", "issue": "Noise Complaint", "status": "Assigned", "assignedOfficer": "TomVega", "assignedTime": "2025-03-11T18:02:00Z"},
+        {"id": "D002", "dateTime": "2025-03-11T18:05:00Z", "caller": "John Smith", "property": "PROP002", "issue": "Suspicious Activity", "status": "Assigned", "assignedOfficer": "AlexReed", "assignedTime": "2025-03-11T18:06:00Z"},
+        {"id": "D003", "dateTime": "2025-03-11T18:10:00Z", "caller": "Property Manager", "property": "PROP001", "issue": "Trespass", "status": "Assigned", "assignedOfficer": "BellaCruz", "assignedTime": "2025-03-11T18:12:00Z"}
     ],
     reportsData: [
         {
@@ -95,17 +95,21 @@ function saveDataToLocalStorage() {
 
 function loadData(callback) {
     console.log('loadData: Starting data load process...');
-    window.usersData = JSON.parse(localStorage.getItem('users')) || sampleData.usersData;
-    window.employeesData = JSON.parse(localStorage.getItem('employees')) || sampleData.employeesData;
-    window.propertiesData = JSON.parse(localStorage.getItem('properties')) || sampleData.propertiesData;
-    window.dispatchData = JSON.parse(localStorage.getItem('dispatches')) || sampleData.dispatchData;
-    window.reportsData = JSON.parse(localStorage.getItem('reports')) || sampleData.reportsData;
-    window.peopleData = JSON.parse(localStorage.getItem('people')) || sampleData.peopleData;
-    
-    saveDataToLocalStorage(); // Persist initial data
-    console.log('loadData: Data loaded and saved');
-    console.log('loadData: reportsData after load:', window.reportsData);
-    if (callback) callback();
+    try {
+        window.usersData = JSON.parse(localStorage.getItem('users')) || sampleData.usersData;
+        window.employeesData = JSON.parse(localStorage.getItem('employees')) || sampleData.employeesData;
+        window.propertiesData = JSON.parse(localStorage.getItem('properties')) || sampleData.propertiesData;
+        window.dispatchData = JSON.parse(localStorage.getItem('dispatches')) || sampleData.dispatchData;
+        window.reportsData = JSON.parse(localStorage.getItem('reports')) || sampleData.reportsData;
+        window.peopleData = JSON.parse(localStorage.getItem('people')) || sampleData.peopleData;
+        
+        saveDataToLocalStorage(); // Persist initial data
+        console.log('loadData: Data loaded and saved');
+        console.log('loadData: dispatchData after load:', window.dispatchData);
+        if (callback) callback();
+    } catch (error) {
+        console.error('loadData: Error loading data:', error);
+    }
 }
 
 // Utility functions for data manipulation
