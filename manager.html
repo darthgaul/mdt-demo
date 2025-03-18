@@ -7,7 +7,6 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
-    <script src="officers.js"></script>
 </head>
 <body class="min-h-screen p-6">
     <nav class="sticky-nav mb-6 p-4 bg-gray-900 rounded-lg shadow"></nav>
@@ -38,132 +37,116 @@
 
     <div id="alert" class="hidden"></div>
 
-    <script src="scripts.js"></script>
     <script src="common.js"></script>
+    <script src="scripts.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const user = JSON.parse(localStorage.getItem('user'));
-            if (!user) {
-                window.location.href = 'login.html';
-                return;
-            }
-
-            if (user.group !== 'Managers') {
-                window.location.href = 'index.html';
-                return;
-            }
-
-            loadData(() => {
-                showEmployees();
-                showProperties();
-            });
-
-            function addProperty() {
-    const id = document.getElementById('propId').value.toUpperCase();
-    const name = document.getElementById('propName').value;
-    const address = document.getElementById('propAddress').value;
-    const apt = document.getElementById('propApt').value;
-    const hits = parseInt(document.getElementById('propHits').value) || 0;
-    const notes = document.getElementById('propNotes').value;
-
-    if (!id || !name || !address) {
-        showAlert('ID, Name, and Address are required', 'bg-red-600');
-        return;
-    }
-    if (propertiesData.some(p => p.id === id)) {
-        showAlert('Property ID already exists', 'bg-red-600');
-        return;
-    }
-
-    const newProp = { id, propertyName: name, address, apt, minHits: hits, notes, suspended: false };
-    addProperty(newProp);
-    showAlert('Property added', 'bg-green-600');
-    showProperties();
-    document.getElementById('propId').value = '';
-    document.getElementById('propName').value = '';
-    document.getElementById('propAddress').value = '';
-    document.getElementById('propApt').value = '';
-    document.getElementById('propHits').value = '';
-    document.getElementById('propNotes').value = '';
-}
-
-            function showEmployees() {
-                let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Group</th><th class="p-2 bg-gray-700">Actions</th></tr>';
-                if (employeesData && employeesData.length > 0) {
-                    employeesData.forEach(emp => {
-                        const userData = usersData.find(u => u.username === emp.name) || {};
-                        html += `<tr><td class="p-2">${emp.name}</td><td class="p-2"><select onchange="editGroup(this, '${emp.name}')" class="bg-gray-700 text-white p-1 rounded">`;
-                        ['Managers', 'Supervisors', 'Dispatchers', 'Officers'].forEach(group => {
-                            html += `<option value="${group}" ${userData.group === group ? 'selected' : ''}>${group}</option>`;
-                        });
-                        html += `</select></td><td class="p-2"><button onclick="deleteEmployee('${emp.name}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button></td></tr>`;
-                    });
-                } else {
-                    html += '<tr><td colspan="3" class="p-2 text-center">No employees found. Data may have failed to load.</td></tr>';
-                }
-                html += '</table>';
-                const employeeList = document.getElementById('employeeList');
-                if (employeeList) {
-                    employeeList.innerHTML = html;
-                }
-            }
-
-            function showProperties() {
-                let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
-                if (propertiesData && propertiesData.length > 0) {
-                    propertiesData.forEach(prop => {
-                        html += `<tr><td class="p-2">${prop.id}</td><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${prop.suspended ? 'Suspended' : 'Active'}</td><td class="p-2">`;
-                        html += `<button onclick="${prop.suspended ? 'activateProperty' : 'suspendProperty'}('${prop.id}')" class="bg-${prop.suspended ? 'green' : 'yellow'}-600 hover:bg-${prop.suspended ? 'green' : 'yellow'}-700 p-1 rounded text-sm shadow">${prop.suspended ? 'Activate' : 'Suspend'}</button></td></tr>`;
-                    });
-                } else {
-                    html += '<tr><td colspan="5" class="p-2 text-center">No properties found. Data may have failed to load.</td></tr>';
-                }
-                html += '</table>';
-                const propertyList = document.getElementById('propertyList');
-                if (propertyList) {
-                    propertyList.innerHTML = html;
-                }
-            }
-
-            function editGroup(select, name) {
-                if (confirm(`Change ${name}'s group to ${select.value}?`)) {
-                    const userData = usersData.find(u => u.username === name);
-                    if (userData) {
-                        userData.group = select.value;
-                        localStorage.setItem('users', JSON.stringify(usersData));
-                        showAlert(`Group updated for ${name}`, 'bg-green-600');
-                    }
-                } else {
-                    select.value = usersData.find(u => u.username === name).group;
-                }
-            }
-
-function deleteEmployee(name) {
-    if (confirm(`Delete ${name}? This cannot be undone.`)) {
-        deleteEmployee(name);
-        deleteUser(name); // Remove from usersData if exists
-        showAlert(`${name} deleted`, 'bg-green-600');
-        showEmployees();
-    }
-}
-
-function suspendProperty(id) {
-    if (confirm(`Suspend property ${id}?`)) {
-        updateProperty(id, { suspended: true });
-        showAlert(`Property ${id} suspended`, 'bg-green-600');
-        showProperties();
-    }
-}
-
-function activateProperty(id) {
-    if (confirm(`Activate property ${id}?`)) {
-        updateProperty(id, { suspended: false });
-        showAlert(`Property ${id} activated`, 'bg-green-600');
-        showProperties();
-    }
-}
-            }
+        loadData(() => {
+            showEmployees();
+            showProperties();
         });
+
+        function addProperty() {
+            const id = document.getElementById('propId').value.toUpperCase();
+            const name = document.getElementById('propName').value;
+            const address = document.getElementById('propAddress').value;
+            const apt = document.getElementById('propApt').value;
+            const hits = parseInt(document.getElementById('propHits').value) || 0;
+            const notes = document.getElementById('propNotes').value;
+
+            if (!id || !name || !address) {
+                showAlert('ID, Name, and Address are required', 'bg-red-600');
+                return;
+            }
+            if (propertiesData.some(p => p.id === id)) {
+                showAlert('Property ID already exists', 'bg-red-600');
+                return;
+            }
+
+            const newProp = { id, propertyName: name, address, apt, minHits: hits, notes, suspended: false };
+            addProperty(newProp);
+            showAlert('Property added', 'bg-green-600');
+            showProperties();
+            document.getElementById('propId').value = '';
+            document.getElementById('propName').value = '';
+            document.getElementById('propAddress').value = '';
+            document.getElementById('propApt').value = '';
+            document.getElementById('propHits').value = '';
+            document.getElementById('propNotes').value = '';
+        }
+
+        function showEmployees() {
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Group</th><th class="p-2 bg-gray-700">Actions</th></tr>';
+            if (employeesData && employeesData.length > 0) {
+                employeesData.forEach(emp => {
+                    const userData = usersData.find(u => u.username === emp.name) || {};
+                    html += '<tr><td class="p-2">' + emp.name + '</td><td class="p-2"><select onchange="editGroup(this, \'' + emp.name + '\')" class="bg-gray-700 text-white p-1 rounded">';
+                    ['Managers', 'Supervisors', 'Dispatchers', 'Officers'].forEach(group => {
+                        html += '<option value="' + group + '" ' + (userData.group === group ? 'selected' : '') + '>' + group + '</option>';
+                    });
+                    html += '</select></td><td class="p-2"><button onclick="deleteEmployee(\'' + emp.name + '\')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button></td></tr>';
+                });
+            } else {
+                html += '<tr><td colspan="3" class="p-2 text-center">No employees found.</td></tr>';
+            }
+            html += '</table>';
+            const employeeList = document.getElementById('employeeList');
+            if (employeeList) {
+                employeeList.innerHTML = html;
+            }
+        }
+
+        function showProperties() {
+            let html = '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">ID</th><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
+            if (propertiesData && propertiesData.length > 0) {
+                propertiesData.forEach(prop => {
+                    html += '<tr><td class="p-2">' + prop.id + '</td><td class="p-2">' + prop.propertyName + '</td><td class="p-2">' + prop.address + '</td><td class="p-2">' + (prop.suspended ? 'Suspended' : 'Active') + '</td><td class="p-2">';
+                    html += '<button onclick="' + (prop.suspended ? 'activateProperty' : 'suspendProperty') + '(\'' + prop.id + '\')" class="bg-' + (prop.suspended ? 'green' : 'yellow') + '-600 hover:bg-' + (prop.suspended ? 'green' : 'yellow') + '-700 p-1 rounded text-sm shadow">' + (prop.suspended ? 'Activate' : 'Suspend') + '</button></td></tr>';
+                });
+            } else {
+                html += '<tr><td colspan="5" class="p-2 text-center">No properties found.</td></tr>';
+            }
+            html += '</table>';
+            const propertyList = document.getElementById('propertyList');
+            if (propertyList) {
+                propertyList.innerHTML = html;
+            }
+        }
+
+        function editGroup(select, name) {
+            if (confirm('Change ' + name + '\'s group to ' + select.value + '?')) {
+                const userData = usersData.find(u => u.username === name);
+                if (userData) {
+                    updateUser(name, null, select.value); // Only update group
+                    showAlert('Group updated for ' + name, 'bg-green-600');
+                }
+            } else {
+                select.value = (usersData.find(u => u.username === name) || {}).group || 'Officers';
+            }
+        }
+
+        function deleteEmployee(name) {
+            if (confirm('Delete ' + name + '? This cannot be undone.')) {
+                deleteEmployee(name);
+                deleteUser(name); // Remove from usersData if exists
+                showAlert(name + ' deleted', 'bg-green-600');
+                showEmployees();
+            }
+        }
+
+        function suspendProperty(id) {
+            if (confirm('Suspend property ' + id + '?')) {
+                updateProperty(id, { suspended: true });
+                showAlert('Property ' + id + ' suspended', 'bg-green-600');
+                showProperties();
+            }
+        }
+
+        function activateProperty(id) {
+            if (confirm('Activate property ' + id + '?')) {
+                updateProperty(id, { suspended: false });
+                showAlert('Property ' + id + ' activated', 'bg-green-600');
+                showProperties();
+            }
+        }
     </script>
-</body>
 </html>
