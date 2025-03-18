@@ -566,22 +566,37 @@
 
         function updateStatusDropdown() {
             const user = JSON.parse(localStorage.getItem('user'));
-            const statusDropdown = document.getElementById('statusDropdown');
-            console.log('updateStatusDropdown: Checking - user:', user, 'statusDropdown:', statusDropdown, 'nav innerHTML:', document.querySelector('nav').innerHTML);
+            let statusDropdown = document.getElementById('statusDropdown');
+            console.log('updateStatusDropdown: Checking - user:', user, 'statusDropdown:', statusDropdown, 'nav innerHTML:', document.querySelector('nav')?.innerHTML);
+
+            // Recreate dropdown if not found
             if (!statusDropdown) {
-                console.error('updateStatusDropdown: statusDropdown element not found in DOM');
-                // Single retry with a check to avoid infinite loop
-                setTimeout(() => {
-                    const retryDropdown = document.getElementById('statusDropdown');
-                    if (retryDropdown) {
-                        console.log('updateStatusDropdown: Retry found statusDropdown:', retryDropdown);
-                        updateStatusDropdown(); // Proceed with initialization
+                console.warn('updateStatusDropdown: statusDropdown not found, recreating...');
+                const nav = document.querySelector('nav');
+                if (nav) {
+                    statusDropdown = document.createElement('select');
+                    statusDropdown.id = 'statusDropdown';
+                    statusDropdown.className = 'bg-gray-700 text-white p-1 rounded hidden';
+                    statusDropdown.innerHTML = `
+                        <option value="10-8">10-8 Available</option>
+                        <option value="10-6">10-6 Busy</option>
+                        <option value="10-42">10-42 Off Duty</option>
+                    `;
+                    statusDropdown.onchange = updateStatus;
+                    // Find the position to insert (before the logout button)
+                    const logoutButton = nav.querySelector('button[onclick="logout()"]');
+                    if (logoutButton) {
+                        logoutButton.parentNode.insertBefore(statusDropdown, logoutButton);
                     } else {
-                        console.warn('updateStatusDropdown: Retry failed, element still not found');
+                        nav.appendChild(statusDropdown); // Fallback if logout button not found
                     }
-                }, 100);
-                return;
+                    console.log('updateStatusDropdown: Recreated statusDropdown:', statusDropdown);
+                } else {
+                    console.error('updateStatusDropdown: nav element not found');
+                    return;
+                }
             }
+
             if (!user) {
                 console.warn('updateStatusDropdown: No user logged in, hiding dropdown');
                 statusDropdown.classList.add('hidden');
@@ -678,6 +693,17 @@
                 }
             }
             updateStatusDropdown(); // Call after DOM is ready
+        }
+
+        // Attempt to mitigate async promise error (placeholder, adjust based on scripts.js)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                console.log('Service worker message received:', event.data);
+                if (event.ports && event.ports.length > 0) {
+                    event.ports[0].postMessage('ACK'); // Acknowledge to prevent channel closure
+                }
+                return false; // Avoid indicating async response
+            });
         }
     </script>
 </body>
