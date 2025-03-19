@@ -9,62 +9,12 @@
 </head>
 <body class="min-h-screen p-6">
     <div id="header"></div>
-
-    <div class="tips">
-        <h4 class="text-lg font-semibold">Tips</h4>
-        <p>Overview: See your dispatches or team status. Route: Start your patrol route. Use the sidebar toggles on mobile.</p>
-        <p>Example: Use 10-codes like "10-42" to mark yourself off duty.</p>
-    </div>
-
-    <div class="dashboard-container">
-        <div class="sidebar" id="unitsSidebar">
-            <button class="toggle-sidebar tooltip" onclick="toggleSidebar('unitsSidebar')">
-                Toggle Units
-                <span class="tooltip-text">Show/hide the Active Units sidebar</span>
-            </button>
-            <h3 class="text-lg font-semibold mb-2">Active Units</h3>
-            <select id="unitFilter" class="bg-gray-700 text-white p-2 rounded w-full mb-2 tooltip" onchange="updateUnitsList()">
-                <option value="">All Departments</option>
-                <option value="Supervisors">Supervisors</option>
-                <option value="Dispatchers">Dispatchers</option>
-                <option value="Officers">Officers</option>
-                <span class="tooltip-text">Filter units by department</span>
-            </select>
-            <div id="unitsList"></div>
-        </div>
-        <div class="main-content">
-            <div class="flex space-x-4 mb-4">
-                <button onclick="showTab('overview')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow tooltip">
-                    Overview
-                    <span class="tooltip-text">View team status and active dispatches</span>
-                </button>
-                <button onclick="showTab('route')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow tooltip">
-                    Route
-                    <span class="tooltip-text">Manage your assigned patrol route</span>
-                </button>
-            </div>
-            <div id="dashboardContent"></div>
-            <div class="nato-cheat-sheet">
-                <h4 class="text-lg font-semibold mb-2">NATO Phonetic Cheat Sheet</h4>
-                <p>A - Alpha | B - Bravo | C - Charlie | D - Delta | E - Echo | F - Foxtrot | G - Golf | H - Hotel | I - India | J - Juliet | K - Kilo | L - Lima | M - Mike</p>
-                <p>N - November | O - Oscar | P - Papa | Q - Quebec | R - Romeo | S - Sierra | T - Tango | U - Uniform | V - Victor | W - Whiskey | X - Xray | Y - Yankee | Z - Zulu</p>
-            </div>
-        </div>
-        <div class="sidebar" id="dispatchSidebar">
-            <button class="toggle-sidebar tooltip" onclick="toggleSidebar('dispatchSidebar')">
-                Toggle Dispatches
-                <span class="tooltip-text">Show/hide the Active Dispatches sidebar</span>
-            </button>
-            <h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>
-            <div id="dispatchList"></div>
-        </div>
-    </div>
-
-    <div id="alert" class="hidden"></div>
+    <div id="main-content"></div>
 
     <script src="common.js"></script>
     <script src="header.js"></script>
     <script src="nav.js"></script>
+    <script src="router.js"></script>
     <script src="scripts.js"></script>
     <script src="dashboard.js"></script>
 </body>
