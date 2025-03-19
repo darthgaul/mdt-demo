@@ -4,8 +4,8 @@ body { background-color: #1f2937; color: #f3f4f6; } /* Default dark mode */
 .light-mode .bg-gray-800 { background-color: #e5e7eb; }
 .light-mode .bg-gray-700 { background-color: #d1d5db; }
 .light-mode .text-white { color: #1f2937; }
-.sticky-nav { position: sticky; top: 0; z-index: 20; background-color: #1f2937; } /* Explicit background */
-.light-mode .sticky-nav { background-color: #e5e7eb !important; } /* Ensure light mode applies */
+.sticky-nav { position: sticky; top: 0; z-index: 20; background-color: #1f2937; }
+.light-mode .sticky-nav { background-color: #e5e7eb !important; }
 tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 @media (max-width: 640px) { table { display: block; overflow-x: auto; } }
 .tips { border: 2px solid #60a5fa; background-color: #1e3a8a; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; }
@@ -170,4 +170,168 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     .sticky-nav .flex.items-center.space-x-4 {
         space-x: 1rem;
     }
+}
+
+/* Dashboard-specific styles */
+.dashboard-container {
+    display: flex;
+    gap: 1rem;
+    height: calc(100vh - 120px);
+    min-height: 400px;
+}
+.sidebar {
+    width: 300px;
+    min-width: 250px;
+    background-color: #2d3748;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-y: auto;
+    transition: all 0.3s ease;
+}
+.main-content {
+    flex: 1;
+    min-width: 0;
+    background-color: #2d3748;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-y: auto;
+}
+.light-mode .sidebar, .light-mode .main-content {
+    background-color: #e5e7eb;
+}
+.toggle-sidebar {
+    display: none;
+    background-color: #2563eb;
+    color: white;
+    padding: 0.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    width: 100%;
+}
+.toggle-sidebar:hover {
+    background-color: #1d4ed8;
+}
+.unit-group {
+    margin-bottom: 1rem;
+}
+.unit-group h4 {
+    cursor: pointer;
+    padding: 0.5rem;
+    background-color: #374151;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.unit-group.collapsed .unit-list {
+    display: none;
+}
+.unit-card {
+    background-color: #4b5563;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.light-mode .unit-group h4 {
+    background-color: #d1d5db;
+}
+.light-mode .unit-card {
+    background-color: #e5e7eb;
+}
+.status-tag {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+}
+.nato-cheat-sheet {
+    background-color: #1e3a8a;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+    font-size: 0.875rem;
+}
+.light-mode .nato-cheat-sheet {
+    background-color: #dbeafe;
+    color: #1e3a8a;
+}
+/* Responsive table for Active Dispatches */
+.dispatch-table-container {
+    width: 100%;
+    overflow-x: hidden;
+}
+.dispatch-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto;
+}
+.dispatch-table th,
+.dispatch-table td {
+    padding: 0.75rem;
+    text-align: left;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+.dispatch-table th {
+    background-color: #374151;
+    font-size: 0.875rem;
+}
+.dispatch-table td {
+    font-size: 0.875rem;
+}
+.dispatch-table tr {
+    border-bottom: 1px solid #4b5563;
+}
+/* Navigation bar styling for even spacing */
+.sticky-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 4rem;
+    flex-wrap: wrap;
+    background-color: #1f2937;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+/* Center section (nav tabs) */
+.nav-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-grow: 1;
+    max-width: 70%;
+}
+/* Right section adjustments */
+.sticky-nav .flex.items-center.space-x-4:last-child {
+    display: flex;
+    align-items: center;
+    gap: 2.5rem;
+    flex-shrink: 0;
+}
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .sticky-nav {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    .nav-tabs {
+        display: none;
+    }
+    .sticky-nav .flex.items-center.space-x-4 {
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+    #statusDropdown {
+        width: 100%;
+        padding: 0.5rem;
+        min-width: 150px;
+    }
+}
+/* Desktop and tablet adjustments */
+#statusDropdown {
+    padding: 0.25rem 0.5rem;
+    min-width: 150px;
 }
