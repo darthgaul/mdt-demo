@@ -1,0 +1,26 @@
+<!-- header.html -->
+<nav class="sticky-nav mb-6">
+    <div class="flex items-center space-x-4">
+        <div class="hamburger">
+            <div></div><div></div><div></div>
+        </div>
+        <button id="darkModeToggle"></button>
+    </div>
+    <div class="nav-tabs hidden md:flex">
+        <a href="index.html">Dashboard</a>
+        <a href="properties.html">Properties</a>
+        <a href="people.html">People</a>
+        <a href="dispatch.html">Dispatch</a>
+        <a href="reports.html">Reports</a>
+        <a href="manager.html" id="managerLink">Manager</a>
+    </div>
+    <div class="flex items-center space-x-4">
+        <span id="userInfo" class="text-sm"></span>
+        <select id="statusDropdown" class="bg-gray-700 text-white p-1 rounded hidden" onchange="updateStatus()">
+            <option value="10-8">10-8 Available</option>
+            <option value="10-6">10-6 Busy</option>
+            <option value="10-42">10-42 Off Duty</option>
+        </select>
+        <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
+    </div>
+</nav>
