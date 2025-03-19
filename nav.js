@@ -13,7 +13,7 @@ function initializeNav(page) {
     const isLightMode = document.body.classList.contains('light-mode');
     const navClass = isLightMode ? 'sticky-nav light-mode' : 'sticky-nav';
 
-    // Include statusDropdown only for index.html
+    // Include statusDropdown only for index.html (dashboard)
     const statusDropdownHtml = page === 'index' ? `
         <select id="statusDropdown" class="bg-gray-700 text-white p-1 rounded hidden" onchange="updateStatus()">
             <option value="10-8">10-8 Available</option>
@@ -34,12 +34,12 @@ function initializeNav(page) {
                 <button id="darkModeToggle"></button>
             </div>
             <div class="nav-tabs">
-                <a href="index.html">Dashboard</a>
-                <a href="properties.html">Properties</a>
-                <a href="people.html">People</a>
-                <a href="dispatch.html">Dispatch</a>
-                <a href="reports.html">Reports</a>
-                <a href="manager.html" id="managerLink">Manager</a>
+                <a href="#dashboard" data-tab="dashboard">Dashboard</a>
+                <a href="#properties" data-tab="properties">Properties</a>
+                <a href="#people" data-tab="people">People</a>
+                <a href="#dispatch" data-tab="dispatch">Dispatch</a>
+                <a href="#reports" data-tab="reports">Reports</a>
+                <a href="#manager" data-tab="manager" id="managerLink">Manager</a>
             </div>
             <div class="flex items-center space-x-4">
                 <span id="userInfo" class="text-sm"></span>
@@ -111,4 +111,23 @@ function initializeNav(page) {
             if (nav) nav.classList.add('light-mode');
         }
     }
+
+    // Tab navigation
+    const navLinks = document.querySelectorAll('.nav-tabs a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tab = link.getAttribute('data-tab');
+            navigateToTab(tab);
+            // Update active class
+            navLinks.forEach(l => l.classList.remove('active'));
+            link.classList.add('active');
+        });
+    });
+
+    // Set initial active tab
+    const currentTab = window.location.hash.replace('#', '') || 'dashboard';
+    navigateToTab(currentTab);
+    const activeLink = document.querySelector(`.nav-tabs a[data-tab="${currentTab}"]`);
+    if (activeLink) activeLink.classList.add('active');
 }
