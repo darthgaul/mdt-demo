@@ -168,4 +168,29 @@ function showDispatchTab(tab) {
                     <label class="block text-sm font-medium mb-1" for="property">Property</label>
                     <input type="text" id="property" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter property">
                 </div>
-                <button type="submit" class="bg-green-60
+                 <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Create Dispatch</button>
+            </form>
+        `;
+        // Add form submission logic (to be implemented)
+        const form = document.getElementById('newDispatchForm');
+        if (form) {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const issue = document.getElementById('issue').value;
+                const property = document.getElementById('property').value;
+                const newDispatch = {
+                    id: `D${(dispatchData.length + 1).toString().padStart(3, '0')}`,
+                    issue,
+                    property,
+                    status: 'Pending',
+                    assignedOfficer: null,
+                    dateTime: new Date().toISOString()
+                };
+                dispatchData.push(newDispatch);
+                saveDataToLocalStorage(); // Assumes this function exists in common.js
+                showAlert('Dispatch created successfully', 'bg-green-600');
+                showDispatchTab('active');
+            });
+        }
+    }
+}
