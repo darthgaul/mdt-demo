@@ -122,7 +122,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.5rem 3rem; /* Increased padding for more space */
+            padding: 1.5rem 4rem; /* Increased padding for more space */
             flex-wrap: wrap;
             background-color: #1f2937;
             border-radius: 0.5rem;
@@ -133,14 +133,14 @@
             display: flex;
             justify-content: center;
             gap: 1rem;
-            flex-grow: 1; /* Grow to fill available space */
-            max-width: 70%; /* Prevent overflow */
+            flex-grow: 1;
+            max-width: 70%;
         }
         /* Right section adjustments */
         .sticky-nav .flex.items-center.space-x-4:last-child {
             display: flex;
             align-items: center;
-            gap: 2rem; /* Increased gap for desktop */
+            gap: 2.5rem; /* Increased gap for desktop */
             flex-shrink: 0;
         }
         /* Mobile adjustments */
@@ -156,22 +156,22 @@
             }
             .sticky-nav .flex.items-center.space-x-4 {
                 flex-direction: column;
-                gap: 1rem; /* Adjusted gap for mobile */
+                gap: 1.5rem; /* Adjusted gap for mobile */
             }
             #statusDropdown {
                 width: 100%;
                 padding: 0.5rem;
-                min-width: 150px; /* Ensure minimum width */
+                min-width: 150px;
             }
         }
         /* Desktop and tablet adjustments */
         #statusDropdown {
             padding: 0.25rem 0.5rem;
-            min-width: 150px; /* Ensure minimum width to prevent cramping */
+            min-width: 150px;
         }
         /* Ensure light mode applies to sticky-nav on dashboard */
         .light-mode .sticky-nav {
-            background-color: #e5e7eb !important; /* Force light mode background */
+            background-color: #e5e7eb !important;
         }
     </style>
 </head>
@@ -363,7 +363,6 @@
             if (toggleBtn) {
                 toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
                 toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
-                // Check for existing label before adding
                 let existingLabel = toggleBtn.parentNode.querySelector('span.ml-2');
                 if (!existingLabel) {
                     const label = document.createElement('span');
@@ -380,7 +379,6 @@
                     toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
                     const label = toggleBtn.parentNode.querySelector('span.ml-2');
                     if (label) label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
-                    // Force update for dashboard nav
                     const nav = document.querySelector('.sticky-nav');
                     if (nav) nav.classList.toggle('light-mode', isLightMode);
                     localStorage.setItem('lightMode', isLightMode);
@@ -420,6 +418,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initializeDashboard();
+            setupDropdownObserver();
         });
 
         function toggleSidebar(id) {
