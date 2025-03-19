@@ -9,9 +9,6 @@ if (!isLoaded) {
         loadData(() => {
             isLoaded = true;
             console.log('Index: loadData callback executed');
-            showTab('overview');
-            updateUnitsList();
-            updateDispatchList();
             initializeDashboard();
             setupDropdownObserver();
         });
@@ -22,9 +19,6 @@ if (!isLoaded) {
         window.dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [];
         window.propertiesData = JSON.parse(localStorage.getItem('properties')) || [];
         window.reportsData = JSON.parse(localStorage.getItem('reports')) || [];
-        showTab('overview');
-        updateUnitsList();
-        updateDispatchList();
         initializeDashboard();
         setupDropdownObserver();
     }
@@ -111,12 +105,6 @@ if ('serviceWorker' in navigator) {
         console.error('Service Worker registration failed:', err);
     });
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    initializeNav('index');
-    initializeDashboard();
-    setupDropdownObserver();
-});
 
 function toggleSidebar(id) {
     console.log('Index: Toggling sidebar with id:', id);
@@ -261,78 +249,6 @@ function updateDispatchList() {
     }
 }
 
-function showTab(tab) {
-    console.log('Index: Showing tab:', tab);
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (!user) {
-        console.log('Index: User not logged in, redirecting to login.html');
-        window.location.href = 'login.html';
-        return;
-    }
-
-    const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
-    console.log('Index: isManagerOrSupervisor:', isManagerOrSupervisor, 'User:', user.username);
-    let html = '';
-
-    if (tab === 'overview') {
-        if (isManagerOrSupervisor) {
-            const activeCalls = dispatchData.filter(d => d.status !== 'Completed').length;
-            const loggedInOfficers = usersData.filter(u => employeesData.some(e => e.name === u.username && new Date() >= new Date(e.schedule.start) && new Date() <= new Date(e.schedule.end))).length;
-            html += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Active Calls:</strong> ${activeCalls}</p></div><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Officers Online:</strong> ${loggedInOfficers}</p></div></div>`;
-            html += '<h3 class="text-lg font-semibold mb-2">Officer Status</h3><table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Route</th><th class="p-2 bg-gray-700">Start</th><th class="p-2 bg-gray-700">End</th><th class="p-2 bg-gray-700">Status</th></tr>';
-            employeesData.forEach(emp => {
-                const isOnline = usersData.some(u => u.username === emp.name);
-                const statusColor = isOnline ? 'text-green-500' : 'text-red-500';
-                html += `<tr><td class="p-2 ${statusColor}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2">${emp.status || 'Offline'}</td></tr>`;
-            });
-            html += '</table>';
-            setInterval(checkDispatchTimeouts, 60000);
-        } else {
-            const active = dispatchData.filter(d => d.assignedOfficer === user.username && d.status !== 'Completed');
-            console.log('Index: Active dispatches for user', user.username, ':', active);
-            html += '<h3 class="text-lg font-semibold mb-2">Your Active Dispatches</h3>';
-            html += active.length ? '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">' : '<p class="text-center">No active dispatches assigned to you.</p>';
-            active.forEach(disp => {
-                const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500', Completed: 'text-green-500' }[disp.status];
-                html += `<div class="bg-gray-700 p-3 rounded shadow"><p><strong>Issue:</strong> ${disp.issue}</p><p><strong>Property:</strong> ${disp.property}</p><p><strong>Status:</strong> <span class="${statusColor}">${disp.status}</span></p></div>`;
-            });
-            if (active.length) html += '</div>';
-        }
-    } else if (tab === 'route') {
-        const officer = employeesData.find(e => e.name === user.username);
-        const routeNum = officer ? parseInt(officer.route.split('-')[1]) : 5;
-        const hitsPerOfficer = routeNum === 5 ? 40 : (routeNum === 4 ? 50 : 60);
-        const activeProps = propertiesData.filter(p => !p.suspended);
-        const propsPerOfficer = Math.ceil(activeProps.length / routeNum);
-        const startIdx = employeesData.findIndex(e => e.name === user.username) * propsPerOfficer;
-        const routeProps = activeProps.slice(startIdx, startIdx + propsPerOfficer);
-
-        html += `<h3 class="text-lg font-semibold mb-2">Your Route: ${officer ? officer.route : 'Unassigned'} (${hitsPerOfficer} hits)</h3>`;
-        html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Hits Done</th><th class="p-2 bg-gray-700">Actions</th></tr>';
-        routeProps.forEach(prop => {
-            const hitsDone = reportsData.filter(r => r.property === prop.id && r.type === 'Patrol Hit').length;
-            html += `<tr><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${hitsDone}/${prop.minHits}</td><td class="p-2 space-x-2">`;
-            html += `<button onclick="navigate('${prop.address}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow tooltip">
-                Navigate
-                <span class="tooltip-text">Open Google Maps to navigate to this property</span>
-            </button>`;
-            html += `<button onclick="arrive('${prop.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow tooltip">
-                Arrived
-                <span class="tooltip-text">Mark arrival and log a patrol hit</span>
-            </button>`;
-            html += `</td></tr>`;
-        });
-        html += '</table>';
-    }
-    const dashboardContent = document.getElementById('dashboardContent');
-    if (dashboardContent) {
-        console.log('Index: Rendering dashboard content with HTML:', html);
-        dashboardContent.innerHTML = html;
-    } else {
-        console.error('Index: dashboardContent element not found');
-    }
-}
-
 function navigate(address) {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(address)}`, '_blank');
 }
@@ -353,7 +269,7 @@ function arrive(propId) {
     if (hits >= prop.minHits * 2) {
         const nextProp = propertiesData.find(p => p.id > propId && !p.suspended);
         if (nextProp) alert(`Property ${prop.propertyName} complete! Navigate to ${nextProp.propertyName}?`);
-        showTab('route');
+        showDashboardTab('route');
     }
 }
 
