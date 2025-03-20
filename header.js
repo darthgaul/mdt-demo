@@ -7,9 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
             .then(response => response.text())
             .then(data => {
                 headerDiv.innerHTML = data;
-                // Determine the current page for statusDropdown
+                // Determine the current page for navigation
                 const page = window.location.pathname.includes('index.html') ? 'index' : '';
-                initializeNav(page);
+                // Delay initializeNav to ensure DOM is updated
+                setTimeout(() => {
+                    initializeNav(page);
+                }, 0);
             })
             .catch(error => console.error('Error loading header:', error));
     }
