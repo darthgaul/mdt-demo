@@ -28,36 +28,52 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     align-items: center;
     padding: 0.5rem 1rem;
     background-color: #1f2937;
-    border-bottom: 2px solid #2563eb;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 20;
 }
 .nav-tabs {
     display: flex;
     gap: 0;
     flex-grow: 1;
     justify-content: center;
+    max-width: 800px; /* Limit the width of the tabs for better centering */
+    margin: 0 auto;
 }
 .tab-link {
     padding: 0.75rem 1.5rem;
     text-decoration: none;
     color: #d1d5db;
     background-color: #2d3748;
-    border-bottom: none;
-    transition: background-color 0.3s ease, color 0.3s ease;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+    position: relative;
+    z-index: 1;
 }
 .tab-link:hover {
     background-color: #4b5563;
     color: #f3f4f6;
+    transform: translateY(-2px);
 }
 .tab-link.active {
-    background-color: #2563eb;
+    background-color: #2d3748; /* Match the content background for seamless integration */
     color: #ffffff;
     font-weight: 600;
-    border-bottom: 2px solid #2563eb;
+    border-bottom: none;
+    z-index: 2;
+}
+.tab-link.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #2d3748; /* Match the content background */
+    z-index: 3;
 }
 .light-mode .sticky-nav {
     background-color: #e5e7eb;
-    border-bottom: 2px solid #3b82f6;
 }
 .light-mode .tab-link {
     color: #4b5563;
@@ -67,9 +83,30 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     background-color: #b0b7c0;
 }
 .light-mode .tab-link.active {
-    background-color: #3b82f6;
-    color: #ffffff;
-    border-bottom: 2px solid #3b82f6;
+    background-color: #e5e7eb; /* Match the light mode content background */
+    color: #1f2937;
+}
+.light-mode .tab-link.active::after {
+    background-color: #e5e7eb; /* Match the light mode content background */
+}
+
+/* Left section (hamburger and dark mode toggle) */
+.sticky-nav .flex.items-center.space-x-4:first-child {
+    display: flex;
+    align-items: center;
+    gap: 1rem; /* Proper spacing for dark mode toggle */
+}
+
+/* Right section (user info and logout) */
+.sticky-nav .flex.items-center.space-x-4:last-child {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem; /* Increased spacing for better fit */
+    flex-shrink: 0;
+}
+#userInfo {
+    white-space: nowrap; /* Prevent "Logged in as" text from wrapping */
+    font-size: 0.875rem; /* Slightly smaller font for better fit */
 }
 
 /* Hamburger menu styles */
@@ -148,16 +185,23 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
         border-radius: 0;
     }
     .tab-link.active {
-        border-bottom: 2px solid #2563eb;
+        border-bottom: none;
+    }
+    .tab-link.active::after {
+        display: none; /* Remove the pseudo-element on mobile for simplicity */
     }
     .light-mode .nav-tabs {
         background: #e5e7eb;
     }
-    .light-mode .tab-link.active {
-        border-bottom: 2px solid #3b82f6;
-    }
     .sticky-nav .flex.items-center.space-x-4 {
-        space-x: 1rem;
+        gap: 1rem;
+    }
+    .sticky-nav .flex.items-center.space-x-4:last-child {
+        flex-direction: row;
+        gap: 1rem;
+    }
+    #userInfo {
+        font-size: 0.75rem; /* Even smaller on mobile */
     }
 }
 
@@ -200,6 +244,7 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     padding: 1rem;
     border-radius: 0.5rem;
     overflow-y: auto;
+    transition: opacity 0.3s ease; /* Smooth transition for tab content */
 }
 .light-mode .sidebar, .light-mode .main-content {
     background-color: #e5e7eb;
@@ -287,46 +332,4 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 }
 .dispatch-table tr {
     border-bottom: 1px solid #4b5563;
-}
-/* Navigation bar styling for even spacing */
-.sticky-nav {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem 4rem;
-    flex-wrap: wrap;
-    background-color: #1f2937;
-    border-radius: 0.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-/* Center section (nav tabs) */
-.nav-tabs {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-    flex-grow: 1;
-    max-width: 70%;
-}
-/* Right section adjustments */
-.sticky-nav .flex.items-center.space-x-4:last-child {
-    display: flex;
-    align-items: center;
-    gap: 2.5rem;
-    flex-shrink: 0;
-}
-/* Mobile adjustments */
-@media (max-width: 768px) {
-    .sticky-nav {
-        flex-direction: column;
-        align-items: center;
-        gap: 1rem;
-        padding: 1rem;
-    }
-    .nav-tabs {
-        display: none;
-    }
-    .sticky-nav .flex.items-center.space-x-4 {
-        flex-direction: column;
-        gap: 1.5rem;
-    }
 }
