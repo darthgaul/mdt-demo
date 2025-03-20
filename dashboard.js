@@ -1,7 +1,6 @@
 // dashboard.js - Dashboard-specific logic
 
 let isLoaded = false;
-const originalStatusDropdown = document.getElementById('statusDropdown');
 
 if (!isLoaded) {
     console.log('Index: Calling loadData for Dashboard');
@@ -10,7 +9,6 @@ if (!isLoaded) {
             isLoaded = true;
             console.log('Index: loadData callback executed');
             initializeDashboard();
-            setupDropdownObserver();
         });
     } else {
         console.error('Index: loadData not defined, using fallback');
@@ -20,61 +18,10 @@ if (!isLoaded) {
         window.propertiesData = JSON.parse(localStorage.getItem('properties')) || [];
         window.reportsData = JSON.parse(localStorage.getItem('reports')) || [];
         initializeDashboard();
-        setupDropdownObserver();
     }
 } else {
     console.log('Index: Data already loaded');
     initializeDashboard();
-    setupDropdownObserver();
-}
-
-function setupDropdownObserver() {
-    const nav = document.querySelector('nav');
-    if (!nav) {
-        console.error('setupDropdownObserver: nav not found');
-        return;
-    }
-
-    const observer = new MutationObserver((mutations) => {
-        let statusDropdown = document.getElementById('statusDropdown');
-        if (!statusDropdown) {
-            console.log('MutationObserver: statusDropdown missing, restoring');
-            const logoutButton = nav.querySelector('button[onclick="logout()"]');
-            if (logoutButton && originalStatusDropdown) {
-                logoutButton.parentNode.insertBefore(originalStatusDropdown.cloneNode(true), logoutButton);
-                statusDropdown = document.getElementById('statusDropdown');
-                statusDropdown.onchange = updateStatus;
-                updateStatusDropdown();
-            }
-        }
-    });
-
-    observer.observe(nav, { childList: true, subtree: true });
-    console.log('MutationObserver: Observing nav for changes');
-}
-
-function updateStatusDropdown() {
-    const user = JSON.parse(localStorage.getItem('user'));
-    let statusDropdown = document.getElementById('statusDropdown');
-    console.log('updateStatusDropdown: user:', user, 'statusDropdown:', statusDropdown);
-
-    if (!statusDropdown) {
-        console.warn('updateStatusDropdown: statusDropdown not found');
-        return;
-    }
-
-    if (!user) {
-        statusDropdown.classList.add('hidden');
-        return;
-    }
-
-    if (['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
-        statusDropdown.classList.remove('hidden');
-        const employee = employeesData.find(e => e.name === user.username);
-        statusDropdown.value = employee?.status || '10-8';
-    } else {
-        statusDropdown.classList.add('hidden');
-    }
 }
 
 function initializeDashboard() {
@@ -85,25 +32,6 @@ function initializeDashboard() {
         const managerLink = document.getElementById('managerLink');
         if (managerLink && user.group !== 'Managers') managerLink.style.display = 'none';
     }
-    updateStatusDropdown();
-}
-
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.addEventListener('message', (event) => {
-        console.log('Service worker message received:', event.data);
-        if (event.ports && event.ports.length > 0) {
-            event.ports[0].postMessage('ACK').catch((err) => {
-                console.error('Failed to send ACK to service worker:', err);
-            });
-        }
-        return false;
-    });
-
-    navigator.serviceWorker.ready.then((registration) => {
-        console.log('Service Worker registered:', registration);
-    }).catch((err) => {
-        console.error('Service Worker registration failed:', err);
-    });
 }
 
 function toggleSidebar(id) {
@@ -147,7 +75,7 @@ function updateUnitsList() {
             groupedUnits[dept].forEach(emp => {
                 const isOnline = usersData.some(u => u.username === emp.name);
                 const currentTime = new Date();
-                const isOnDuty = currentTime >= new Date(emp.schedule.start) && currentTime <= new Date(emp.schedule.end);
+                const isOnDuty = currentTime >= new Date(emp.schedule.start) && new Date() <= new Date(emp.schedule.end);
                 let status = emp.status || 'Offline';
                 let statusClass = 'bg-red-500';
                 if (isOnline && isOnDuty) {
