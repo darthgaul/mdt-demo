@@ -13,16 +13,7 @@ function initializeNav(page) {
     const isLightMode = document.body.classList.contains('light-mode');
     const navClass = isLightMode ? 'sticky-nav light-mode' : 'sticky-nav';
 
-    // Include statusDropdown only for index.html (dashboard)
-    const statusDropdownHtml = page === 'index' ? `
-        <select id="statusDropdown" class="bg-gray-700 text-white p-1 rounded hidden" onchange="updateStatus()">
-            <option value="10-8">10-8 Available</option>
-            <option value="10-6">10-6 Busy</option>
-            <option value="10-42">10-42 Off Duty</option>
-        </select>
-    ` : '';
-
-    // Populate navigation bar
+    // Populate navigation bar with tabbed design
     nav.innerHTML = `
         <div class="flex justify-between items-center">
             <div class="flex items-center space-x-4">
@@ -33,17 +24,16 @@ function initializeNav(page) {
                 </div>
                 <button id="darkModeToggle"></button>
             </div>
-            <div class="nav-tabs">
-                <a href="index.html#dashboard" data-tab="dashboard">Dashboard</a>
-                <a href="index.html#properties" data-tab="properties">Properties</a>
-                <a href="index.html#people" data-tab="people">People</a>
-                <a href="index.html#dispatch" data-tab="dispatch">Dispatch</a>
-                <a href="index.html#reports" data-tab="reports">Reports</a>
-                <a href="index.html#manager" data-tab="manager" id="managerLink">Manager</a>
+            <div class="nav-tabs flex space-x-2">
+                <a href="index.html#dashboard" data-tab="dashboard" class="tab-link px-4 py-2 rounded-t-lg">Dashboard</a>
+                <a href="index.html#properties" data-tab="properties" class="tab-link px-4 py-2 rounded-t-lg">Properties</a>
+                <a href="index.html#people" data-tab="people" class="tab-link px-4 py-2 rounded-t-lg">People</a>
+                <a href="index.html#dispatch" data-tab="dispatch" class="tab-link px-4 py-2 rounded-t-lg">Dispatch</a>
+                <a href="index.html#reports" data-tab="reports" class="tab-link px-4 py-2 rounded-t-lg">Reports</a>
+                <a href="index.html#manager" data-tab="manager" id="managerLink" class="tab-link px-4 py-2 rounded-t-lg">Manager</a>
             </div>
             <div class="flex items-center space-x-4">
                 <span id="userInfo" class="text-sm"></span>
-                ${statusDropdownHtml}
                 <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
             </div>
         </div>
