@@ -103,7 +103,6 @@ function showDashboard() {
     `;
     // Reinitialize dashboard-specific logic
     initializeDashboard();
-    setupDropdownObserver();
     // Load initial tab content
     showDashboardTab('overview');
     // Update units and dispatch lists after DOM is rendered
