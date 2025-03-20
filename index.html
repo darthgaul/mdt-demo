@@ -11,11 +11,47 @@
     <div id="header"></div>
     <div id="main-content"></div>
 
+    <!-- Floating Action Button for Status Dropdown -->
+    <div id="statusFab" class="fixed bottom-6 right-6 z-50">
+        <button id="statusFabButton" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 19.071a2 2 0 01-2.828 0 2 2 0 010-2.828l12-12a2 2 0 012.828 0 2 2 0 010 2.828l-12 12z"></path>
+            </svg>
+        </button>
+        <div id="statusDropdownContainer" class="absolute bottom-14 right-0 hidden bg-gray-800 rounded-lg shadow-lg p-2">
+            <select id="statusDropdown" class="bg-gray-700 text-white p-2 rounded w-48" onchange="updateStatus()">
+                <option value="10-8">10-8 Available</option>
+                <option value="10-6">10-6 Busy</option>
+                <option value="10-42">10-42 Off Duty</option>
+            </select>
+        </div>
+    </div>
+
     <script src="common.js"></script>
     <script src="header.js"></script>
     <script src="nav.js"></script>
     <script src="router.js"></script>
     <script src="scripts.js"></script>
     <script src="dashboard.js"></script>
+    <script>
+        // Toggle FAB dropdown
+        const fabButton = document.getElementById('statusFabButton');
+        const dropdownContainer = document.getElementById('statusDropdownContainer');
+        fabButton.addEventListener('click', () => {
+            dropdownContainer.classList.toggle('hidden');
+        });
+
+        // Update status dropdown visibility based on user group
+        const user = JSON.parse(localStorage.getItem('user'));
+        const statusFab = document.getElementById('statusFab');
+        if (user && ['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
+            statusFab.classList.remove('hidden');
+            const statusDropdown = document.getElementById('statusDropdown');
+            const employee = employeesData.find(e => e.name === user.username);
+            statusDropdown.value = employee?.status || '10-8';
+        } else {
+            statusFab.classList.add('hidden');
+        }
+    </script>
 </body>
 </html>
