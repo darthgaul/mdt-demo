@@ -1234,3 +1234,15 @@ function editEmployee(name) {
         const updates = {
             route: document.getElementById(`route-${name}`).value,
             schedule: {
+                start: new Date(document.getElementById(`start-${name}`).value).toISOString(),
+                end: new Date(document.getElementById(`end-${name}`).value).toISOString()
+            },
+            location: document.getElementById(`location-${name}`).value,
+            department: document.getElementById(`department-${name}`).value,
+            status: document.getElementById(`status-${name}`).value
+        };
+        updateEmployee(name, updates);
+        showAlert('Employee updated successfully', 'bg-green-600');
+        filterEmployees();
+    });
+}
