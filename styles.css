@@ -76,10 +76,11 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     transform: translateY(-2px);
 }
 .tab-link.active {
-    background-color: #2d3748; /* Match the content background for seamless integration */
+    background-color: #4b5563; /* Lighter shade for active tab in dark mode */
     color: #ffffff;
-    font-weight: 600;
-    border-bottom: none;
+    font-weight: 700; /* Bolder font */
+    text-shadow: 0 0 4px rgba(255, 255, 255, 0.3); /* Subtle text shadow */
+    border-bottom: 2px solid #3b82f6; /* Blue underline for active tab */
     z-index: 2;
 }
 .tab-link.active::after {
@@ -89,7 +90,7 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     left: 0;
     right: 0;
     height: 2px;
-    background-color: #2d3748; /* Match the content background */
+    background-color: #2d3748; /* Match the content background for seamless integration */
     z-index: 3;
 }
 .light-mode .sticky-nav {
@@ -103,8 +104,11 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     background-color: #b0b7c0;
 }
 .light-mode .tab-link.active {
-    background-color: #e5e7eb; /* Match the light mode content background */
+    background-color: #93c5fd; /* Subtle blue for active tab in light mode */
     color: #1f2937;
+    font-weight: 700;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+    border-bottom: 2px solid #2563eb; /* Blue underline for active tab */
 }
 .light-mode .tab-link.active::after {
     background-color: #e5e7eb; /* Match the light mode content background */
@@ -235,6 +239,7 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     }
     .tab-link.active {
         border-bottom: none;
+        border-bottom: 2px solid #3b82f6; /* Keep the underline on mobile */
     }
     .tab-link.active::after {
         display: none; /* Remove the pseudo-element on mobile for simplicity */
