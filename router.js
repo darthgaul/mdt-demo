@@ -19,16 +19,16 @@ function navigateToTab(tab) {
             showDispatch();
             break;
         case 'properties':
-            mainContent.innerHTML = '<h2>Properties</h2><p>Properties content will be implemented here.</p>';
+            showProperties();
             break;
         case 'people':
-            mainContent.innerHTML = '<h2>People</h2><p>People content will be implemented here.</p>';
+            showPeople();
             break;
         case 'reports':
-            mainContent.innerHTML = '<h2>Reports</h2><p>Reports content will be implemented here.</p>';
+            showReports();
             break;
         case 'manager':
-            mainContent.innerHTML = '<h2>Manager</h2><p>Manager content will be implemented here.</p>';
+            showManager();
             break;
         default:
             showDashboard();
@@ -298,6 +298,275 @@ function showDispatchTab(tab) {
         }
     }
     dispatchContent.innerHTML = html;
+}
+
+function showProperties() {
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+        <h2 class="text-2xl font-bold mb-4">Properties</h2>
+        <div class="tips">
+            <h4 class="text-lg font-semibold">Tips</h4>
+            <p>Search: Filter properties by name or address. Click a property to view details (e.g., reports, people). Managers can add/edit properties.</p>
+        </div>
+        <div class="mb-4">
+            <input type="text" id="propertySearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search properties..." onkeyup="filterProperties()">
+        </div>
+        <div id="propertyList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        <div id="alert" class="hidden"></div>
+    `;
+    // Populate properties
+    filterProperties();
+}
+
+function filterProperties() {
+    const search = document.getElementById('propertySearch')?.value.toLowerCase() || '';
+    const properties = propertiesData.filter(p => 
+        p.propertyName.toLowerCase().includes(search) || 
+        p.address.toLowerCase().includes(search)
+    );
+    let html = '';
+    properties.forEach(prop => {
+        const reports = reportsData.filter(r => r.property === prop.id);
+        html += `
+            <div class="bg-gray-700 p-3 rounded shadow">
+                <p><strong>${prop.propertyName}</strong></p>
+                <p><strong>Address:</strong> ${prop.address}${prop.apt ? ', ' + prop.apt : ''}</p>
+                <p><strong>Min Hits:</strong> ${prop.minHits}</p>
+                <p><strong>Notes:</strong> ${prop.notes || 'N/A'}</p>
+                <p><strong>Reports:</strong> ${reports.length}</p>
+                <div class="flex space-x-2 mt-2">
+                    <a href="prop${prop.id.toLowerCase()}.html" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow">View Details</a>
+                </div>
+            </div>
+        `;
+    });
+    const propertyList = document.getElementById('propertyList');
+    if (propertyList) {
+        propertyList.innerHTML = html || '<p class="text-center">No properties found.</p>';
+    }
+}
+
+function showPeople() {
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+        <h2 class="text-2xl font-bold mb-4">People</h2>
+        <div class="tips">
+            <h4 class="text-lg font-semibold">Tips</h4>
+            <p>Search: Filter people by name or property. Click a person to view details (e.g., reports, CTN status). Managers can add/edit people.</p>
+        </div>
+        <div class="mb-4">
+            <input type="text" id="peopleSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search people..." onkeyup="filterPeople()">
+        </div>
+        <div id="peopleList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        <div id="alert" class="hidden"></div>
+    `;
+    // Populate people
+    filterPeople();
+}
+
+function filterPeople() {
+    const search = document.getElementById('peopleSearch')?.value.toLowerCase() || '';
+    const people = peopleData.filter(p => 
+        p.name.toLowerCase().includes(search) || 
+        p.property.toLowerCase().includes(search)
+    );
+    let html = '';
+    people.forEach(person => {
+        const behaviorClass = {
+            Friendly: 'friendly-text',
+            Cautious: 'cautious-text',
+            Hostile: 'hostile-text',
+            Unknown: 'unknown-text'
+        }[person.behavior] || 'unknown-text';
+        const ctnClass = person.ctnStatus === 'CTN Issued' ? 'ctn-active' : '';
+        html += `
+            <div class="bg-gray-700 p-3 rounded shadow ${ctnClass}">
+                <p><strong class="name">${person.name}</strong></p>
+                <p><strong>DOB:</strong> ${person.dob}</p>
+                <p><strong>Status:</strong> ${person.status}</p>
+                <p><strong>Property:</strong> ${person.property}</p>
+                <p><strong>Behavior:</strong> <span class="${behaviorClass}">${person.behavior}</span></p>
+                <p><strong>CTN Status:</strong> ${person.ctnStatus}</p>
+            </div>
+        `;
+    });
+    const peopleList = document.getElementById('peopleList');
+    if (peopleList) {
+        peopleList.innerHTML = html || '<p class="text-center">No people found.</p>';
+    }
+}
+
+function showReports() {
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+        <h2 class="text-2xl font-bold mb-4">Reports</h2>
+        <div class="tips">
+            <h4 class="text-lg font-semibold">Tips</h4>
+            <p>Search: Filter reports by case number, property, or type. Managers can add/edit reports.</p>
+        </div>
+        <div class="mb-4">
+            <input type="text" id="reportSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search reports..." onkeyup="filterReports()">
+        </div>
+        <div id="reportList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        <div id="alert" class="hidden"></div>
+    `;
+    // Populate reports
+    filterReports();
+}
+
+function filterReports() {
+    const search = document.getElementById('reportSearch')?.value.toLowerCase() || '';
+    const reports = reportsData.filter(r => 
+        r.caseNumber.toLowerCase().includes(search) || 
+        r.property.toLowerCase().includes(search) || 
+        r.type.toLowerCase().includes(search)
+    );
+    let html = '';
+    reports.forEach(report => {
+        html += `
+            <div class="bg-gray-700 p-3 rounded shadow">
+                <p><strong>Case #:</strong> ${report.caseNumber}</p>
+                <p><strong>Date:</strong> ${new Date(report.dateTime).toLocaleString()}</p>
+                <p><strong>Property:</strong> ${report.property}</p>
+                <p><strong>Type:</strong> ${report.type}</p>
+                <p><strong>Narrative:</strong> ${report.narrative}</p>
+                <p><strong>Officer:</strong> ${report.officer}</p>
+            </div>
+        `;
+    });
+    const reportList = document.getElementById('reportList');
+    if (reportList) {
+        reportList.innerHTML = html || '<p class="text-center">No reports found.</p>';
+    }
+}
+
+function showManager() {
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+        <h2 class="text-2xl font-bold mb-4">Manager Dashboard</h2>
+        <div class="tips">
+            <h4 class="text-lg font-semibold">Tips</h4>
+            <p>Users: Add/edit/delete users. Employees: Manage employee schedules and routes. Properties: Add/edit properties.</p>
+        </div>
+        <div class="flex space-x-4 mb-4">
+            <button onclick="showManagerTab('users')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Users</button>
+            <button onclick="showManagerTab('employees')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Employees</button>
+            <button onclick="showManagerTab('properties')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Properties</button>
+        </div>
+        <div id="managerContent"></div>
+        <div id="alert" class="hidden"></div>
+    `;
+    // Initialize manager tab (default to users)
+    showManagerTab('users');
+}
+
+function showManagerTab(tab) {
+    const managerContent = document.getElementById('managerContent');
+    if (!managerContent) return;
+
+    let html = '';
+
+    if (tab === 'users') {
+        html += '<h3 class="text-lg font-semibold mb-2">Manage Users</h3>';
+        html += `
+            <div class="mb-4">
+                <input type="text" id="userSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search users..." onkeyup="filterUsers()">
+            </div>
+            <div id="userList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        `;
+        managerContent.innerHTML = html;
+        filterUsers();
+    } else if (tab === 'employees') {
+        html += '<h3 class="text-lg font-semibold mb-2">Manage Employees</h3>';
+        html += `
+            <div class="mb-4">
+                <input type="text" id="employeeSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search employees..." onkeyup="filterEmployees()">
+            </div>
+            <div id="employeeList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        `;
+        managerContent.innerHTML = html;
+        filterEmployees();
+    } else if (tab === 'properties') {
+        html += '<h3 class="text-lg font-semibold mb-2">Manage Properties</h3>';
+        html += `
+            <div class="mb-4">
+                <input type="text" id="propertySearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search properties..." onkeyup="filterProperties()">
+            </div>
+            <div id="propertyList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        `;
+        managerContent.innerHTML = html;
+        filterProperties();
+    }
+}
+
+function filterUsers() {
+    const search = document.getElementById('userSearch')?.value.toLowerCase() || '';
+    const users = usersData.filter(u => u.username.toLowerCase().includes(search));
+    let html = '';
+    users.forEach(user => {
+        html += `
+            <div class="bg-gray-700 p-3 rounded shadow">
+                <p><strong>Username:</strong> ${user.username}</p>
+                <p><strong>Group:</strong> ${user.group}</p>
+                <div class="flex space-x-2 mt-2">
+                    <button onclick="editUser('${user.username}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
+                    <button onclick="deleteUser('${user.username}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
+                </div>
+            </div>
+        `;
+    });
+    const userList = document.getElementById('userList');
+    if (userList) {
+        userList.innerHTML = html || '<p class="text-center">No users found.</p>';
+    }
+}
+
+function editUser(username) {
+    const newPassword = prompt('Enter new password:', '');
+    const newGroup = prompt('Enter new group (Managers, Supervisors, Officers, Dispatchers):', '');
+    if (newPassword || newGroup) {
+        updateUser(username, newPassword, newGroup);
+        showAlert('User updated successfully', 'bg-green-600');
+        filterUsers();
+    }
+}
+
+function filterEmployees() {
+    const search = document.getElementById('employeeSearch')?.value.toLowerCase() || '';
+    const employees = employeesData.filter(e => e.name.toLowerCase().includes(search));
+    let html = '';
+    employees.forEach(emp => {
+        html += `
+            <div class="bg-gray-700 p-3 rounded shadow">
+                <p><strong>Name:</strong> ${emp.name}</p>
+                <p><strong>Route:</strong> ${emp.route}</p>
+                <p><strong>Schedule:</strong> ${new Date(emp.schedule.start).toLocaleString()} - ${new Date(emp.schedule.end).toLocaleString()}</p>
+                <p><strong>Location:</strong> ${emp.location}</p>
+                <p><strong>Department:</strong> ${emp.department}</p>
+                <p><strong>Status:</strong> ${emp.status}</p>
+                <div class="flex space-x-2 mt-2">
+                    <button onclick="editEmployee('${emp.name}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
+                    <button onclick="deleteEmployee('${emp.name}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
+                </div>
+            </div>
+        `;
+    });
+    const employeeList = document.getElementById('employeeList');
+    if (employeeList) {
+        employeeList.innerHTML = html || '<p class="text-center">No employees found.</p>';
+    }
+}
+
+function editEmployee(name) {
+    const newRoute = prompt('Enter new route:', '');
+    const newLocation = prompt('Enter new location:', '');
+    const newDepartment = prompt('Enter new department:', '');
+    const newStatus = prompt('Enter new status (e.g., 10-8, 10-6, 10-42):', '');
+    if (newRoute || newLocation || newDepartment || newStatus) {
+        updateEmployee(name, { route: newRoute, location: newLocation, department: newDepartment, status: newStatus });
+        showAlert('Employee updated successfully', 'bg-green-600');
+        filterEmployees();
+    }
 }
 
 function assignOfficer(select, dispatchId) {
