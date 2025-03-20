@@ -309,14 +309,22 @@ function showDispatchTab(tab) {
 
 function showProperties() {
     const mainContent = document.getElementById('main-content');
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isManager = user && user.group === 'Managers';
     mainContent.innerHTML = `
         <h2 class="text-2xl font-bold mb-4">Properties</h2>
         <div class="tips">
             <h4 class="text-lg font-semibold">Tips</h4>
-            <p>Search: Filter properties by name or address. Managers can add/edit properties.</p>
+            <p>Search: Filter properties by name, address, or suspended status. Managers can add/edit/delete properties.</p>
         </div>
-        <div class="mb-4">
+        <div class="mb-4 flex space-x-4">
             <input type="text" id="propertySearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search properties..." onkeyup="filterProperties()">
+            <select id="propertySuspendedFilter" class="bg-gray-700 text-white p-2 rounded" onchange="filterProperties()">
+                <option value="">All</option>
+                <option value="active">Active</option>
+                <option value="suspended">Suspended</option>
+            </select>
+            ${isManager ? `<button onclick="addNewProperty()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New Property</button>` : ''}
         </div>
         <div id="propertyList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         <div id="alert" class="hidden"></div>
@@ -327,9 +335,10 @@ function showProperties() {
 
 function filterProperties() {
     const search = document.getElementById('propertySearch')?.value.toLowerCase() || '';
-    const properties = propertiesData.filter(p => 
-        p.propertyName.toLowerCase().includes(search) || 
-        p.address.toLowerCase().includes(search)
+    const suspendedFilter = document.getElementById('propertySuspendedFilter')?.value || '';
+    let properties = propertiesData.filter(p => 
+        (p.propertyName.toLowerCase().includes(search) || p.address.toLowerCase().includes(search)) &&
+        (suspendedFilter === '' || (suspendedFilter === 'active' && !p.suspended) || (suspendedFilter === 'suspended' && p.suspended))
     );
     let html = '';
     const user = JSON.parse(localStorage.getItem('user'));
@@ -344,9 +353,11 @@ function filterProperties() {
                 <p><strong>Min Hits:</strong> ${prop.minHits}</p>
                 <p><strong>Notes:</strong> ${prop.notes || 'N/A'}</p>
                 <p><strong>Reports:</strong> ${reports.length}</p>
+                <p><strong>Status:</strong> ${prop.suspended ? 'Suspended' : 'Active'}</p>
                 ${isManager ? `
                 <div class="flex space-x-2 mt-2">
                     <button onclick="editProperty('${prop.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
+                    <button onclick="confirmDeleteProperty('${prop.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
                 </div>
                 ` : ''}
             </div>
@@ -358,6 +369,65 @@ function filterProperties() {
     }
 }
 
+function addNewProperty() {
+    const newId = `PROP${(propertiesData.length + 1).toString().padStart(3, '0')}`;
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+        <h2 class="text-2xl font-bold mb-4">Add New Property</h2>
+        <form id="addPropertyForm" class="edit-form">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="propertyName">Property Name</label>
+                <input type="text" id="propertyName" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter property name">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="address">Address</label>
+                <input type="text" id="address" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter address">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="apt">Apartment</label>
+                <input type="text" id="apt" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter apartment (optional)">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="minHits">Min Hits</label>
+                <input type="number" id="minHits" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter min hits">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="notes">Notes</label>
+                <textarea id="notes" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter notes (optional)"></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="suspended">Suspended</label>
+                <select id="suspended" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="false">No</option>
+                    <option value="true">Yes</option>
+                </select>
+            </div>
+            <div class="flex space-x-2">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add Property</button>
+                <button type="button" onclick="showProperties()" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
+            </div>
+        </form>
+        <div id="alert" class="hidden"></div>
+    `;
+
+    const form = document.getElementById('addPropertyForm');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newProperty = {
+            id: newId,
+            propertyName: document.getElementById('propertyName').value,
+            address: document.getElementById('address').value,
+            apt: document.getElementById('apt').value,
+            minHits: parseInt(document.getElementById('minHits').value),
+            notes: document.getElementById('notes').value,
+            suspended: document.getElementById('suspended').value === 'true'
+        };
+        addProperty(newProperty);
+        showAlert('Property added successfully', 'bg-green-600');
+        showProperties();
+    });
+}
+
 function editProperty(id) {
     const prop = propertiesData.find(p => p.id === id);
     if (!prop) return;
@@ -365,25 +435,32 @@ function editProperty(id) {
     const card = document.getElementById(`property-${id}`);
     card.innerHTML = `
         <form id="editPropertyForm-${id}" class="edit-form">
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="propertyName-${id}">Property Name</label>
                 <input type="text" id="propertyName-${id}" value="${prop.propertyName}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="address-${id}">Address</label>
                 <input type="text" id="address-${id}" value="${prop.address}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="apt-${id}">Apartment</label>
                 <input type="text" id="apt-${id}" value="${prop.apt || ''}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="minHits-${id}">Min Hits</label>
                 <input type="number" id="minHits-${id}" value="${prop.minHits}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="notes-${id}">Notes</label>
                 <textarea id="notes-${id}" class="bg-gray-700 text-white p-2 rounded w-full">${prop.notes || ''}</textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="suspended-${id}">Suspended</label>
+                <select id="suspended-${id}" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="false" ${!prop.suspended ? 'selected' : ''}>No</option>
+                    <option value="true" ${prop.suspended ? 'selected' : ''}>Yes</option>
+                </select>
             </div>
             <div class="flex space-x-2">
                 <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Save</button>
@@ -402,7 +479,7 @@ function editProperty(id) {
             apt: document.getElementById(`apt-${id}`).value,
             minHits: parseInt(document.getElementById(`minHits-${id}`).value),
             notes: document.getElementById(`notes-${id}`).value,
-            suspended: prop.suspended // Preserve existing value
+            suspended: document.getElementById(`suspended-${id}`).value === 'true'
         };
         updateProperty(prop.id, updatedProperty);
         showAlert('Property updated successfully', 'bg-green-600');
@@ -410,16 +487,32 @@ function editProperty(id) {
     });
 }
 
+function confirmDeleteProperty(id) {
+    if (confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
+        deleteProperty(id);
+        showAlert('Property deleted successfully', 'bg-green-600');
+        filterProperties();
+    }
+}
+
 function showPeople() {
     const mainContent = document.getElementById('main-content');
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isManager = user && user.group === 'Managers';
     mainContent.innerHTML = `
         <h2 class="text-2xl font-bold mb-4">People</h2>
         <div class="tips">
             <h4 class="text-lg font-semibold">Tips</h4>
-            <p>Search: Filter people by name or property. Click a person to view details (e.g., reports, CTN status). Managers can add/edit people.</p>
+            <p>Search: Filter people by name, property, or CTN status. Managers can add/edit/delete people.</p>
         </div>
-        <div class="mb-4">
+        <div class="mb-4 flex space-x-4">
             <input type="text" id="peopleSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search people..." onkeyup="filterPeople()">
+            <select id="peopleCtnFilter" class="bg-gray-700 text-white p-2 rounded" onchange="filterPeople()">
+                <option value="">All</option>
+                <option value="CTN Issued">CTN Issued</option>
+                <option value="N/A">No CTN</option>
+            </select>
+            ${isManager ? `<button onclick="addNewPerson()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New Person</button>` : ''}
         </div>
         <div id="peopleList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         <div id="alert" class="hidden"></div>
@@ -430,9 +523,10 @@ function showPeople() {
 
 function filterPeople() {
     const search = document.getElementById('peopleSearch')?.value.toLowerCase() || '';
-    const people = peopleData.filter(p => 
-        p.name.toLowerCase().includes(search) || 
-        p.property.toLowerCase().includes(search)
+    const ctnFilter = document.getElementById('peopleCtnFilter')?.value || '';
+    let people = peopleData.filter(p => 
+        (p.name.toLowerCase().includes(search) || p.property.toLowerCase().includes(search)) &&
+        (ctnFilter === '' || p.ctnStatus === ctnFilter)
     );
     let html = '';
     const user = JSON.parse(localStorage.getItem('user'));
@@ -457,6 +551,7 @@ function filterPeople() {
                 ${isManager ? `
                 <div class="flex space-x-2 mt-2">
                     <button onclick="editPerson('${person.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
+                    <button onclick="confirmDeletePerson('${person.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
                 </div>
                 ` : ''}
             </div>
@@ -468,6 +563,73 @@ function filterPeople() {
     }
 }
 
+function addNewPerson() {
+    const newId = `P${(peopleData.length + 1).toString().padStart(3, '0')}`;
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+        <h2 class="text-2xl font-bold mb-4">Add New Person</h2>
+        <form id="addPersonForm" class="edit-form">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="name">Name</label>
+                <input type="text" id="name" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter name">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="dob">DOB</label>
+                <input type="date" id="dob" class="bg-gray-700 text-white p-2 rounded w-full">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="status">Status</label>
+                <select id="status" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="Staff">Staff</option>
+                    <option value="Trespasser">Trespasser</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="property">Property</label>
+                <input type="text" id="property" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter property">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="behavior">Behavior</label>
+                <select id="behavior" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="Friendly">Friendly</option>
+                    <option value="Cautious">Cautious</option>
+                    <option value="Hostile">Hostile</option>
+                    <option value="Unknown">Unknown</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="ctnStatus">CTN Status</label>
+                <select id="ctnStatus" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="N/A">N/A</option>
+                    <option value="CTN Issued">CTN Issued</option>
+                </select>
+            </div>
+            <div class="flex space-x-2">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add Person</button>
+                <button type="button" onclick="showPeople()" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
+            </div>
+        </form>
+        <div id="alert" class="hidden"></div>
+    `;
+
+    const form = document.getElementById('addPersonForm');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newPerson = {
+            id: newId,
+            name: document.getElementById('name').value,
+            dob: document.getElementById('dob').value,
+            status: document.getElementById('status').value,
+            property: document.getElementById('property').value,
+            behavior: document.getElementById('behavior').value,
+            ctnStatus: document.getElementById('ctnStatus').value
+        };
+        addPerson(newPerson);
+        showAlert('Person added successfully', 'bg-green-600');
+        showPeople();
+    });
+}
+
 function editPerson(id) {
     const person = peopleData.find(p => p.id === id);
     if (!person) return;
@@ -475,26 +637,26 @@ function editPerson(id) {
     const card = document.getElementById(`person-${id}`);
     card.innerHTML = `
         <form id="editPersonForm-${id}" class="edit-form">
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="name-${id}">Name</label>
                 <input type="text" id="name-${id}" value="${person.name}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="dob-${id}">DOB</label>
                 <input type="date" id="dob-${id}" value="${person.dob}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="status-${id}">Status</label>
                 <select id="status-${id}" class="bg-gray-700 text-white p-2 rounded w-full">
                     <option value="Staff" ${person.status === 'Staff' ? 'selected' : ''}>Staff</option>
                     <option value="Trespasser" ${person.status === 'Trespasser' ? 'selected' : ''}>Trespasser</option>
                 </select>
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="property-${id}">Property</label>
                 <input type="text" id="property-${id}" value="${person.property}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="behavior-${id}">Behavior</label>
                 <select id="behavior-${id}" class="bg-gray-700 text-white p-2 rounded w-full">
                     <option value="Friendly" ${person.behavior === 'Friendly' ? 'selected' : ''}>Friendly</option>
@@ -503,7 +665,7 @@ function editPerson(id) {
                     <option value="Unknown" ${person.behavior === 'Unknown' ? 'selected' : ''}>Unknown</option>
                 </select>
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="ctnStatus-${id}">CTN Status</label>
                 <select id="ctnStatus-${id}" class="bg-gray-700 text-white p-2 rounded w-full">
                     <option value="N/A" ${person.ctnStatus === 'N/A' ? 'selected' : ''}>N/A</option>
@@ -535,16 +697,32 @@ function editPerson(id) {
     });
 }
 
+function confirmDeletePerson(id) {
+    if (confirm('Are you sure you want to delete this person? This action cannot be undone.')) {
+        deletePerson(id);
+        showAlert('Person deleted successfully', 'bg-green-600');
+        filterPeople();
+    }
+}
+
 function showReports() {
     const mainContent = document.getElementById('main-content');
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isManager = user && user.group === 'Managers';
     mainContent.innerHTML = `
         <h2 class="text-2xl font-bold mb-4">Reports</h2>
         <div class="tips">
             <h4 class="text-lg font-semibold">Tips</h4>
-            <p>Search: Filter reports by case number, property, or type. Managers can add/edit reports.</p>
+            <p>Search: Filter reports by case number, property, or type. Managers can add/edit/delete reports.</p>
         </div>
-        <div class="mb-4">
+        <div class="mb-4 flex space-x-4">
             <input type="text" id="reportSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search reports..." onkeyup="filterReports()">
+            <select id="reportTypeFilter" class="bg-gray-700 text-white p-2 rounded" onchange="filterReports()">
+                <option value="">All Types</option>
+                <option value="Patrol Hit">Patrol Hit</option>
+                <option value="Incident">Incident</option>
+            </select>
+            ${isManager ? `<button onclick="addNewReport()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New Report</button>` : ''}
         </div>
         <div id="reportList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         <div id="alert" class="hidden"></div>
@@ -555,10 +733,12 @@ function showReports() {
 
 function filterReports() {
     const search = document.getElementById('reportSearch')?.value.toLowerCase() || '';
-    const reports = reportsData.filter(r => 
-        r.caseNumber.toLowerCase().includes(search) || 
-        r.property.toLowerCase().includes(search) || 
-        r.type.toLowerCase().includes(search)
+    const typeFilter = document.getElementById('reportTypeFilter')?.value || '';
+    let reports = reportsData.filter(r => 
+        (r.caseNumber.toLowerCase().includes(search) || 
+         r.property.toLowerCase().includes(search) || 
+         r.type.toLowerCase().includes(search)) &&
+        (typeFilter === '' || r.type === typeFilter)
     );
     let html = '';
     const user = JSON.parse(localStorage.getItem('user'));
@@ -576,6 +756,7 @@ function filterReports() {
                 ${isManager ? `
                 <div class="flex space-x-2 mt-2">
                     <button onclick="editReport('${report.caseNumber}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
+                    <button onclick="confirmDeleteReport('${report.caseNumber}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
                 </div>
                 ` : ''}
             </div>
@@ -587,6 +768,65 @@ function filterReports() {
     }
 }
 
+function addNewReport() {
+    const newCaseNumber = `25-0314${(reportsData.length + 1).toString().padStart(4, '0')}`;
+    const mainContent = document.getElementById('main-content');
+    mainContent.innerHTML = `
+        <h2 class="text-2xl font-bold mb-4">Add New Report</h2>
+        <form id="addReportForm" class="edit-form">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="caseNumber">Case #</label>
+                <input type="text" id="caseNumber" value="${newCaseNumber}" class="bg-gray-700 text-white p-2 rounded w-full" readonly>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="dateTime">Date</label>
+                <input type="datetime-local" id="dateTime" class="bg-gray-700 text-white p-2 rounded w-full">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="property">Property</label>
+                <input type="text" id="property" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter property">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="type">Type</label>
+                <select id="type" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="Patrol Hit">Patrol Hit</option>
+                    <option value="Incident">Incident</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="narrative">Narrative</label>
+                <textarea id="narrative" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter narrative"></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="officer">Officer</label>
+                <input type="text" id="officer" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter officer name">
+            </div>
+            <div class="flex space-x-2">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add Report</button>
+                <button type="button" onclick="showReports()" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
+            </div>
+        </form>
+        <div id="alert" class="hidden"></div>
+    `;
+
+    const form = document.getElementById('addReportForm');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newReport = {
+            caseNumber: newCaseNumber,
+            dateTime: new Date(document.getElementById('dateTime').value).toISOString(),
+            personId: 'N/A', // Default value
+            property: document.getElementById('property').value,
+            type: document.getElementById('type').value,
+            narrative: document.getElementById('narrative').value,
+            officer: document.getElementById('officer').value
+        };
+        addReport(newReport);
+        showAlert('Report added successfully', 'bg-green-600');
+        showReports();
+    });
+}
+
 function editReport(caseNumber) {
     const report = reportsData.find(r => r.caseNumber === caseNumber);
     if (!report) return;
@@ -594,30 +834,30 @@ function editReport(caseNumber) {
     const card = document.getElementById(`report-${caseNumber}`);
     card.innerHTML = `
         <form id="editReportForm-${caseNumber}" class="edit-form">
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="caseNumber-${caseNumber}">Case #</label>
                 <input type="text" id="caseNumber-${caseNumber}" value="${report.caseNumber}" class="bg-gray-700 text-white p-2 rounded w-full" readonly>
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="dateTime-${caseNumber}">Date</label>
                 <input type="datetime-local" id="dateTime-${caseNumber}" value="${report.dateTime.slice(0, 16)}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="property-${caseNumber}">Property</label>
                 <input type="text" id="property-${caseNumber}" value="${report.property}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="type-${caseNumber}">Type</label>
                 <select id="type-${caseNumber}" class="bg-gray-700 text-white p-2 rounded w-full">
                     <option value="Patrol Hit" ${report.type === 'Patrol Hit' ? 'selected' : ''}>Patrol Hit</option>
                     <option value="Incident" ${report.type === 'Incident' ? 'selected' : ''}>Incident</option>
                 </select>
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="narrative-${caseNumber}">Narrative</label>
                 <textarea id="narrative-${caseNumber}" class="bg-gray-700 text-white p-2 rounded w-full">${report.narrative}</textarea>
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="officer-${caseNumber}">Officer</label>
                 <input type="text" id="officer-${caseNumber}" value="${report.officer}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
@@ -646,13 +886,21 @@ function editReport(caseNumber) {
     });
 }
 
+function confirmDeleteReport(caseNumber) {
+    if (confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+        deleteReport(caseNumber);
+        showAlert('Report deleted successfully', 'bg-green-600');
+        filterReports();
+    }
+}
+
 function showManager() {
     const mainContent = document.getElementById('main-content');
     mainContent.innerHTML = `
         <h2 class="text-2xl font-bold mb-4">Manager Dashboard</h2>
         <div class="tips">
             <h4 class="text-lg font-semibold">Tips</h4>
-            <p>Users: Add/edit/delete users. Employees: Manage employee schedules and routes. Properties: Add/edit properties.</p>
+            <p>Users: Add/edit/delete users. Employees: Manage employee schedules and routes. Properties: Add/edit/delete properties.</p>
         </div>
         <div class="flex space-x-4 mb-4">
             <button onclick="showManagerTab('users')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Users</button>
@@ -675,8 +923,9 @@ function showManagerTab(tab) {
     if (tab === 'users') {
         html += '<h3 class="text-lg font-semibold mb-2">Manage Users</h3>';
         html += `
-            <div class="mb-4">
+            <div class="mb-4 flex space-x-4">
                 <input type="text" id="userSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search users..." onkeyup="filterUsers()">
+                <button onclick="addNewUser()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New User</button>
             </div>
             <div id="userList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         `;
@@ -685,8 +934,9 @@ function showManagerTab(tab) {
     } else if (tab === 'employees') {
         html += '<h3 class="text-lg font-semibold mb-2">Manage Employees</h3>';
         html += `
-            <div class="mb-4">
+            <div class="mb-4 flex space-x-4">
                 <input type="text" id="employeeSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search employees..." onkeyup="filterEmployees()">
+                <button onclick="addNewEmployee()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New Employee</button>
             </div>
             <div id="employeeList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         `;
@@ -695,14 +945,61 @@ function showManagerTab(tab) {
     } else if (tab === 'properties') {
         html += '<h3 class="text-lg font-semibold mb-2">Manage Properties</h3>';
         html += `
-            <div class="mb-4">
+            <div class="mb-4 flex space-x-4">
                 <input type="text" id="propertySearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search properties..." onkeyup="filterProperties()">
+                <select id="propertySuspendedFilter" class="bg-gray-700 text-white p-2 rounded" onchange="filterProperties()">
+                    <option value="">All</option>
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+                <button onclick="addNewProperty()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New Property</button>
             </div>
             <div id="propertyList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         `;
         managerContent.innerHTML = html;
         filterProperties();
     }
+}
+
+function addNewUser() {
+    const mainContent = document.getElementById('managerContent');
+    mainContent.innerHTML = `
+        <h3 class="text-lg font-semibold mb-2">Add New User</h3>
+        <form id="addUserForm" class="edit-form">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="username">Username</label>
+                <input type="text" id="username" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter username">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="password">Password</label>
+                <input type="text" id="password" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter password">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="group">Group</label>
+                <select id="group" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="Managers">Managers</option>
+                    <option value="Supervisors">Supervisors</option>
+                    <option value="Officers">Officers</option>
+                    <option value="Dispatchers">Dispatchers</option>
+                </select>
+            </div>
+            <div class="flex space-x-2">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add User</button>
+                <button type="button" onclick="showManagerTab('users')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
+            </div>
+        </form>
+    `;
+
+    const form = document.getElementById('addUserForm');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const group = document.getElementById('group').value;
+        addUser(username, password, group);
+        showAlert('User added successfully', 'bg-green-600');
+        showManagerTab('users');
+    });
 }
 
 function filterUsers() {
@@ -716,7 +1013,7 @@ function filterUsers() {
                 <p><strong>Group:</strong> ${user.group}</p>
                 <div class="flex space-x-2 mt-2">
                     <button onclick="editUser('${user.username}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
-                    <button onclick="deleteUser('${user.username}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
+                    <button onclick="confirmDeleteUser('${user.username}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
                 </div>
             </div>
         `;
@@ -727,6 +1024,14 @@ function filterUsers() {
     }
 }
 
+function confirmDeleteUser(username) {
+    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        deleteUser(username);
+        showAlert('User deleted successfully', 'bg-green-600');
+        filterUsers();
+    }
+}
+
 function editUser(username) {
     const user = usersData.find(u => u.username === username);
     if (!user) return;
@@ -734,15 +1039,15 @@ function editUser(username) {
     const card = document.getElementById(`user-${username}`);
     card.innerHTML = `
         <form id="editUserForm-${username}" class="edit-form">
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="username-${username}">Username</label>
                 <input type="text" id="username-${username}" value="${user.username}" class="bg-gray-700 text-white p-2 rounded w-full" readonly>
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="password-${username}">Password</label>
                 <input type="text" id="password-${username}" value="${user.password}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="group-${username}">Group</label>
                 <select id="group-${username}" class="bg-gray-700 text-white p-2 rounded w-full">
                     <option value="Managers" ${user.group === 'Managers' ? 'selected' : ''}>Managers</option>
@@ -771,6 +1076,74 @@ function editUser(username) {
     });
 }
 
+function addNewEmployee() {
+    const mainContent = document.getElementById('managerContent');
+    mainContent.innerHTML = `
+        <h3 class="text-lg font-semibold mb-2">Add New Employee</h3>
+        <form id="addEmployeeForm" class="edit-form">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="name">Name</label>
+                <input type="text" id="name" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter name">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="route">Route</label>
+                <input type="text" id="route" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter route">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="start">Schedule Start</label>
+                <input type="datetime-local" id="start" class="bg-gray-700 text-white p-2 rounded w-full">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="end">Schedule End</label>
+                <input type="datetime-local" id="end" class="bg-gray-700 text-white p-2 rounded w-full">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="location">Location</label>
+                <input type="text" id="location" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter location">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="department">Department</label>
+                <select id="department" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="Supervisors">Supervisors</option>
+                    <option value="Officers">Officers</option>
+                    <option value="Dispatchers">Dispatchers</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="status">Status</label>
+                <select id="status" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="10-8">10-8</option>
+                    <option value="10-6">10-6</option>
+                    <option value="10-42">10-42</option>
+                </select>
+            </div>
+            <div class="flex space-x-2">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add Employee</button>
+                <button type="button" onclick="showManagerTab('employees')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
+            </div>
+        </form>
+    `;
+
+    const form = document.getElementById('addEmployeeForm');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const newEmployee = {
+            name: document.getElementById('name').value,
+            route: document.getElementById('route').value,
+            schedule: {
+                start: new Date(document.getElementById('start').value).toISOString(),
+                end: new Date(document.getElementById('end').value).toISOString()
+            },
+            location: document.getElementById('location').value,
+            department: document.getElementById('department').value,
+            status: document.getElementById('status').value
+        };
+        addEmployee(newEmployee);
+        showAlert('Employee added successfully', 'bg-green-600');
+        showManagerTab('employees');
+    });
+}
+
 function filterEmployees() {
     const search = document.getElementById('employeeSearch')?.value.toLowerCase() || '';
     const employees = employeesData.filter(e => e.name.toLowerCase().includes(search));
@@ -786,7 +1159,7 @@ function filterEmployees() {
                 <p><strong>Status:</strong> ${emp.status}</p>
                 <div class="flex space-x-2 mt-2">
                     <button onclick="editEmployee('${emp.name}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
-                    <button onclick="deleteEmployee('${emp.name}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
+                    <button onclick="confirmDeleteEmployee('${emp.name}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
                 </div>
             </div>
         `;
@@ -797,6 +1170,14 @@ function filterEmployees() {
     }
 }
 
+function confirmDeleteEmployee(name) {
+    if (confirm('Are you sure you want to delete this employee? This action cannot be undone.')) {
+        deleteEmployee(name);
+        showAlert('Employee deleted successfully', 'bg-green-600');
+        filterEmployees();
+    }
+}
+
 function editEmployee(name) {
     const emp = employeesData.find(e => e.name === name);
     if (!emp) return;
@@ -804,27 +1185,27 @@ function editEmployee(name) {
     const card = document.getElementById(`employee-${name}`);
     card.innerHTML = `
         <form id="editEmployeeForm-${name}" class="edit-form">
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="name-${name}">Name</label>
                 <input type="text" id="name-${name}" value="${emp.name}" class="bg-gray-700 text-white p-2 rounded w-full" readonly>
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="route-${name}">Route</label>
                 <input type="text" id="route-${name}" value="${emp.route}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="start-${name}">Schedule Start</label>
                 <input type="datetime-local" id="start-${name}" value="${emp.schedule.start.slice(0, 16)}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="end-${name}">Schedule End</label>
                 <input type="datetime-local" id="end-${name}" value="${emp.schedule.end.slice(0, 16)}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="location-${name}">Location</label>
                 <input type="text" id="location-${name}" value="${emp.location}" class="bg-gray-700 text-white p-2 rounded w-full">
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="department-${name}">Department</label>
                 <select id="department-${name}" class="bg-gray-700 text-white p-2 rounded w-full">
                     <option value="Supervisors" ${emp.department === 'Supervisors' ? 'selected' : ''}>Supervisors</option>
@@ -832,7 +1213,7 @@ function editEmployee(name) {
                     <option value="Dispatchers" ${emp.department === 'Dispatchers' ? 'selected' : ''}>Dispatchers</option>
                 </select>
             </div>
-            <div class="mb-2">
+            <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="status-${name}">Status</label>
                 <select id="status-${name}" class="bg-gray-700 text-white p-2 rounded w-full">
                     <option value="10-8" ${emp.status === '10-8' ? 'selected' : ''}>10-8</option>
@@ -853,46 +1234,3 @@ function editEmployee(name) {
         const updates = {
             route: document.getElementById(`route-${name}`).value,
             schedule: {
-                start: new Date(document.getElementById(`start-${name}`).value).toISOString(),
-                end: new Date(document.getElementById(`end-${name}`).value).toISOString()
-            },
-            location: document.getElementById(`location-${name}`).value,
-            department: document.getElementById(`department-${name}`).value,
-            status: document.getElementById(`status-${name}`).value
-        };
-        updateEmployee(name, updates);
-        showAlert('Employee updated successfully', 'bg-green-600');
-        filterEmployees();
-    });
-}
-
-function assignOfficer(select, dispatchId) {
-    const officer = select.value;
-    const dispatch = dispatchData.find(d => d.id === dispatchId);
-    if (dispatch) {
-        updateDispatch(dispatchId, { assignedOfficer: officer || null, status: officer ? 'Assigned' : 'Pending', assignedTime: officer ? new Date().toISOString() : null });
-        showDispatchTab('active');
-    } else {
-        showAlert('Dispatch not found', 'bg-red-600');
-    }
-}
-
-function clearDispatch(dispatchId) {
-    const dispatch = dispatchData.find(d => d.id === dispatchId);
-    if (dispatch) {
-        updateDispatch(dispatchId, { status: 'Completed', resolveTime: new Date().toISOString() });
-        showDispatchTab('active');
-    } else {
-        showAlert('Dispatch not found', 'bg-red-600');
-    }
-}
-
-function restoreDispatch(dispatchId) {
-    const dispatch = dispatchData.find(d => d.id === dispatchId);
-    if (dispatch) {
-        updateDispatch(dispatchId, { status: 'Pending', resolveTime: null });
-        showDispatchTab('completed');
-    } else {
-        showAlert('Dispatch not found', 'bg-red-600');
-    }
-}
