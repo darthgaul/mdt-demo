@@ -263,20 +263,42 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     }
 }
 
-/* Floating Action Button (FAB) styles */
+/* Enhanced Floating Action Button (FAB) styles */
 #statusFab {
     display: none; /* Hidden by default, shown via JavaScript for appropriate users */
 }
+#statusFabButton {
+    background: linear-gradient(135deg, #3b82f6, #2563eb); /* Gradient background */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+#statusFabButton:hover {
+    transform: scale(1.1); /* Slight scale on hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); /* Enhanced shadow on hover */
+}
 #statusDropdownContainer {
-    transition: opacity 0.3s ease;
+    background: linear-gradient(135deg, #374151, #2d3748); /* Gradient background for dropdown */
+    border: 1px solid #4b5563; /* Subtle border */
+    border-radius: 0.75rem; /* More rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Subtle shadow */
+    transition: transform 0.3s ease, opacity 0.3s ease; /* Smooth animation */
 }
 #statusDropdownContainer.hidden {
+    transform: scale(0.95);
     opacity: 0;
     pointer-events: none;
 }
 #statusDropdownContainer:not(.hidden) {
+    transform: scale(1);
     opacity: 1;
     pointer-events: auto;
+}
+.light-mode #statusFabButton {
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+}
+.light-mode #statusDropdownContainer {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+    border: 1px solid #9ca3af;
 }
 
 /* Dashboard-specific styles */
