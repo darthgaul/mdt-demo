@@ -301,6 +301,47 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     border: 1px solid #9ca3af;
 }
 
+/* Edit form styles */
+.edit-form {
+    background: linear-gradient(135deg, #374151, #2d3748);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+.light-mode .edit-form {
+    background: linear-gradient(135deg, #e5e7eb, #d1d5db);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.edit-form input,
+.edit-form select,
+.edit-form textarea {
+    background-color: #4b5563;
+    color: #f3f4f6;
+    border: 1px solid #6b7280;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+.light-mode .edit-form input,
+.light-mode .edit-form select,
+.light-mode .edit-form textarea {
+    background-color: #d1d5db;
+    color: #1f2937;
+    border: 1px solid #9ca3af;
+}
+.edit-form textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+.edit-form button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
 /* Dashboard-specific styles */
 .dashboard-container {
     display: flex;
