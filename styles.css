@@ -22,73 +22,54 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
 .ctn-icon { margin-left: 5px; }
 
 /* Updated tab navigation styles */
+.sticky-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: #1f2937;
+    border-bottom: 2px solid #2563eb;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
 .nav-tabs {
     display: flex;
-    flex-wrap: wrap;
+    gap: 0;
+    flex-grow: 1;
     justify-content: center;
-    gap: 0.5rem;
-    background: linear-gradient(90deg, #1e3a8a, #374151);
-    padding: 0.5rem;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    max-width: 800px;
-    margin: 0 auto;
 }
-.nav-tabs a {
-    padding: 0.5rem 1rem;
-    border-radius: 0.5rem;
+.tab-link {
+    padding: 0.75rem 1.5rem;
     text-decoration: none;
     color: #d1d5db;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-    flex: 1 0 auto;
-    text-align: center;
-    white-space: nowrap;
-    position: relative;
-    overflow: hidden;
+    background-color: #2d3748;
+    border-bottom: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
-.nav-tabs a:hover {
+.tab-link:hover {
     background-color: #4b5563;
     color: #f3f4f6;
-    transform: translateY(-2px);
 }
-.nav-tabs a.active {
+.tab-link.active {
     background-color: #2563eb;
     color: #ffffff;
     font-weight: 600;
-    box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
+    border-bottom: 2px solid #2563eb;
 }
-.nav-tabs a::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: #2563eb;
-    transform: scaleX(0);
-    transform-origin: bottom right;
-    transition: transform 0.3s ease-out;
+.light-mode .sticky-nav {
+    background-color: #e5e7eb;
+    border-bottom: 2px solid #3b82f6;
 }
-.nav-tabs a:hover::after, .nav-tabs a.active::after {
-    transform: scaleX(1);
-    transform-origin: bottom left;
-}
-.light-mode .nav-tabs {
-    background: linear-gradient(90deg, #dbeafe, #e5e7eb);
-}
-.light-mode .nav-tabs a {
+.light-mode .tab-link {
     color: #4b5563;
-}
-.light-mode .nav-tabs a:hover {
     background-color: #d1d5db;
 }
-.light-mode .nav-tabs a.active {
+.light-mode .tab-link:hover {
+    background-color: #b0b7c0;
+}
+.light-mode .tab-link.active {
     background-color: #3b82f6;
     color: #ffffff;
-}
-.light-mode .nav-tabs a::after {
-    background-color: #3b82f6;
+    border-bottom: 2px solid #3b82f6;
 }
 
 /* Hamburger menu styles */
@@ -151,7 +132,7 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
         top: 100%;
         left: 0;
         width: 100%;
-        background: linear-gradient(90deg, #1e3a8a, #374151);
+        background: #1f2937;
         padding: 0.5rem;
         border-radius: 0 0 0.75rem 0.75rem;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
@@ -159,17 +140,41 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     .nav-tabs.active {
         display: flex;
     }
-    .nav-tabs a {
+    .tab-link {
         padding: 0.75rem;
         font-size: 1rem;
         margin: 0;
+        border-bottom: 1px solid #4b5563;
+        border-radius: 0;
+    }
+    .tab-link.active {
+        border-bottom: 2px solid #2563eb;
     }
     .light-mode .nav-tabs {
-        background: linear-gradient(90deg, #dbeafe, #e5e7eb);
+        background: #e5e7eb;
+    }
+    .light-mode .tab-link.active {
+        border-bottom: 2px solid #3b82f6;
     }
     .sticky-nav .flex.items-center.space-x-4 {
         space-x: 1rem;
     }
+}
+
+/* Floating Action Button (FAB) styles */
+#statusFab {
+    display: none; /* Hidden by default, shown via JavaScript for appropriate users */
+}
+#statusDropdownContainer {
+    transition: opacity 0.3s ease;
+}
+#statusDropdownContainer.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+#statusDropdownContainer:not(.hidden) {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 /* Dashboard-specific styles */
@@ -324,14 +329,4 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
         flex-direction: column;
         gap: 1.5rem;
     }
-    #statusDropdown {
-        width: 100%;
-        padding: 0.5rem;
-        min-width: 150px;
-    }
-}
-/* Desktop and tablet adjustments */
-#statusDropdown {
-    padding: 0.25rem 0.5rem;
-    min-width: 150px;
 }
