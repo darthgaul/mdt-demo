@@ -7,32 +7,40 @@ function navigateToTab(tab) {
         return;
     }
 
+    // Add fade-out effect
+    mainContent.style.opacity = '0';
+
     // Update browser history
     history.pushState({ tab }, '', `#${tab}`);
 
-    // Route to the appropriate content
-    switch (tab) {
-        case 'dashboard':
-            showDashboard();
-            break;
-        case 'dispatch':
-            showDispatch();
-            break;
-        case 'properties':
-            showProperties();
-            break;
-        case 'people':
-            showPeople();
-            break;
-        case 'reports':
-            showReports();
-            break;
-        case 'manager':
-            showManager();
-            break;
-        default:
-            showDashboard();
-    }
+    // Delay content update to allow fade-out transition
+    setTimeout(() => {
+        // Route to the appropriate content
+        switch (tab) {
+            case 'dashboard':
+                showDashboard();
+                break;
+            case 'dispatch':
+                showDispatch();
+                break;
+            case 'properties':
+                showProperties();
+                break;
+            case 'people':
+                showPeople();
+                break;
+            case 'reports':
+                showReports();
+                break;
+            case 'manager':
+                showManager();
+                break;
+            default:
+                showDashboard();
+        }
+        // Fade-in the new content
+        mainContent.style.opacity = '1';
+    }, 300); // Match the transition duration in CSS
 }
 
 // Handle browser back/forward navigation
