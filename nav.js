@@ -13,29 +13,31 @@ function initializeNav(page) {
     const isLightMode = document.body.classList.contains('light-mode');
     const navClass = isLightMode ? 'sticky-nav light-mode' : 'sticky-nav';
 
-    // Populate navigation bar with tabbed design
+    // Populate navigation bar with three distinct sections
     nav.innerHTML = `
-        <div class="flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-                <div class="hamburger">
-                    <div></div>
-                    <div></div>
-                    <div></div>
-                </div>
-                <button id="darkModeToggle"></button>
+        <div class="nav-left">
+            <div class="hamburger">
+                <div></div>
+                <div></div>
+                <div></div>
             </div>
-            <div class="nav-tabs flex space-x-2">
-                <a href="index.html#dashboard" data-tab="dashboard" class="tab-link px-4 py-2 rounded-t-lg">Dashboard</a>
-                <a href="index.html#properties" data-tab="properties" class="tab-link px-4 py-2 rounded-t-lg">Properties</a>
-                <a href="index.html#people" data-tab="people" class="tab-link px-4 py-2 rounded-t-lg">People</a>
-                <a href="index.html#dispatch" data-tab="dispatch" class="tab-link px-4 py-2 rounded-t-lg">Dispatch</a>
-                <a href="index.html#reports" data-tab="reports" class="tab-link px-4 py-2 rounded-t-lg">Reports</a>
-                <a href="index.html#manager" data-tab="manager" id="managerLink" class="tab-link px-4 py-2 rounded-t-lg">Manager</a>
+            <button id="darkModeToggle" class="theme-toggle">
+                <span class="theme-icon">${isLightMode ? '🌙' : '☀️'}</span>
+            </button>
+        </div>
+        <div class="nav-center">
+            <div class="nav-tabs">
+                <a href="index.html#dashboard" data-tab="dashboard" class="tab-link">Dashboard</a>
+                <a href="index.html#properties" data-tab="properties" class="tab-link">Properties</a>
+                <a href="index.html#people" data-tab="people" class="tab-link">People</a>
+                <a href="index.html#dispatch" data-tab="dispatch" class="tab-link">Dispatch</a>
+                <a href="index.html#reports" data-tab="reports" class="tab-link">Reports</a>
+                <a href="index.html#manager" data-tab="manager" id="managerLink" class="tab-link">Manager</a>
             </div>
-            <div class="flex items-center space-x-4">
-                <span id="userInfo" class="text-sm"></span>
-                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 p-2 rounded text-sm shadow">Logout</button>
-            </div>
+        </div>
+        <div class="nav-right">
+            <span id="userInfo" class="text-sm"></span>
+            <button onclick="logout()" class="logout-btn">Logout</button>
         </div>
     `;
 
@@ -64,27 +66,13 @@ function initializeNav(page) {
         });
     }
 
-    // Dark mode toggle
+    // Dark mode toggle with modern design
     const toggleBtn = document.getElementById('darkModeToggle');
     if (toggleBtn) {
-        toggleBtn.classList.add('relative', 'inline-flex', 'items-center', 'h-6', 'rounded-full', 'w-11', 'transition-colors', 'duration-200');
-        toggleBtn.innerHTML = '<span class="absolute left-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 transform"></span>';
-        let existingLabel = toggleBtn.parentNode.querySelector('span.ml-2');
-        if (!existingLabel) {
-            const label = document.createElement('span');
-            label.className = 'ml-2 text-sm';
-            label.textContent = 'Dark Mode';
-            toggleBtn.parentNode.insertBefore(label, toggleBtn.nextSibling);
-        }
-
         toggleBtn.addEventListener('click', () => {
             document.body.classList.toggle('light-mode');
             const isLightMode = document.body.classList.contains('light-mode');
-            toggleBtn.classList.toggle('bg-blue-600', isLightMode);
-            toggleBtn.classList.toggle('bg-gray-700', !isLightMode);
-            toggleBtn.querySelector('span').style.transform = isLightMode ? 'translateX(1.25rem)' : 'translateX(0)';
-            const label = toggleBtn.parentNode.querySelector('span.ml-2');
-            if (label) label.textContent = isLightMode ? 'Light Mode' : 'Dark Mode';
+            toggleBtn.querySelector('.theme-icon').textContent = isLightMode ? '🌙' : '☀️';
             const nav = document.querySelector('.sticky-nav');
             if (nav) nav.classList.toggle('light-mode', isLightMode);
             localStorage.setItem('lightMode', isLightMode);
@@ -92,11 +80,7 @@ function initializeNav(page) {
 
         if (localStorage.getItem('lightMode') === 'true') {
             document.body.classList.add('light-mode');
-            toggleBtn.classList.add('bg-blue-600');
-            toggleBtn.classList.remove('bg-gray-700');
-            toggleBtn.querySelector('span').style.transform = 'translateX(1.25rem)';
-            const label = toggleBtn.parentNode.querySelector('span.ml-2');
-            if (label) label.textContent = 'Light Mode';
+            toggleBtn.querySelector('.theme-icon').textContent = '🌙';
             const nav = document.querySelector('.sticky-nav');
             if (nav) nav.classList.add('light-mode');
         }
