@@ -30,14 +30,16 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     background-color: #1f2937;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     z-index: 20;
+    width: 100%; /* Ensure full width */
+    max-width: 1200px; /* Constrain content width */
+    margin: 0 auto; /* Center the nav bar */
 }
 .nav-tabs {
     display: flex;
     gap: 0;
-    flex-grow: 1;
-    justify-content: center;
-    max-width: 800px; /* Limit the width of the tabs for better centering */
-    margin: 0 auto;
+    justify-content: center; /* Center the tabs */
+    width: 100%; /* Ensure tabs take full width of container */
+    max-width: 800px; /* Limit tab width for better centering */
 }
 .tab-link {
     padding: 0.75rem 1.5rem;
@@ -49,6 +51,8 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
     transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
     position: relative;
     z-index: 1;
+    flex: 1; /* Make tabs take equal space */
+    text-align: center; /* Center text within each tab */
 }
 .tab-link:hover {
     background-color: #4b5563;
@@ -183,6 +187,7 @@ tr:hover { background-color: rgba(0, 0, 0, 0.1); }
         margin: 0;
         border-bottom: 1px solid #4b5563;
         border-radius: 0;
+        flex: none; /* Remove flex-grow on mobile */
     }
     .tab-link.active {
         border-bottom: none;
