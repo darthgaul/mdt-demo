@@ -6,80 +6,99 @@
     <title>MDT Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .logo {
+            display: block;
+            width: 200px;
+            height: auto;
+            margin: 0 auto 2rem auto;
+        }
+        .login-legend {
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+        .username-text {
+            color: #34d399; /* Green that complements blue */
+        }
+        .password-text {
+            color: #facc15; /* Yellow that complements blue */
+        }
+    </style>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-gray-900">
-    <div class="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md">
-        <!-- Logo -->
-        <div class="text-center mb-4">
-            <h1 class="text-4xl font-bold text-blue-600">MDT</h1>
+<body class="bg-gray-900 text-white min-h-screen p-6 flex flex-col items-center justify-center">
+    <img src="./images/SW-S527AD.png" alt="MDT Logo" class="logo">
+    <div class="bg-gray-800 p-6 rounded-lg shadow w-full max-w-md">
+        <h2 class="text-2xl font-semibold mb-4 text-center">MDT Login</h2>
+        <input type="text" id="username" placeholder="Username" class="bg-gray-700 text-white p-2 rounded w-full mb-2">
+        <input type="password" id="password" placeholder="Password" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
+        <button onclick="login()" class="bg-blue-600 hover:bg-blue-700 p-2 rounded w-full shadow">Login</button>
+    </div>
+    <div class="tips mt-4 w-full max-w-md">
+        <h4 class="text-lg font-semibold">Tips</h4>
+        <div class="login-legend">
+            <span class="username-text">Username</span> / <span class="password-text">Password</span>
         </div>
-
-        <!-- Login Form -->
-        <h2 class="text-2xl font-bold text-white mb-4 text-center">MDT Login</h2>
-        <form id="loginForm">
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-400 mb-1" for="username">Username</label>
-                <input type="text" id="username" class="bg-gray-700 text-white p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Enter username">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-400 mb-1" for="password">Password</label>
-                <input type="password" id="password" class="bg-gray-700 text-white p-2 rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-600" placeholder="Enter password">
-            </div>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white p-2 rounded w-full">Login</button>
-        </form>
-
-        <!-- Login Info Tip Bar -->
-        <div class="tips mt-4">
-            <h4 class="text-lg font-semibold">Login Info</h4>
-            <p>Default credentials: Username: JohnSmith, Password: password123 (Manager) | Username: AlexReed, Password: password123 (Officer)</p>
-        </div>
-
-        <!-- Alert -->
-        <div id="alert" class="hidden mt-4 p-2 rounded text-center"></div>
+        <p>
+            [Security Manager] <span class="username-text">JohnSmith</span> / <span class="password-text">john123</span><br>
+            [Security Supervisor] <span class="username-text">TomVega</span> / <span class="password-text">tom123</span><br>
+            [Patrol Officer] <span class="username-text">AlexReed</span> / <span class="password-text">alex123</span><br>
+            [Static Officer] <span class="username-text">BellaCruz</span> / <span class="password-text">bella123</span><br>
+            [Dispatcher] <span class="username-text">SarahJones</span> / <span class="password-text">sarah123</span>
+        </p>
     </div>
 
+    <div id="alert" class="hidden"></div>
+
     <script src="common.js"></script>
+    <script src="scripts.js"></script>
     <script>
+        let isLoaded = false;
+
         document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('loginForm');
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                console.log('Login: Attempting login');
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
+            console.log('Login: DOM fully loaded');
+            if (isLoaded) return;
+            isLoaded = true;
 
-                loadData(() => {
-                    console.log('Login: Data loaded, usersData:', usersData);
-                    if (usersData.length === 0) {
-                        showAlert('No users found. Please contact an administrator to create a user account.', 'bg-red-600');
-                        return;
-                    }
-
-                    const user = usersData.find(u => u.username === username && u.password === password);
-                    if (user) {
-                        localStorage.setItem('user', JSON.stringify(user));
-                        window.location.href = 'index.html';
-                    } else {
-                        console.log('Login: Invalid credentials');
-                        showAlert('Invalid username or password', 'bg-red-600');
-                    }
-                });
-            });
-
-            // Apply light mode if set
             if (localStorage.getItem('lightMode') === 'true') {
                 document.body.classList.add('light-mode');
             }
+            document.getElementById('password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') login();
+            });
         });
 
-        function showAlert(message, bgColor) {
+        function login() {
+            console.log('Login: Attempting login');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            loadData(() => {
+                console.log('Login: Data loaded, usersData:', usersData);
+                if (usersData.length === 0) {
+                    showAlert('No users found. Please contact an administrator to create a user account.', 'bg-red-600');
+                    return;
+                }
+
+                const user = usersData.find(u => u.username === username && u.password === password);
+                if (user) {
+                    console.log('Login: User found, redirecting to index.html');
+                    localStorage.setItem('user', JSON.stringify(user));
+                    window.location.href = 'index.html';
+                } else {
+                    console.log('Login: Invalid credentials');
+                    showAlert('Invalid username or password', 'bg-red-600');
+                }
+            });
+        }
+
+        function showAlert(message, color = 'bg-green-600') {
             const alert = document.getElementById('alert');
-            alert.textContent = message;
-            alert.className = `mt-4 p-2 rounded text-center ${bgColor} text-white`;
-            alert.classList.remove('hidden');
-            setTimeout(() => {
-                alert.classList.add('hidden');
-            }, 3000);
+            if (alert) {
+                alert.textContent = message;
+                alert.className = `fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000]`;
+                alert.classList.remove('hidden');
+                setTimeout(() => alert.classList.add('hidden'), 3000);
+            }
         }
     </script>
 </body>
