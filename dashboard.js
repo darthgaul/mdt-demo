@@ -25,8 +25,13 @@ if (!isLoaded) {
 }
 
 function initializeDashboard() {
-    const userInfo = document.getElementById('userInfo');
     const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const userInfo = document.getElementById('userInfo');
     if (userInfo && user) {
         userInfo.textContent = `Logged in as ${user.username}`;
         const managerLink = document.getElementById('managerLink');
@@ -211,4 +216,12 @@ function checkDispatchTimeouts() {
             }
         });
     }
+}
+
+function calculateElapsed(dateTime) {
+    const start = new Date(dateTime);
+    const now = new Date();
+    const diffMs = now - start;
+    const minutes = Math.floor(diffMs / 1000 / 60);
+    return { minutes };
 }
