@@ -220,46 +220,39 @@ function showDispatchTab(tab) {
     let html = '';
 
     if (tab === 'active') {
-        const activeDispatches = dispatchData ? dispatchData.filter(d => d.status !== 'Completed') : [];
-        html += '<h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>';
-        if (activeDispatches.length) {
-            html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
-            activeDispatches.forEach(disp => {
-                if (!isOfficer || disp.assignedOfficer === user.username) {
-                    const callTime = new Date(disp.dateTime).toLocaleString();
-                    const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
-                    const statusColor = { Pending: 'yellow-500', Assigned: 'blue-500', 'In Progress': 'orange-500' }[disp.status];
-                    html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td>`;
-                    if (isDispatcher) {
-                        html += '<td class="p-2 space-x-2"><select onchange="assignOfficer(this, \'' + disp.id + '\')" class="bg-gray-700 text-white p-1 rounded">';
-                        html += '<option value="">Assign</option>';
-                        if (employeesData) {
-                            employeesData.forEach(emp => {
-                                html += '<option value="' + emp.name + '" ' + (disp.assignedOfficer === emp.name ? 'selected' : '') + '>' + emp.name + '</option>';
-                            });
-                        }
-                        html += '</select><button onclick="clearDispatch(\'' + disp.id + '\')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Clear</button></td>';
-                    }
-                    html += '</tr>';
-                }
-            });
-            html += '</table>';
-        } else {
-            html += '<p class="text-center">No active dispatches.</p>';
-        }
+        html += `
+            <h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>
+            <div class="mb-4 flex space-x-4">
+                <select id="statusFilter" class="bg-gray-700 text-white p-2 rounded" onchange="filterActiveDispatches()">
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Assigned">Assigned</option>
+                    <option value="In Progress">In Progress</option>
+                </select>
+                <select id="sortOrder" class="bg-gray-700 text-white p-2 rounded" onchange="filterActiveDispatches()">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                </select>
+            </div>
+            <div id="activeDispatchList"></div>
+        `;
+        dispatchContent.innerHTML = html;
+        filterActiveDispatches();
     } else if (tab === 'completed') {
         const completedDispatches = dispatchData ? dispatchData.filter(d => d.status === 'Completed') : [];
         html += '<h3 class="text-lg font-semibold mb-2">Completed Dispatches</h3>';
         if (completedDispatches.length) {
-            html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Resolve Time</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
+            html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Priority</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Resolve Time</th><th class="p-2 bg-gray-700">Assignment History</th>' + (isDispatcher ? '<th class="p-2 bg-gray-700">Actions</th>' : '') + '</tr>';
             completedDispatches.forEach(disp => {
                 if (!isOfficer || disp.assignedOfficer === user.username) {
                     const callTime = new Date(disp.dateTime).toLocaleString();
                     const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
                     const resolveTime = disp.resolveTime ? new Date(disp.resolveTime).toLocaleString() : 'N/A';
-                    html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td><td class="p-2">${resolveTime}</td>`;
+                    const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500', Completed: 'text-green-500' }[disp.status];
+                    const history = disp.assignmentHistory ? disp.assignmentHistory.map(h => `${h.officer} at ${new Date(h.timestamp).toLocaleString()}`).join('<br>') : 'N/A';
+                    html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.priority}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2"><span class="${statusColor}">${disp.status}</span></td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td><td class="p-2">${resolveTime}</td><td class="p-2">${history}</td>`;
                     if (isDispatcher) {
-                        html += '<td class="p-2"><button onclick="restoreDispatch(\'' + disp.id + '\')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow">Restore</button></td>';
+                        html += '<td class="p-2 space-x-2"><button onclick="restoreDispatch(\'' + disp.id + '\')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow">Restore</button><button onclick="confirmDeleteDispatch(\'' + disp.id + '\')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button></td>';
                     }
                     html += '</tr>';
                 }
@@ -268,10 +261,11 @@ function showDispatchTab(tab) {
         } else {
             html += '<p class="text-center">No completed dispatches.</p>';
         }
+        dispatchContent.innerHTML = html;
     } else if (tab === 'new') {
         dispatchContent.innerHTML = `
             <h3 class="text-lg font-semibold mb-2">New Dispatch</h3>
-            <form id="newDispatchForm">
+            <form id="newDispatchForm" class="edit-form">
                 <div class="mb-4">
                     <label class="block text-sm font-medium mb-1" for="issue">Issue</label>
                     <input type="text" id="issue" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter issue">
@@ -280,7 +274,22 @@ function showDispatchTab(tab) {
                     <label class="block text-sm font-medium mb-1" for="property">Property</label>
                     <input type="text" id="property" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter property">
                 </div>
-                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Create Dispatch</button>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1" for="priority">Priority</label>
+                    <select id="priority" class="bg-gray-700 text-white p-2 rounded w-full">
+                        <option value="Low">Low</option>
+                        <option value="Medium">Medium</option>
+                        <option value="High">High</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1" for="notes">Notes</label>
+                    <textarea id="notes" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter notes (optional)"></textarea>
+                </div>
+                <div class="flex space-x-2">
+                    <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Create Dispatch</button>
+                    <button type="button" onclick="showDispatchTab('active')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
+                </div>
             </form>
         `;
         const form = document.getElementById('newDispatchForm');
@@ -289,13 +298,18 @@ function showDispatchTab(tab) {
                 e.preventDefault();
                 const issue = document.getElementById('issue').value;
                 const property = document.getElementById('property').value;
+                const priority = document.getElementById('priority').value;
+                const notes = document.getElementById('notes').value;
                 const newDispatch = {
                     id: `D${(dispatchData.length + 1).toString().padStart(3, '0')}`,
                     issue,
                     property,
+                    priority,
+                    notes,
                     status: 'Pending',
                     assignedOfficer: null,
-                    dateTime: new Date().toISOString()
+                    dateTime: new Date().toISOString(),
+                    assignmentHistory: []
                 };
                 dispatchData.push(newDispatch);
                 saveDataToLocalStorage();
@@ -304,7 +318,186 @@ function showDispatchTab(tab) {
             });
         }
     }
-    dispatchContent.innerHTML = html;
+}
+
+function filterActiveDispatches() {
+    const statusFilter = document.getElementById('statusFilter')?.value || '';
+    const sortOrder = document.getElementById('sortOrder')?.value || 'newest';
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isOfficer = user.group === 'Officers';
+    const isDispatcher = ['Dispatchers', 'Managers', 'Supervisors'].includes(user.group);
+
+    let activeDispatches = dispatchData ? dispatchData.filter(d => d.status !== 'Completed') : [];
+    if (statusFilter) {
+        activeDispatches = activeDispatches.filter(d => d.status === statusFilter);
+    }
+    if (sortOrder === 'newest') {
+        activeDispatches.sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime));
+    } else {
+        activeDispatches.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+    }
+
+    let html = '';
+    if (activeDispatches.length) {
+        html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Priority</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Assignment History</th><th class="p-2 bg-gray-700">Actions</th></tr>';
+        activeDispatches.forEach(disp => {
+            if (!isOfficer || disp.assignedOfficer === user.username) {
+                const callTime = new Date(disp.dateTime).toLocaleString();
+                const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
+                const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500', Completed: 'text-green-500' }[disp.status];
+                const history = disp.assignmentHistory ? disp.assignmentHistory.map(h => `${h.officer} at ${new Date(h.timestamp).toLocaleString()}`).join('<br>') : 'N/A';
+                html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.priority}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2"><span class="${statusColor}">${disp.status}</span></td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td><td class="p-2">${history}</td>`;
+                html += '<td class="p-2 space-x-2">';
+                if (isDispatcher) {
+                    html += `<select onchange="assignOfficer(this, '${disp.id}')" class="bg-gray-700 text-white p-1 rounded">`;
+                    html += '<option value="">Assign</option>';
+                    if (employeesData) {
+                        employeesData.forEach(emp => {
+                            html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`;
+                        });
+                    }
+                    html += '</select>';
+                    html += `<button onclick="editDispatch('${disp.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>`;
+                    html += `<button onclick="clearDispatch('${disp.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Clear</button>`;
+                    html += `<button onclick="confirmDeleteDispatch('${disp.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>`;
+                }
+                if (isOfficer && disp.assignedOfficer === user.username && disp.status !== 'In Progress') {
+                    html += `<button onclick="setDispatchInProgress('${disp.id}')" class="bg-orange-600 hover:bg-orange-700 p-1 rounded text-sm shadow">In Progress</button>`;
+                }
+                html += '</td></tr>';
+            }
+        });
+        html += '</table>';
+    } else {
+        html += '<p class="text-center">No active dispatches.</p>';
+    }
+    const activeDispatchList = document.getElementById('activeDispatchList');
+    if (activeDispatchList) {
+        activeDispatchList.innerHTML = html;
+    }
+}
+
+function editDispatch(id) {
+    const dispatch = dispatchData.find(d => d.id === id);
+    if (!dispatch) return;
+
+    const dispatchContent = document.getElementById('dispatchContent');
+    dispatchContent.innerHTML = `
+        <h3 class="text-lg font-semibold mb-2">Edit Dispatch</h3>
+        <form id="editDispatchForm-${id}" class="edit-form">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="issue-${id}">Issue</label>
+                <input type="text" id="issue-${id}" value="${dispatch.issue}" class="bg-gray-700 text-white p-2 rounded w-full">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="property-${id}">Property</label>
+                <input type="text" id="property-${id}" value="${dispatch.property}" class="bg-gray-700 text-white p-2 rounded w-full">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="priority-${id}">Priority</label>
+                <select id="priority-${id}" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="Low" ${dispatch.priority === 'Low' ? 'selected' : ''}>Low</option>
+                    <option value="Medium" ${dispatch.priority === 'Medium' ? 'selected' : ''}>Medium</option>
+                    <option value="High" ${dispatch.priority === 'High' ? 'selected' : ''}>High</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="status-${id}">Status</label>
+                <select id="status-${id}" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="Pending" ${dispatch.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                    <option value="Assigned" ${dispatch.status === 'Assigned' ? 'selected' : ''}>Assigned</option>
+                    <option value="In Progress" ${dispatch.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                </select>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="notes-${id}">Notes</label>
+                <textarea id="notes-${id}" class="bg-gray-700 text-white p-2 rounded w-full">${dispatch.notes || ''}</textarea>
+            </div>
+            <div class="flex space-x-2">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Save</button>
+                <button type="button" onclick="showDispatchTab('active')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
+            </div>
+        </form>
+    `;
+
+    const form = document.getElementById(`editDispatchForm-${id}`);
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const updates = {
+            issue: document.getElementById(`issue-${id}`).value,
+            property: document.getElementById(`property-${id}`).value,
+            priority: document.getElementById(`priority-${id}`).value,
+            status: document.getElementById(`status-${id}`).value,
+            notes: document.getElementById(`notes-${id}`).value
+        };
+        updateDispatch(id, updates);
+        showAlert('Dispatch updated successfully', 'bg-green-600');
+        showDispatchTab('active');
+    });
+}
+
+function setDispatchInProgress(id) {
+    const dispatch = dispatchData.find(d => d.id === id);
+    if (dispatch) {
+        updateDispatch(id, { status: 'In Progress' });
+        showAlert('Dispatch set to In Progress', 'bg-orange-600');
+        filterActiveDispatches();
+    }
+}
+
+function assignOfficer(select, dispatchId) {
+    const officer = select.value;
+    const dispatch = dispatchData.find(d => d.id === dispatchId);
+    if (dispatch) {
+        const historyEntry = { officer: officer || 'Unassigned', timestamp: new Date().toISOString() };
+        const assignmentHistory = dispatch.assignmentHistory ? [...dispatch.assignmentHistory, historyEntry] : [historyEntry];
+        updateDispatch(dispatchId, {
+            assignedOfficer: officer || null,
+            status: officer ? 'Assigned' : 'Pending',
+            assignedTime: officer ? new Date().toISOString() : null,
+            assignmentHistory
+        });
+        // Notify the officer if assigned
+        if (officer) {
+            const user = JSON.parse(localStorage.getItem('user'));
+            if (user.username === officer) {
+                showAlert(`You have been assigned to dispatch ${dispatchId}: ${dispatch.issue}`, 'bg-blue-600');
+            }
+        }
+        showDispatchTab('active');
+    } else {
+        showAlert('Dispatch not found', 'bg-red-600');
+    }
+}
+
+function clearDispatch(dispatchId) {
+    const dispatch = dispatchData.find(d => d.id === dispatchId);
+    if (dispatch) {
+        updateDispatch(dispatchId, { status: 'Completed', resolveTime: new Date().toISOString() });
+        showAlert('Dispatch cleared successfully', 'bg-green-600');
+        showDispatchTab('active');
+    } else {
+        showAlert('Dispatch not found', 'bg-red-600');
+    }
+}
+
+function restoreDispatch(dispatchId) {
+    const dispatch = dispatchData.find(d => d.id === dispatchId);
+    if (dispatch) {
+        updateDispatch(dispatchId, { status: 'Pending', resolveTime: null });
+        showAlert('Dispatch restored successfully', 'bg-blue-600');
+        showDispatchTab('completed');
+    } else {
+        showAlert('Dispatch not found', 'bg-red-600');
+    }
+}
+
+function confirmDeleteDispatch(id) {
+    if (confirm('Are you sure you want to delete this dispatch? This action cannot be undone.')) {
+        deleteDispatch(id);
+        showAlert('Dispatch deleted successfully', 'bg-green-600');
+        showDispatchTab('active');
+    }
 }
 
 function showProperties() {
@@ -1019,230 +1212,4 @@ function filterUsers() {
         `;
     });
     const userList = document.getElementById('userList');
-    if (userList) {
-        userList.innerHTML = html || '<p class="text-center">No users found.</p>';
-    }
-}
-
-function confirmDeleteUser(username) {
-    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-        deleteUser(username);
-        showAlert('User deleted successfully', 'bg-green-600');
-        filterUsers();
-    }
-}
-
-function editUser(username) {
-    const user = usersData.find(u => u.username === username);
-    if (!user) return;
-
-    const card = document.getElementById(`user-${username}`);
-    card.innerHTML = `
-        <form id="editUserForm-${username}" class="edit-form">
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="username-${username}">Username</label>
-                <input type="text" id="username-${username}" value="${user.username}" class="bg-gray-700 text-white p-2 rounded w-full" readonly>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="password-${username}">Password</label>
-                <input type="text" id="password-${username}" value="${user.password}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="group-${username}">Group</label>
-                <select id="group-${username}" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="Managers" ${user.group === 'Managers' ? 'selected' : ''}>Managers</option>
-                    <option value="Supervisors" ${user.group === 'Supervisors' ? 'selected' : ''}>Supervisors</option>
-                    <option value="Officers" ${user.group === 'Officers' ? 'selected' : ''}>Officers</option>
-                    <option value="Dispatchers" ${user.group === 'Dispatchers' ? 'selected' : ''}>Dispatchers</option>
-                </select>
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Save</button>
-                <button type="button" onclick="filterUsers()" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
-            </div>
-        </form>
-    `;
-
-    const form = document.getElementById(`editUserForm-${username}`);
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newPassword = document.getElementById(`password-${username}`).value;
-        const newGroup = document.getElementById(`group-${username}`).value;
-        if (newPassword || newGroup) {
-            updateUser(username, newPassword, newGroup);
-            showAlert('User updated successfully', 'bg-green-600');
-            filterUsers();
-        }
-    });
-}
-
-function addNewEmployee() {
-    const mainContent = document.getElementById('managerContent');
-    mainContent.innerHTML = `
-        <h3 class="text-lg font-semibold mb-2">Add New Employee</h3>
-        <form id="addEmployeeForm" class="edit-form">
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="name">Name</label>
-                <input type="text" id="name" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter name">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="route">Route</label>
-                <input type="text" id="route" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter route">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="start">Schedule Start</label>
-                <input type="datetime-local" id="start" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="end">Schedule End</label>
-                <input type="datetime-local" id="end" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="location">Location</label>
-                <input type="text" id="location" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter location">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="department">Department</label>
-                <select id="department" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="Supervisors">Supervisors</option>
-                    <option value="Officers">Officers</option>
-                    <option value="Dispatchers">Dispatchers</option>
-                </select>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="status">Status</label>
-                <select id="status" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="10-8">10-8</option>
-                    <option value="10-6">10-6</option>
-                    <option value="10-42">10-42</option>
-                </select>
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add Employee</button>
-                <button type="button" onclick="showManagerTab('employees')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
-            </div>
-        </form>
-    `;
-
-    const form = document.getElementById('addEmployeeForm');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newEmployee = {
-            name: document.getElementById('name').value,
-            route: document.getElementById('route').value,
-            schedule: {
-                start: new Date(document.getElementById('start').value).toISOString(),
-                end: new Date(document.getElementById('end').value).toISOString()
-            },
-            location: document.getElementById('location').value,
-            department: document.getElementById('department').value,
-            status: document.getElementById('status').value
-        };
-        addEmployee(newEmployee);
-        showAlert('Employee added successfully', 'bg-green-600');
-        showManagerTab('employees');
-    });
-}
-
-function filterEmployees() {
-    const search = document.getElementById('employeeSearch')?.value.toLowerCase() || '';
-    const employees = employeesData.filter(e => e.name.toLowerCase().includes(search));
-    let html = '';
-    employees.forEach(emp => {
-        html += `
-            <div class="bg-gray-700 p-3 rounded shadow" id="employee-${emp.name}">
-                <p><strong>Name:</strong> ${emp.name}</p>
-                <p><strong>Route:</strong> ${emp.route}</p>
-                <p><strong>Schedule:</strong> ${new Date(emp.schedule.start).toLocaleString()} - ${new Date(emp.schedule.end).toLocaleString()}</p>
-                <p><strong>Location:</strong> ${emp.location}</p>
-                <p><strong>Department:</strong> ${emp.department}</p>
-                <p><strong>Status:</strong> ${emp.status}</p>
-                <div class="flex space-x-2 mt-2">
-                    <button onclick="editEmployee('${emp.name}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
-                    <button onclick="confirmDeleteEmployee('${emp.name}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
-                </div>
-            </div>
-        `;
-    });
-    const employeeList = document.getElementById('employeeList');
-    if (employeeList) {
-        employeeList.innerHTML = html || '<p class="text-center">No employees found.</p>';
-    }
-}
-
-function confirmDeleteEmployee(name) {
-    if (confirm('Are you sure you want to delete this employee? This action cannot be undone.')) {
-        deleteEmployee(name);
-        showAlert('Employee deleted successfully', 'bg-green-600');
-        filterEmployees();
-    }
-}
-
-function editEmployee(name) {
-    const emp = employeesData.find(e => e.name === name);
-    if (!emp) return;
-
-    const card = document.getElementById(`employee-${name}`);
-    card.innerHTML = `
-        <form id="editEmployeeForm-${name}" class="edit-form">
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="name-${name}">Name</label>
-                <input type="text" id="name-${name}" value="${emp.name}" class="bg-gray-700 text-white p-2 rounded w-full" readonly>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="route-${name}">Route</label>
-                <input type="text" id="route-${name}" value="${emp.route}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="start-${name}">Schedule Start</label>
-                <input type="datetime-local" id="start-${name}" value="${emp.schedule.start.slice(0, 16)}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="end-${name}">Schedule End</label>
-                <input type="datetime-local" id="end-${name}" value="${emp.schedule.end.slice(0, 16)}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="location-${name}">Location</label>
-                <input type="text" id="location-${name}" value="${emp.location}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="department-${name}">Department</label>
-                <select id="department-${name}" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="Supervisors" ${emp.department === 'Supervisors' ? 'selected' : ''}>Supervisors</option>
-                    <option value="Officers" ${emp.department === 'Officers' ? 'selected' : ''}>Officers</option>
-                    <option value="Dispatchers" ${emp.department === 'Dispatchers' ? 'selected' : ''}>Dispatchers</option>
-                </select>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="status-${name}">Status</label>
-                <select id="status-${name}" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="10-8" ${emp.status === '10-8' ? 'selected' : ''}>10-8</option>
-                    <option value="10-6" ${emp.status === '10-6' ? 'selected' : ''}>10-6</option>
-                    <option value="10-42" ${emp.status === '10-42' ? 'selected' : ''}>10-42</option>
-                </select>
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Save</button>
-                <button type="button" onclick="filterEmployees()" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
-            </div>
-        </form>
-    `;
-
-    const form = document.getElementById(`editEmployeeForm-${name}`);
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const updates = {
-            route: document.getElementById(`route-${name}`).value,
-            schedule: {
-                start: new Date(document.getElementById(`start-${name}`).value).toISOString(),
-                end: new Date(document.getElementById(`end-${name}`).value).toISOString()
-            },
-            location: document.getElementById(`location-${name}`).value,
-            department: document.getElementById(`department-${name}`).value,
-            status: document.getElementById(`status-${name}`).value
-        };
-        updateEmployee(name, updates);
-        showAlert('Employee updated successfully', 'bg-green-600');
-        filterEmployees();
-    });
-}
+   
