@@ -2,12 +2,18 @@
 
 // Data arrays (loaded from local storage or initialized with defaults)
 let usersData = JSON.parse(localStorage.getItem('users')) || [
-    { username: 'JohnSmith', password: 'password123', group: 'Managers' },
-    { username: 'AlexReed', password: 'password123', group: 'Officers' }
+    { username: 'JohnSmith', password: 'john123', group: 'Managers' },
+    { username: 'TomVega', password: 'tom123', group: 'Supervisors' },
+    { username: 'AlexReed', password: 'alex123', group: 'Officers' },
+    { username: 'BellaCruz', password: 'bella123', group: 'Officers' },
+    { username: 'SarahJones', password: 'sarah123', group: 'Dispatchers' }
 ];
 let employeesData = JSON.parse(localStorage.getItem('employees')) || [
     { name: 'JohnSmith', route: 'Route-1', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'HQ', department: 'Supervisors', status: '10-8' },
-    { name: 'AlexReed', route: 'Route-2', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'Field', department: 'Officers', status: '10-8' }
+    { name: 'TomVega', route: 'Route-2', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'HQ', department: 'Supervisors', status: '10-8' },
+    { name: 'AlexReed', route: 'Route-3', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'Field', department: 'Officers', status: '10-8' },
+    { name: 'BellaCruz', route: 'Route-4', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'Field', department: 'Officers', status: '10-8' },
+    { name: 'SarahJones', route: 'Route-5', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'Dispatch', department: 'Dispatchers', status: '10-8' }
 ];
 let dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [];
 let propertiesData = JSON.parse(localStorage.getItem('properties')) || [
@@ -32,12 +38,18 @@ function saveDataToLocalStorage() {
 
 function loadData(callback) {
     usersData = JSON.parse(localStorage.getItem('users')) || [
-        { username: 'JohnSmith', password: 'password123', group: 'Managers' },
-        { username: 'AlexReed', password: 'password123', group: 'Officers' }
+        { username: 'JohnSmith', password: 'john123', group: 'Managers' },
+        { username: 'TomVega', password: 'tom123', group: 'Supervisors' },
+        { username: 'AlexReed', password: 'alex123', group: 'Officers' },
+        { username: 'BellaCruz', password: 'bella123', group: 'Officers' },
+        { username: 'SarahJones', password: 'sarah123', group: 'Dispatchers' }
     ];
     employeesData = JSON.parse(localStorage.getItem('employees')) || [
         { name: 'JohnSmith', route: 'Route-1', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'HQ', department: 'Supervisors', status: '10-8' },
-        { name: 'AlexReed', route: 'Route-2', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'Field', department: 'Officers', status: '10-8' }
+        { name: 'TomVega', route: 'Route-2', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'HQ', department: 'Supervisors', status: '10-8' },
+        { name: 'AlexReed', route: 'Route-3', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'Field', department: 'Officers', status: '10-8' },
+        { name: 'BellaCruz', route: 'Route-4', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'Field', department: 'Officers', status: '10-8' },
+        { name: 'SarahJones', route: 'Route-5', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'Dispatch', department: 'Dispatchers', status: '10-8' }
     ];
     dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [];
     propertiesData = JSON.parse(localStorage.getItem('properties')) || [
