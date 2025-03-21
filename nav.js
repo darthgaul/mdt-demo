@@ -45,6 +45,8 @@ function initializeNav(page) {
     const userInfo = document.getElementById('userInfo');
     if (userInfo && user) {
         userInfo.textContent = `Logged in as ${user.username}`;
+    } else if (userInfo) {
+        userInfo.textContent = `Logged in as no one`;
     }
 
     // Hide Manager link for non-managers
@@ -106,4 +108,9 @@ function initializeNav(page) {
         const activeLink = document.querySelector(`.nav-tabs a[data-tab="${currentTab}"]`);
         if (activeLink) activeLink.classList.add('active');
     }
+}
+
+function logout() {
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
 }
