@@ -1135,14 +1135,19 @@ function addNewReport() {
         <div id="alert" class="hidden"></div>
     `;
 
-    const form = document.getElementById('addReportForm');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newReport = {
-            caseNumber: newCaseNumber,
-            dateTime: new Date(document.getElementById('dateTime').value).toISOString(),
-            personId: 'N/A', // Default value
-            property: document.getElementById('property').value,
-            type: document.getElementById('type').value,
-            narrative: document.getElementById('narrative').value,
-            officer: document.getElementById('officer').
+   const form = document.getElementById('addReportForm');
+form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const newReport = {
+        caseNumber: newCaseNumber,
+        dateTime: new Date(document.getElementById('dateTime').value).toISOString(),
+        personId: 'N/A', // Default value
+        property: document.getElementById('property').value,
+        type: document.getElementById('type').value,
+        narrative: document.getElementById('narrative').value,
+        officer: document.getElementById('officer').value
+    };
+    addReport(newReport);
+    showAlert('Report added successfully', 'bg-green-600');
+    showReports();
+});
