@@ -37,6 +37,20 @@ function initializeDashboard() {
         const managerLink = document.getElementById('managerLink');
         if (managerLink && user.group !== 'Managers') managerLink.style.display = 'none';
     }
+
+    // Check for new dispatch assignments for officers
+    if (user.group === 'Officers') {
+        const lastChecked = localStorage.getItem('lastDispatchCheck') ? new Date(localStorage.getItem('lastDispatchCheck')) : null;
+        const newDispatches = dispatchData.filter(d => 
+            d.assignedOfficer === user.username && 
+            d.status !== 'Completed' && 
+            (!lastChecked || new Date(d.assignedTime) > lastChecked)
+        );
+        newDispatches.forEach(disp => {
+            showAlert(`You have been assigned to dispatch ${disp.id}: ${disp.issue}`, 'bg-blue-600');
+        });
+        localStorage.setItem('lastDispatchCheck', new Date().toISOString());
+    }
 }
 
 function toggleSidebar(id) {
@@ -146,7 +160,14 @@ function assignCall(name) {
     if (callId) {
         const dispatch = dispatchData.find(d => d.id === callId && d.status !== 'Completed');
         if (dispatch) {
-            updateDispatch(callId, { assignedOfficer: name, status: 'Assigned' });
+            const historyEntry = { officer: name, timestamp: new Date().toISOString() };
+            const assignmentHistory = dispatch.assignmentHistory ? [...dispatch.assignmentHistory, historyEntry] : [historyEntry];
+            updateDispatch(callId, { 
+                assignedOfficer: name, 
+                status: 'Assigned', 
+                assignedTime: new Date().toISOString(),
+                assignmentHistory
+            });
             showAlert(`Dispatch ${callId} assigned to ${name}`, 'bg-green-600');
             updateDispatchList();
         } else {
