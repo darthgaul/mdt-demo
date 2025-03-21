@@ -107,20 +107,7 @@ function updateUnitsList() {
                 html += `<div class="unit-card"><p><strong>${emp.name}</strong> <span class="status-tag ${statusClass}">${status}</span></p>`;
                 html += `<p><strong>Location:</strong> ${emp.location || 'N/A'}</p>`;
                 html += `<p><strong>Department:</strong> ${emp.department || 'N/A'}</p>`;
-                html += `<div class="flex space-x-2 mt-2">
-                    <button onclick="messageUnit('${emp.name}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow tooltip">
-                        Message
-                        <span class="tooltip-text">Send a message to this unit</span>
-                    </button>
-                    <button onclick="setStatus('${emp.name}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow tooltip">
-                        Set Status
-                        <span class="tooltip-text">Update the unit's status</span>
-                    </button>
-                    <button onclick="assignCall('${emp.name}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow tooltip">
-                        Assign Call
-                        <span class="tooltip-text">Assign a dispatch to this unit</span>
-                    </button>
-                </div></div>`;
+                html += `</div>`;
             });
             html += '</div></div>';
         }
@@ -136,43 +123,6 @@ function updateUnitsList() {
         }
     } else {
         console.error('Index: unitsList element not found');
-    }
-}
-
-function messageUnit(name) {
-    const message = prompt(`Message to ${name}:`);
-    if (message) showAlert(`Message sent to ${name}: ${message}`, 'bg-green-600');
-}
-
-function setStatus(name) {
-    const status = prompt(`Set status for ${name} (e.g., 10-8, 10-6, 10-42):`);
-    if (['10-8', '10-6', '10-42'].includes(status)) {
-        updateEmployee(name, { status: status });
-        showAlert(`Status for ${name} updated to ${status}`, 'bg-green-600');
-        updateUnitsList();
-    } else {
-        showAlert('Invalid status code. Use 10-8, 10-6, or 10-42.', 'bg-red-600');
-    }
-}
-
-function assignCall(name) {
-    const callId = prompt(`Enter dispatch ID to assign to ${name}:`);
-    if (callId) {
-        const dispatch = dispatchData.find(d => d.id === callId && d.status !== 'Completed');
-        if (dispatch) {
-            const historyEntry = { officer: name, timestamp: new Date().toISOString() };
-            const assignmentHistory = dispatch.assignmentHistory ? [...dispatch.assignmentHistory, historyEntry] : [historyEntry];
-            updateDispatch(callId, { 
-                assignedOfficer: name, 
-                status: 'Assigned', 
-                assignedTime: new Date().toISOString(),
-                assignmentHistory
-            });
-            showAlert(`Dispatch ${callId} assigned to ${name}`, 'bg-green-600');
-            updateDispatchList();
-        } else {
-            showAlert(`Dispatch ${callId} not found or completed`, 'bg-red-600');
-        }
     }
 }
 
