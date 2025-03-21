@@ -169,6 +169,11 @@ function updateDispatch(id, updates) {
     }
 }
 
+function deleteDispatch(id) {
+    dispatchData = dispatchData.filter(d => d.id !== id);
+    saveDataToLocalStorage();
+}
+
 // Alert function
 function showAlert(message, bgColor) {
     const alert = document.getElementById('alert');
