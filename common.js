@@ -2,16 +2,16 @@
 
 // Initial data arrays
 let usersData = [
-    { username: 'JohnSmith', password: 'password123', group: 'Managers' },
-    { username: 'SarahJones', password: 'password123', group: 'Dispatchers' },
-    { username: 'AlexReed', password: 'password123', group: 'Officers' },
-    { username: 'TomVega', password: 'password123', group: 'Supervisors' },
-    { username: 'BellaCruz', password: 'password123', group: 'Officers' },
-    { username: 'MikeBrown', password: 'password123', group: 'Officers' },
-    { username: 'LisaWhite', password: 'password123', group: 'Dispatchers' },
-    { username: 'JamesGreen', password: 'password123', group: 'Officers' },
-    { username: 'EmmaDavis', password: 'password123', group: 'Supervisors' },
-    { username: 'DavidLee', password: 'password123', group: 'Officers' }
+    { username: 'JohnSmith', password: 'john123', group: 'Managers' },
+    { username: 'SarahJones', password: 'sarah123', group: 'Dispatchers' },
+    { username: 'AlexReed', password: 'alex123', group: 'Officers' },
+    { username: 'TomVega', password: 'tom123', group: 'Supervisors' },
+    { username: 'BellaCruz', password: 'bella123', group: 'Officers' },
+    { username: 'MikeBrown', password: 'mike123', group: 'Officers' },
+    { username: 'LisaWhite', password: 'lisa123', group: 'Dispatchers' },
+    { username: 'JamesGreen', password: 'james123', group: 'Officers' },
+    { username: 'EmmaDavis', password: 'emma123', group: 'Supervisors' },
+    { username: 'DavidLee', password: 'david123', group: 'Officers' }
 ];
 
 let employeesData = [
