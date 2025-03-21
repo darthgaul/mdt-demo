@@ -1,12 +1,25 @@
 // common.js - Shared utilities and data management
 
-// Data arrays (loaded from local storage or initialized)
-let usersData = JSON.parse(localStorage.getItem('users')) || [];
-let employeesData = JSON.parse(localStorage.getItem('employees')) || [];
+// Data arrays (loaded from local storage or initialized with defaults)
+let usersData = JSON.parse(localStorage.getItem('users')) || [
+    { username: 'JohnSmith', password: 'password123', group: 'Managers' },
+    { username: 'AlexReed', password: 'password123', group: 'Officers' }
+];
+let employeesData = JSON.parse(localStorage.getItem('employees')) || [
+    { name: 'JohnSmith', route: 'Route-1', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'HQ', department: 'Supervisors', status: '10-8' },
+    { name: 'AlexReed', route: 'Route-2', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'Field', department: 'Officers', status: '10-8' }
+];
 let dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [];
-let propertiesData = JSON.parse(localStorage.getItem('properties')) || [];
-let peopleData = JSON.parse(localStorage.getItem('people')) || [];
-let reportsData = JSON.parse(localStorage.getItem('reports')) || [];
+let propertiesData = JSON.parse(localStorage.getItem('properties')) || [
+    { id: 'PROP001', propertyName: 'Sunset Apartments', address: '123 Sunset Blvd', apt: '', minHits: 5, notes: 'High crime area', suspended: false },
+    { id: 'PROP002', propertyName: 'Oakwood Plaza', address: '456 Oakwood Dr', apt: '', minHits: 3, notes: '', suspended: false }
+];
+let peopleData = JSON.parse(localStorage.getItem('people')) || [
+    { id: 'P001', name: 'Jane Doe', dob: '1990-01-01', status: 'Trespasser', property: 'Sunset Apartments', behavior: 'Hostile', ctnStatus: 'CTN Issued' }
+];
+let reportsData = JSON.parse(localStorage.getItem('reports')) || [
+    { caseNumber: '25-03140001', dateTime: '2025-03-21T10:00:00Z', personId: 'N/A', property: 'PROP001', type: 'Patrol Hit', narrative: 'Routine patrol', officer: 'AlexReed' }
+];
 
 function saveDataToLocalStorage() {
     localStorage.setItem('users', JSON.stringify(usersData));
@@ -18,12 +31,25 @@ function saveDataToLocalStorage() {
 }
 
 function loadData(callback) {
-    usersData = JSON.parse(localStorage.getItem('users')) || [];
-    employeesData = JSON.parse(localStorage.getItem('employees')) || [];
+    usersData = JSON.parse(localStorage.getItem('users')) || [
+        { username: 'JohnSmith', password: 'password123', group: 'Managers' },
+        { username: 'AlexReed', password: 'password123', group: 'Officers' }
+    ];
+    employeesData = JSON.parse(localStorage.getItem('employees')) || [
+        { name: 'JohnSmith', route: 'Route-1', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'HQ', department: 'Supervisors', status: '10-8' },
+        { name: 'AlexReed', route: 'Route-2', schedule: { start: '2025-03-21T08:00:00Z', end: '2025-03-21T17:00:00Z' }, location: 'Field', department: 'Officers', status: '10-8' }
+    ];
     dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [];
-    propertiesData = JSON.parse(localStorage.getItem('properties')) || [];
-    peopleData = JSON.parse(localStorage.getItem('people')) || [];
-    reportsData = JSON.parse(localStorage.getItem('reports')) || [];
+    propertiesData = JSON.parse(localStorage.getItem('properties')) || [
+        { id: 'PROP001', propertyName: 'Sunset Apartments', address: '123 Sunset Blvd', apt: '', minHits: 5, notes: 'High crime area', suspended: false },
+        { id: 'PROP002', propertyName: 'Oakwood Plaza', address: '456 Oakwood Dr', apt: '', minHits: 3, notes: '', suspended: false }
+    ];
+    peopleData = JSON.parse(localStorage.getItem('people')) || [
+        { id: 'P001', name: 'Jane Doe', dob: '1990-01-01', status: 'Trespasser', property: 'Sunset Apartments', behavior: 'Hostile', ctnStatus: 'CTN Issued' }
+    ];
+    reportsData = JSON.parse(localStorage.getItem('reports')) || [
+        { caseNumber: '25-03140001', dateTime: '2025-03-21T10:00:00Z', personId: 'N/A', property: 'PROP001', type: 'Patrol Hit', narrative: 'Routine patrol', officer: 'AlexReed' }
+    ];
     if (callback) callback();
 }
 
@@ -122,7 +148,7 @@ function deleteEmployee(name) {
     saveDataToLocalStorage();
 }
 
-// Helper functions for dispatches (already used in dispatch tab)
+// Helper functions for dispatches
 function updateDispatch(id, updates) {
     const index = dispatchData.findIndex(d => d.id === id);
     if (index !== -1) {
@@ -131,7 +157,7 @@ function updateDispatch(id, updates) {
     }
 }
 
-// Alert function (already used throughout the app)
+// Alert function
 function showAlert(message, bgColor) {
     const alert = document.getElementById('alert');
     if (alert) {
@@ -144,7 +170,7 @@ function showAlert(message, bgColor) {
     }
 }
 
-// Service worker setup (already present, unchanged)
+// Service worker setup
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('message', (event) => {
         console.log('Service worker message received:', event.data);
