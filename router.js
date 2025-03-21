@@ -58,10 +58,21 @@ window.addEventListener('popstate', (event) => {
 
 function showDashboard() {
     const mainContent = document.getElementById('main-content');
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+        console.log('Index: User not logged in, redirecting to login.html');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const isDispatcher = user.group === 'Dispatchers';
+    const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
+    const isOfficer = user.group === 'Officers';
+
     mainContent.innerHTML = `
         <div class="tips">
             <h4 class="text-lg font-semibold">Tips</h4>
-            <p>Overview: See your dispatches or team status. Route: Start your patrol route. Use the sidebar toggles on mobile.</p>
+            <p>Overview: See your dispatches or team status. ${isOfficer ? 'Route: Start your patrol route.' : ''} Use the sidebar toggles on mobile.</p>
             <p>Example: Use 10-codes like "10-42" to mark yourself off duty.</p>
         </div>
         <div class="dashboard-container">
@@ -86,10 +97,12 @@ function showDashboard() {
                         Overview
                         <span class="tooltip-text">View team status and active dispatches</span>
                     </button>
+                    ${!isDispatcher ? `
                     <button onclick="showDashboardTab('route')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow tooltip">
                         Route
-                        <span class="tooltip-text">Manage your assigned patrol route</span>
+                        <span class="tooltip-text">Manage patrol routes</span>
                     </button>
+                    ` : ''}
                 </div>
                 <div id="dashboardContent"></div>
                 <div class="nato-cheat-sheet">
@@ -128,23 +141,105 @@ function showDashboardTab(tab) {
         return;
     }
 
+    const isDispatcher = user.group === 'Dispatchers';
     const isManagerOrSupervisor = ['Managers', 'Supervisors'].includes(user.group);
+    const isOfficer = user.group === 'Officers';
     let html = '';
 
     if (tab === 'overview') {
-        if (isManagerOrSupervisor) {
+        if (isDispatcher) {
+            // Dispatchers: Dispatch-focused dashboard
+            html += '<h3 class="text-lg font-semibold mb-2">Active Dispatches</h3>';
+            let activeDispatches = dispatchData ? dispatchData.filter(d => d.status !== 'Completed') : [];
+            if (activeDispatches.length) {
+                html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Priority</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Call Time</th><th class="p-2 bg-gray-700">Assigned Time</th><th class="p-2 bg-gray-700">Assignment History</th><th class="p-2 bg-gray-700">Actions</th></tr>';
+                activeDispatches.forEach(disp => {
+                    const callTime = new Date(disp.dateTime).toLocaleString();
+                    const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
+                    const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500', Completed: 'text-green-500' }[disp.status];
+                    const history = disp.assignmentHistory ? disp.assignmentHistory.map(h => `${h.officer} at ${new Date(h.timestamp).toLocaleString()}`).join('<br>') : 'N/A';
+                    html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.priority}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2"><span class="${statusColor}">${disp.status}</span></td><td class="p-2">${callTime}</td><td class="p-2">${assignedTime}</td><td class="p-2">${history}</td>`;
+                    html += '<td class="p-2 space-x-2">';
+                    html += `<select onchange="assignOfficer(this, '${disp.id}')" class="bg-gray-700 text-white p-1 rounded">`;
+                    html += '<option value="">Assign</option>';
+                    if (employeesData) {
+                        employeesData.forEach(emp => {
+                            html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`;
+                        });
+                    }
+                    html += '</select>';
+                    html += `<button onclick="editDispatch('${disp.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>`;
+                    html += `<button onclick="clearDispatch('${disp.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Clear</button>`;
+                    html += `<button onclick="confirmDeleteDispatch('${disp.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>`;
+                    html += '</td></tr>';
+                });
+                html += '</table>';
+            } else {
+                html += '<p class="text-center">No active dispatches.</p>';
+            }
+        } else if (isManagerOrSupervisor) {
+            // Managers/Supervisors: Managerial-oriented dashboard
             const activeCalls = dispatchData.filter(d => d.status !== 'Completed').length;
             const loggedInOfficers = usersData.filter(u => employeesData.some(e => e.name === u.username && new Date() >= new Date(e.schedule.start) && new Date() <= new Date(e.schedule.end))).length;
-            html += `<div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4"><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Active Calls:</strong> ${activeCalls}</p></div><div class="bg-gray-700 p-3 rounded shadow"><p><strong>Officers Online:</strong> ${loggedInOfficers}</p></div></div>`;
-            html += '<h3 class="text-lg font-semibold mb-2">Officer Status</h3><table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Route</th><th class="p-2 bg-gray-700">Start</th><th class="p-2 bg-gray-700">End</th><th class="p-2 bg-gray-700">Status</th></tr>';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const completedToday = dispatchData.filter(d => d.status === 'Completed' && new Date(d.resolveTime) >= today).length;
+            const overdueDispatches = dispatchData.filter(d => {
+                const elapsed = (new Date() - new Date(d.dateTime)) / 1000 / 60;
+                return d.status !== 'Completed' && elapsed >= 15;
+            }).length;
+
+            html += `
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div class="bg-gray-700 p-3 rounded shadow"><p><strong>Active Calls:</strong> ${activeCalls}</p></div>
+                    <div class="bg-gray-700 p-3 rounded shadow"><p><strong>Officers Online:</strong> ${loggedInOfficers}</p></div>
+                    <div class="bg-gray-700 p-3 rounded shadow"><p><strong>Completed Today:</strong> ${completedToday}</p></div>
+                    <div class="bg-gray-700 p-3 rounded shadow"><p><strong>Overdue Dispatches:</strong> ${overdueDispatches}</p></div>
+                </div>
+            `;
+
+            // Officer Status Table
+            html += '<h3 class="text-lg font-semibold mb-2">Officer Status</h3>';
+            html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Name</th><th class="p-2 bg-gray-700">Route</th><th class="p-2 bg-gray-700">Start</th><th class="p-2 bg-gray-700">End</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Active Dispatches</th></tr>';
             employeesData.forEach(emp => {
                 const isOnline = usersData.some(u => u.username === emp.name);
                 const statusColor = isOnline ? 'text-green-500' : 'text-red-500';
-                html += `<tr><td class="p-2 ${statusColor}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2">${emp.status || 'Offline'}</td></tr>`;
+                const activeDispatches = dispatchData.filter(d => d.assignedOfficer === emp.name && d.status !== 'Completed').length;
+                html += `<tr><td class="p-2 ${statusColor}">${emp.name}</td><td class="p-2">${emp.route}</td><td class="p-2">${new Date(emp.schedule.start).toLocaleTimeString()}</td><td class="p-2">${new Date(emp.schedule.end).toLocaleTimeString()}</td><td class="p-2">${emp.status || 'Offline'}</td><td class="p-2">${activeDispatches}</td></tr>`;
             });
             html += '</table>';
+
+            // Mini Active Dispatches Table
+            html += '<h3 class="text-lg font-semibold mb-2 mt-4">Active Dispatches</h3>';
+            let activeDispatches = dispatchData ? dispatchData.filter(d => d.status !== 'Completed') : [];
+            if (activeDispatches.length) {
+                html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Issue</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Priority</th><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Status</th><th class="p-2 bg-gray-700">Actions</th></tr>';
+                activeDispatches.forEach(disp => {
+                    const callTime = new Date(disp.dateTime).toLocaleString();
+                    const assignedTime = disp.assignedTime ? new Date(disp.assignedTime).toLocaleString() : 'N/A';
+                    const statusColor = { Pending: 'text-yellow-500', Assigned: 'text-blue-500', 'In Progress': 'text-orange-500', Completed: 'text-green-500' }[disp.status];
+                    html += `<tr><td class="p-2">${disp.issue}</td><td class="p-2">${disp.property}</td><td class="p-2">${disp.priority}</td><td class="p-2">${disp.assignedOfficer || 'Unassigned'}</td><td class="p-2"><span class="${statusColor}">${disp.status}</span></td>`;
+                    html += '<td class="p-2 space-x-2">';
+                    html += `<select onchange="assignOfficer(this, '${disp.id}')" class="bg-gray-700 text-white p-1 rounded">`;
+                    html += '<option value="">Assign</option>';
+                    if (employeesData) {
+                        employeesData.forEach(emp => {
+                            html += `<option value="${emp.name}" ${disp.assignedOfficer === emp.name ? 'selected' : ''}>${emp.name}</option>`;
+                        });
+                    }
+                    html += '</select>';
+                    html += `<button onclick="editDispatch('${disp.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>`;
+                    html += `<button onclick="clearDispatch('${disp.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Clear</button>`;
+                    html += `<button onclick="confirmDeleteDispatch('${disp.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>`;
+                    html += '</td></tr>';
+                });
+                html += '</table>';
+            } else {
+                html += '<p class="text-center">No active dispatches.</p>';
+            }
             setInterval(checkDispatchTimeouts, 60000);
-        } else {
+        } else if (isOfficer) {
+            // Officers: Current view with Recent Activity
             const active = dispatchData.filter(d => d.assignedOfficer === user.username && d.status !== 'Completed');
             console.log('Index: Active dispatches for user', user.username, ':', active);
             html += '<h3 class="text-lg font-semibold mb-2">Your Active Dispatches</h3>';
@@ -154,32 +249,70 @@ function showDashboardTab(tab) {
                 html += `<div class="bg-gray-700 p-3 rounded shadow"><p><strong>Issue:</strong> ${disp.issue}</p><p><strong>Property:</strong> ${disp.property}</p><p><strong>Status:</strong> <span class="${statusColor}">${disp.status}</span></p></div>`;
             });
             if (active.length) html += '</div>';
-        }
-    } else if (tab === 'route') {
-        const officer = employeesData.find(e => e.name === user.username);
-        const routeNum = officer ? parseInt(officer.route.split('-')[1]) : 5;
-        const hitsPerOfficer = routeNum === 5 ? 40 : (routeNum === 4 ? 50 : 60);
-        const activeProps = propertiesData.filter(p => !p.suspended);
-        const propsPerOfficer = Math.ceil(activeProps.length / routeNum);
-        const startIdx = employeesData.findIndex(e => e.name === user.username) * propsPerOfficer;
-        const routeProps = activeProps.slice(startIdx, startIdx + propsPerOfficer);
 
-        html += `<h3 class="text-lg font-semibold mb-2">Your Route: ${officer ? officer.route : 'Unassigned'} (${hitsPerOfficer} hits)</h3>`;
-        html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Hits Done</th><th class="p-2 bg-gray-700">Actions</th></tr>';
-        routeProps.forEach(prop => {
-            const hitsDone = reportsData.filter(r => r.property === prop.id && r.type === 'Patrol Hit').length;
-            html += `<tr><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${hitsDone}/${prop.minHits}</td><td class="p-2 space-x-2">`;
-            html += `<button onclick="navigate('${prop.address}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow tooltip">
-                Navigate
-                <span class="tooltip-text">Open Google Maps to navigate to this property</span>
-            </button>`;
-            html += `<button onclick="arrive('${prop.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow tooltip">
-                Arrived
-                <span class="tooltip-text">Mark arrival and log a patrol hit</span>
-            </button>`;
-            html += `</td></tr>`;
-        });
-        html += '</table>';
+            // Recent Activity Section
+            const recentReports = reportsData
+                .filter(r => r.officer === user.username && r.type === 'Patrol Hit')
+                .sort((a, b) => new Date(b.dateTime) - new Date(a.dateTime))
+                .slice(0, 5);
+            html += '<h3 class="text-lg font-semibold mb-2 mt-4">Recent Activity</h3>';
+            if (recentReports.length) {
+                html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Date</th><th class="p-2 bg-gray-700">Narrative</th></tr>';
+                recentReports.forEach(report => {
+                    const property = propertiesData.find(p => p.id === report.property)?.propertyName || report.property;
+                    html += `<tr><td class="p-2">${property}</td><td class="p-2">${new Date(report.dateTime).toLocaleString()}</td><td class="p-2">${report.narrative}</td></tr>`;
+                });
+                html += '</table>';
+            } else {
+                html += '<p class="text-center">No recent patrol hits.</p>';
+            }
+        }
+    } else if (tab === 'route' && !isDispatcher) {
+        if (isManagerOrSupervisor) {
+            // Managers/Supervisors: Show all officers' routes
+            html += '<h3 class="text-lg font-semibold mb-2">All Officers\' Routes</h3>';
+            html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Officer</th><th class="p-2 bg-gray-700">Route</th><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Hits Done</th></tr>';
+            employeesData.forEach(officer => {
+                const routeNum = officer.route ? parseInt(officer.route.split('-')[1]) : 5;
+                const hitsPerOfficer = routeNum === 5 ? 40 : (routeNum === 4 ? 50 : 60);
+                const activeProps = propertiesData.filter(p => !p.suspended);
+                const propsPerOfficer = Math.ceil(activeProps.length / 5); // Assuming 5 routes total
+                const startIdx = employeesData.findIndex(e => e.name === officer.name) * propsPerOfficer;
+                const routeProps = activeProps.slice(startIdx, startIdx + propsPerOfficer);
+
+                routeProps.forEach(prop => {
+                    const hitsDone = reportsData.filter(r => r.property === prop.id && r.type === 'Patrol Hit').length;
+                    html += `<tr><td class="p-2">${officer.name}</td><td class="p-2">${officer.route} (${hitsPerOfficer} hits)</td><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${hitsDone}/${prop.minHits}</td></tr>`;
+                });
+            });
+            html += '</table>';
+        } else if (isOfficer) {
+            // Officers: Current route view
+            const officer = employeesData.find(e => e.name === user.username);
+            const routeNum = officer ? parseInt(officer.route.split('-')[1]) : 5;
+            const hitsPerOfficer = routeNum === 5 ? 40 : (routeNum === 4 ? 50 : 60);
+            const activeProps = propertiesData.filter(p => !p.suspended);
+            const propsPerOfficer = Math.ceil(activeProps.length / routeNum);
+            const startIdx = employeesData.findIndex(e => e.name === user.username) * propsPerOfficer;
+            const routeProps = activeProps.slice(startIdx, startIdx + propsPerOfficer);
+
+            html += `<h3 class="text-lg font-semibold mb-2">Your Route: ${officer ? officer.route : 'Unassigned'} (${hitsPerOfficer} hits)</h3>`;
+            html += '<table class="w-full text-left"><tr><th class="p-2 bg-gray-700">Property</th><th class="p-2 bg-gray-700">Address</th><th class="p-2 bg-gray-700">Hits Done</th><th class="p-2 bg-gray-700">Actions</th></tr>';
+            routeProps.forEach(prop => {
+                const hitsDone = reportsData.filter(r => r.property === prop.id && r.type === 'Patrol Hit').length;
+                html += `<tr><td class="p-2">${prop.propertyName}</td><td class="p-2">${prop.address}</td><td class="p-2">${hitsDone}/${prop.minHits}</td><td class="p-2 space-x-2">`;
+                html += `<button onclick="navigate('${prop.address}')" class="bg-blue-600 hover:bg-blue-700 p-1 rounded text-sm shadow tooltip">
+                    Navigate
+                    <span class="tooltip-text">Open Google Maps to navigate to this property</span>
+                </button>`;
+                html += `<button onclick="arrive('${prop.id}')" class="bg-green-600 hover:bg-green-700 p-1 rounded text-sm shadow tooltip">
+                    Arrived
+                    <span class="tooltip-text">Mark arrival and log a patrol hit</span>
+                </button>`;
+                html += `</td></tr>`;
+            });
+            html += '</table>';
+        }
     }
     const dashboardContent = document.getElementById('dashboardContent');
     if (dashboardContent) {
@@ -1012,430 +1145,4 @@ function addNewReport() {
             property: document.getElementById('property').value,
             type: document.getElementById('type').value,
             narrative: document.getElementById('narrative').value,
-            officer: document.getElementById('officer').value
-        };
-        addReport(newReport);
-        showAlert('Report added successfully', 'bg-green-600');
-        showReports();
-    });
-}
-
-function editReport(caseNumber) {
-    const report = reportsData.find(r => r.caseNumber === caseNumber);
-    if (!report) return;
-
-    const card = document.getElementById(`report-${caseNumber}`);
-    card.innerHTML = `
-        <form id="editReportForm-${caseNumber}" class="edit-form">
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="caseNumber-${caseNumber}">Case #</label>
-                <input type="text" id="caseNumber-${caseNumber}" value="${report.caseNumber}" class="bg-gray-700 text-white p-2 rounded w-full" readonly>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="dateTime-${caseNumber}">Date</label>
-                <input type="datetime-local" id="dateTime-${caseNumber}" value="${report.dateTime.slice(0, 16)}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="property-${caseNumber}">Property</label>
-                <input type="text" id="property-${caseNumber}" value="${report.property}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="type-${caseNumber}">Type</label>
-                <select id="type-${caseNumber}" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="Patrol Hit" ${report.type === 'Patrol Hit' ? 'selected' : ''}>Patrol Hit</option>
-                    <option value="Incident" ${report.type === 'Incident' ? 'selected' : ''}>Incident</option>
-                </select>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="narrative-${caseNumber}">Narrative</label>
-                <textarea id="narrative-${caseNumber}" class="bg-gray-700 text-white p-2 rounded w-full">${report.narrative}</textarea>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="officer-${caseNumber}">Officer</label>
-                <input type="text" id="officer-${caseNumber}" value="${report.officer}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Save</button>
-                <button type="button" onclick="filterReports()" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
-            </div>
-        </form>
-    `;
-
-    const form = document.getElementById(`editReportForm-${caseNumber}`);
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const updatedReport = {
-            caseNumber: report.caseNumber,
-            dateTime: new Date(document.getElementById(`dateTime-${caseNumber}`).value).toISOString(),
-            personId: report.personId, // Preserve existing value
-            property: document.getElementById(`property-${caseNumber}`).value,
-            type: document.getElementById(`type-${caseNumber}`).value,
-            narrative: document.getElementById(`narrative-${caseNumber}`).value,
-            officer: document.getElementById(`officer-${caseNumber}`).value
-        };
-        updateReport(report.caseNumber, updatedReport);
-        showAlert('Report updated successfully', 'bg-green-600');
-        filterReports();
-    });
-}
-
-function confirmDeleteReport(caseNumber) {
-    if (confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
-        deleteReport(caseNumber);
-        showAlert('Report deleted successfully', 'bg-green-600');
-        filterReports();
-    }
-}
-
-function showManager() {
-    const mainContent = document.getElementById('main-content');
-    mainContent.innerHTML = `
-        <h2 class="text-2xl font-bold mb-4">Manager Dashboard</h2>
-        <div class="tips">
-            <h4 class="text-lg font-semibold">Tips</h4>
-            <p>Users: Add/edit/delete users. Employees: Manage employee schedules and routes. Properties: Add/edit/delete properties.</p>
-        </div>
-        <div class="flex space-x-4 mb-4">
-            <button onclick="showManagerTab('users')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Users</button>
-            <button onclick="showManagerTab('employees')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Employees</button>
-            <button onclick="showManagerTab('properties')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Properties</button>
-        </div>
-        <div id="managerContent"></div>
-        <div id="alert" class="hidden"></div>
-    `;
-    // Initialize manager tab (default to users)
-    showManagerTab('users');
-}
-
-function showManagerTab(tab) {
-    const managerContent = document.getElementById('managerContent');
-    if (!managerContent) return;
-
-    let html = '';
-
-    if (tab === 'users') {
-        html += '<h3 class="text-lg font-semibold mb-2">Manage Users</h3>';
-        html += `
-            <div class="mb-4 flex space-x-4">
-                <input type="text" id="userSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search users..." onkeyup="filterUsers()">
-                <button onclick="addNewUser()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New User</button>
-            </div>
-            <div id="userList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-        `;
-        managerContent.innerHTML = html;
-        filterUsers();
-    } else if (tab === 'employees') {
-        html += '<h3 class="text-lg font-semibold mb-2">Manage Employees</h3>';
-        html += `
-            <div class="mb-4 flex space-x-4">
-                <input type="text" id="employeeSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search employees..." onkeyup="filterEmployees()">
-                <button onclick="addNewEmployee()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New Employee</button>
-            </div>
-            <div id="employeeList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-        `;
-        managerContent.innerHTML = html;
-        filterEmployees();
-    } else if (tab === 'properties') {
-        html += '<h3 class="text-lg font-semibold mb-2">Manage Properties</h3>';
-        html += `
-            <div class="mb-4 flex space-x-4">
-                <input type="text" id="propertySearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search properties..." onkeyup="filterProperties()">
-                <select id="propertySuspendedFilter" class="bg-gray-700 text-white p-2 rounded" onchange="filterProperties()">
-                    <option value="">All</option>
-                    <option value="active">Active</option>
-                    <option value="suspended">Suspended</option>
-                </select>
-                <button onclick="addNewProperty()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New Property</button>
-            </div>
-            <div id="propertyList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-        `;
-        managerContent.innerHTML = html;
-        filterProperties();
-    }
-}
-
-function addNewUser() {
-    const mainContent = document.getElementById('managerContent');
-    mainContent.innerHTML = `
-        <h3 class="text-lg font-semibold mb-2">Add New User</h3>
-        <form id="addUserForm" class="edit-form">
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="username">Username</label>
-                <input type="text" id="username" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter username">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="password">Password</label>
-                <input type="text" id="password" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter password">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="group">Group</label>
-                <select id="group" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="Managers">Managers</option>
-                    <option value="Supervisors">Supervisors</option>
-                    <option value="Officers">Officers</option>
-                    <option value="Dispatchers">Dispatchers</option>
-                </select>
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add User</button>
-                <button type="button" onclick="showManagerTab('users')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
-            </div>
-        </form>
-    `;
-
-    const form = document.getElementById('addUserForm');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const group = document.getElementById('group').value;
-        addUser(username, password, group);
-        showAlert('User added successfully', 'bg-green-600');
-        showManagerTab('users');
-    });
-}
-
-function filterUsers() {
-    const search = document.getElementById('userSearch')?.value.toLowerCase() || '';
-    const users = usersData.filter(u => u.username.toLowerCase().includes(search));
-    let html = '';
-    users.forEach(user => {
-        html += `
-            <div class="bg-gray-700 p-3 rounded shadow" id="user-${user.username}">
-                <p><strong>Username:</strong> ${user.username}</p>
-                <p><strong>Group:</strong> ${user.group}</p>
-                <div class="flex space-x-2 mt-2">
-                    <button onclick="editUser('${user.username}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
-                    <button onclick="confirmDeleteUser('${user.username}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
-                </div>
-            </div>
-        `;
-    });
-    const userList = document.getElementById('userList');
-    if (userList) {
-        userList.innerHTML = html || '<p class="text-center">No users found.</p>';
-    }
-}
-
-function confirmDeleteUser(username) {
-    if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-        deleteUser(username);
-        showAlert('User deleted successfully', 'bg-green-600');
-        filterUsers();
-    }
-}
-
-function editUser(username) {
-    const user = usersData.find(u => u.username === username);
-    if (!user) return;
-
-    const card = document.getElementById(`user-${username}`);
-    card.innerHTML = `
-        <form id="editUserForm-${username}" class="edit-form">
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="username-${username}">Username</label>
-                <input type="text" id="username-${username}" value="${user.username}" class="bg-gray-700 text-white p-2 rounded w-full" readonly>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="password-${username}">Password</label>
-                <input type="text" id="password-${username}" value="${user.password}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="group-${username}">Group</label>
-                <select id="group-${username}" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="Managers" ${user.group === 'Managers' ? 'selected' : ''}>Managers</option>
-                    <option value="Supervisors" ${user.group === 'Supervisors' ? 'selected' : ''}>Supervisors</option>
-                    <option value="Officers" ${user.group === 'Officers' ? 'selected' : ''}>Officers</option>
-                    <option value="Dispatchers" ${user.group === 'Dispatchers' ? 'selected' : ''}>Dispatchers</option>
-                </select>
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Save</button>
-                <button type="button" onclick="filterUsers()" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
-            </div>
-        </form>
-    `;
-
-    const form = document.getElementById(`editUserForm-${username}`);
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newPassword = document.getElementById(`password-${username}`).value;
-        const newGroup = document.getElementById(`group-${username}`).value;
-        if (newPassword || newGroup) {
-            updateUser(username, newPassword, newGroup);
-            showAlert('User updated successfully', 'bg-green-600');
-            filterUsers();
-        }
-    });
-}
-
-function addNewEmployee() {
-    const mainContent = document.getElementById('managerContent');
-    mainContent.innerHTML = `
-        <h3 class="text-lg font-semibold mb-2">Add New Employee</h3>
-        <form id="addEmployeeForm" class="edit-form">
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="name">Name</label>
-                <input type="text" id="name" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter name">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="route">Route</label>
-                <input type="text" id="route" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter route">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="start">Schedule Start</label>
-                <input type="datetime-local" id="start" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="end">Schedule End</label>
-                <input type="datetime-local" id="end" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="location">Location</label>
-                <input type="text" id="location" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter location">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="department">Department</label>
-                <select id="department" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="Supervisors">Supervisors</option>
-                    <option value="Officers">Officers</option>
-                    <option value="Dispatchers">Dispatchers</option>
-                </select>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="status">Status</label>
-                <select id="status" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="10-8">10-8</option>
-                    <option value="10-6">10-6</option>
-                    <option value="10-42">10-42</option>
-                </select>
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add Employee</button>
-                <button type="button" onclick="showManagerTab('employees')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
-            </div>
-        </form>
-    `;
-
-    const form = document.getElementById('addEmployeeForm');
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const newEmployee = {
-            name: document.getElementById('name').value,
-            route: document.getElementById('route').value,
-            schedule: {
-                start: new Date(document.getElementById('start').value).toISOString(),
-                end: new Date(document.getElementById('end').value).toISOString()
-            },
-            location: document.getElementById('location').value,
-            department: document.getElementById('department').value,
-            status: document.getElementById('status').value
-        };
-        addEmployee(newEmployee);
-        showAlert('Employee added successfully', 'bg-green-600');
-        showManagerTab('employees');
-    });
-}
-
-function filterEmployees() {
-    const search = document.getElementById('employeeSearch')?.value.toLowerCase() || '';
-    const employees = employeesData.filter(e => e.name.toLowerCase().includes(search));
-    let html = '';
-    employees.forEach(emp => {
-        html += `
-            <div class="bg-gray-700 p-3 rounded shadow" id="employee-${emp.name}">
-                <p><strong>Name:</strong> ${emp.name}</p>
-                <p><strong>Route:</strong> ${emp.route}</p>
-                <p><strong>Schedule:</strong> ${new Date(emp.schedule.start).toLocaleString()} - ${new Date(emp.schedule.end).toLocaleString()}</p>
-                <p><strong>Location:</strong> ${emp.location}</p>
-                <p><strong>Department:</strong> ${emp.department}</p>
-                <p><strong>Status:</strong> ${emp.status}</p>
-                <div class="flex space-x-2 mt-2">
-                    <button onclick="editEmployee('${emp.name}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
-                    <button onclick="confirmDeleteEmployee('${emp.name}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
-                </div>
-            </div>
-        `;
-    });
-    const employeeList = document.getElementById('employeeList');
-    if (employeeList) {
-        employeeList.innerHTML = html || '<p class="text-center">No employees found.</p>';
-    }
-}
-
-function confirmDeleteEmployee(name) {
-    if (confirm('Are you sure you want to delete this employee? This action cannot be undone.')) {
-        deleteEmployee(name);
-        showAlert('Employee deleted successfully', 'bg-green-600');
-        filterEmployees();
-    }
-}
-
-function editEmployee(name) {
-    const emp = employeesData.find(e => e.name === name);
-    if (!emp) return;
-
-    const card = document.getElementById(`employee-${name}`);
-    card.innerHTML = `
-        <form id="editEmployeeForm-${name}" class="edit-form">
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="name-${name}">Name</label>
-                <input type="text" id="name-${name}" value="${emp.name}" class="bg-gray-700 text-white p-2 rounded w-full" readonly>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="route-${name}">Route</label>
-                <input type="text" id="route-${name}" value="${emp.route}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="start-${name}">Schedule Start</label>
-                <input type="datetime-local" id="start-${name}" value="${emp.schedule.start.slice(0, 16)}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="end-${name}">Schedule End</label>
-                <input type="datetime-local" id="end-${name}" value="${emp.schedule.end.slice(0, 16)}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="location-${name}">Location</label>
-                <input type="text" id="location-${name}" value="${emp.location}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="department-${name}">Department</label>
-                <select id="department-${name}" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="Supervisors" ${emp.department === 'Supervisors' ? 'selected' : ''}>Supervisors</option>
-                    <option value="Officers" ${emp.department === 'Officers' ? 'selected' : ''}>Officers</option>
-                    <option value="Dispatchers" ${emp.department === 'Dispatchers' ? 'selected' : ''}>Dispatchers</option>
-                </select>
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="status-${name}">Status</label>
-                <select id="status-${name}" class="bg-gray-700 text-white p-2 rounded w-full">
-                    <option value="10-8" ${emp.status === '10-8' ? 'selected' : ''}>10-8</option>
-                    <option value="10-6" ${emp.status === '10-6' ? 'selected' : ''}>10-6</option>
-                    <option value="10-42" ${emp.status === '10-42' ? 'selected' : ''}>10-42</option>
-                </select>
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Save</button>
-                <button type="button" onclick="filterEmployees()" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
-            </div>
-        </form>
-    `;
-
-    const form = document.getElementById(`editEmployeeForm-${name}`);
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const updates = {
-            route: document.getElementById(`route-${name}`).value,
-            schedule: {
-                start: new Date(document.getElementById(`start-${name}`).value).toISOString(),
-                end: new Date(document.getElementById(`end-${name}`).value).toISOString()
-            },
-            location: document.getElementById(`location-${name}`).value,
-            department: document.getElementById(`department-${name}`).value,
-            status: document.getElementById(`status-${name}`).value
-        };
-        updateEmployee(name, updates);
-        showAlert('Employee updated successfully', 'bg-green-600');
-        filterEmployees();
-    });
-}
+            officer: document.getElementById('officer').
