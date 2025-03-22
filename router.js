@@ -646,7 +646,7 @@ function showProperties() {
         <h2 class="text-2xl font-bold mb-4">Properties</h2>
         <div class="tips">
             <h4 class="text-lg font-semibold">Tips</h4>
-            <p>Search: Filter properties by name, address, or suspended status. Managers can add/edit/delete properties.</p>
+            <p>Properties are organized by routes. Managers can add/edit/delete properties.</p>
         </div>
         <div class="mb-4 flex space-x-4">
             <input type="text" id="propertySearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search properties..." onkeyup="filterProperties()">
@@ -657,7 +657,7 @@ function showProperties() {
             </select>
             ${isManager ? `<button onclick="addNewProperty()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New Property</button>` : ''}
         </div>
-        <div id="propertyList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        <div id="propertyList" class="grid grid-cols-1 gap-4"></div>
         <div id="alert" class="hidden"></div>
     `;
     // Populate properties
@@ -671,29 +671,67 @@ function filterProperties() {
         (p.propertyName.toLowerCase().includes(search) || p.address.toLowerCase().includes(search)) &&
         (suspendedFilter === '' || (suspendedFilter === 'active' && !p.suspended) || (suspendedFilter === 'suspended' && p.suspended))
     );
-    let html = '';
     const user = JSON.parse(localStorage.getItem('user'));
     const isManager = user && user.group === 'Managers';
 
-    properties.forEach(prop => {
-        const reports = reportsData.filter(r => r.property === prop.id);
-        html += `
-            <div class="bg-gray-700 p-3 rounded shadow" id="property-${prop.id}">
-                <p><strong>${prop.propertyName}</strong></p>
-                <p><strong>Address:</strong> ${prop.address}${prop.apt ? ', ' + prop.apt : ''}</p>
-                <p><strong>Min Hits:</strong> ${prop.minHits}</p>
-                <p><strong>Notes:</strong> ${prop.notes || 'N/A'}</p>
-                <p><strong>Reports:</strong> ${reports.length}</p>
-                <p><strong>Status:</strong> ${prop.suspended ? 'Suspended' : 'Active'}</p>
-                ${isManager ? `
-                <div class="flex space-x-2 mt-2">
-                    <button onclick="editProperty('${prop.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
-                    <button onclick="confirmDeleteProperty('${prop.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
-                </div>
-                ` : ''}
-            </div>
-        `;
+    let html = '';
+
+    // Organize properties by routes
+    routesData.forEach(route => {
+        const routeProperties = properties.filter(p => route.propertyIds.includes(p.id));
+        if (routeProperties.length > 0) {
+            html += `<h3 class="text-lg font-semibold mb-2 mt-4">${route.name}</h3>`;
+            html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">';
+            routeProperties.forEach(prop => {
+                const reports = reportsData.filter(r => r.property === prop.id);
+                html += `
+                    <div class="bg-gray-700 p-3 rounded shadow" id="property-${prop.id}">
+                        <p><strong>${prop.propertyName}</strong></p>
+                        <p><strong>Address:</strong> ${prop.address}${prop.apt ? ', ' + prop.apt : ''}</p>
+                        <p><strong>Min Hits:</strong> ${prop.minHits}</p>
+                        <p><strong>Notes:</strong> ${prop.notes || 'N/A'}</p>
+                        <p><strong>Reports:</strong> ${reports.length}</p>
+                        <p><strong>Status:</strong> ${prop.suspended ? 'Suspended' : 'Active'}</p>
+                        ${isManager ? `
+                        <div class="flex space-x-2 mt-2">
+                            <button onclick="editProperty('${prop.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
+                            <button onclick="confirmDeleteProperty('${prop.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
     });
+
+    // Unassigned properties
+    const unassignedProperties = properties.filter(p => !routesData.some(r => r.propertyIds.includes(p.id)));
+    if (unassignedProperties.length > 0) {
+        html += `<h3 class="text-lg font-semibold mb-2 mt-4">Unassigned Properties</h3>`;
+        html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">';
+        unassignedProperties.forEach(prop => {
+            const reports = reportsData.filter(r => r.property === prop.id);
+            html += `
+                <div class="bg-gray-700 p-3 rounded shadow" id="property-${prop.id}">
+                    <p><strong>${prop.propertyName}</strong></p>
+                    <p><strong>Address:</strong> ${prop.address}${prop.apt ? ', ' + prop.apt : ''}</p>
+                    <p><strong>Min Hits:</strong> ${prop.minHits}</p>
+                    <p><strong>Notes:</strong> ${prop.notes || 'N/A'}</p>
+                    <p><strong>Reports:</strong> ${reports.length}</p>
+                    <p><strong>Status:</strong> ${prop.suspended ? 'Suspended' : 'Active'}</p>
+                    ${isManager ? `
+                    <div class="flex space-x-2 mt-2">
+                        <button onclick="editProperty('${prop.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
+                        <button onclick="confirmDeleteProperty('${prop.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
+                    </div>
+                    ` : ''}
+                </div>
+            `;
+        });
+        html += '</div>';
+    }
+
     const propertyList = document.getElementById('propertyList');
     if (propertyList) {
         propertyList.innerHTML = html || '<p class="text-center">No properties found.</p>';
@@ -748,7 +786,7 @@ function addNewProperty() {
             id: newId,
             propertyName: document.getElementById('propertyName').value,
             address: document.getElementById('address').value,
-            Apt: document.getElementById('apt').value,
+            apt: document.getElementById('apt').value,
             minHits: parseInt(document.getElementById('minHits').value),
             notes: document.getElementById('notes').value,
             suspended: document.getElementById('suspended').value === 'true'
@@ -1140,7 +1178,7 @@ function addNewReport() {
         <div id="alert" class="hidden"></div>
     `;
 
-    const form = document.getElementById('addReportForm');
+        const form = document.getElementById('addReportForm');
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const newReport = {
@@ -1231,26 +1269,8 @@ function showManager() {
         <h2 class="text-2xl font-bold mb-4">Manager Dashboard</h2>
         <div class="tips">
             <h4 class="text-lg font-semibold">Tips</h4>
-            <p>Users: Add/edit/delete users. Employees: Manage employee schedules and routes. Properties: Add/edit/delete properties.</p>
+            <p>Users: Add/edit/delete users. Employees: Manage employee schedules and routes. Properties: Add/edit/delete properties. Routes: Create and manage patrol routes.</p>
         </div>
-        <div class="flex space-x-4 mb-4">
-            <button onclick="showManagerTab('users')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Users</button>
-            <button onclick="showManagerTab('employees')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Employees</button>
-            <button onclick="showManagerTab('properties')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Properties</button>
-        </div>
-        <div id="managerContent"></div>
-        <div id="alert" class="hidden"></div>
-    `;
-    // Initialize manager tab (default to users)
-    showManagerTab('users');
-}
-
-// router.js - Simple router for tab navigation
-
-function showManager() {
-    const mainContent = document.getElementById('main-content');
-    mainContent.innerHTML = `
-        <h2 class="text-2xl font-bold mb-4">Manager Dashboard</h2>
         <div class="flex space-x-4 mb-4">
             <button onclick="showManagerTab('users')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Users</button>
             <button onclick="showManagerTab('employees')" class="bg-blue-600 hover:bg-blue-700 p-2 rounded shadow">Employees</button>
@@ -1260,7 +1280,8 @@ function showManager() {
         <div id="managerContent"></div>
         <div id="alert" class="hidden"></div>
     `;
-    showManagerTab('users'); // Default tab
+    // Initialize manager tab (default to users)
+    showManagerTab('users');
 }
 
 function showManagerTab(tab) {
@@ -1269,7 +1290,93 @@ function showManagerTab(tab) {
 
     let html = '';
 
-    if (tab === 'routes') {
+    if (tab === 'users') {
+        html += '<h3 class="text-lg font-semibold mb-2">Manage Users</h3>';
+        html += `
+            <div class="mb-4 flex space-x-4">
+                <input type="text" id="userSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search users..." onkeyup="filterUsers()">
+                <button onclick="addNewUser()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New User</button>
+            </div>
+            <div id="userList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        `;
+        managerContent.innerHTML = html;
+        filterUsers();
+    } else if (tab === 'employees') {
+        html += '<h3 class="text-lg font-semibold mb-2">Manage Employees</h3>';
+        html += `
+            <div class="mb-4 flex space-x-4">
+                <input type="text" id="employeeSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search employees..." onkeyup="filterEmployees()">
+                <button onclick="addNewEmployee()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New Employee</button>
+            </div>
+            <div id="employeeList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        `;
+        managerContent.innerHTML = html;
+        filterEmployees();
+    } else if (tab === 'properties') {
+        html += '<h3 class="text-lg font-semibold mb-2">Manage Properties</h3>';
+        html += `
+            <div class="mb-4 flex space-x-4">
+                <input type="text" id="propertySearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search properties..." onkeyup="filterProperties()">
+                <select id="propertySuspendedFilter" class="bg-gray-700 text-white p-2 rounded" onchange="filterProperties()">
+                    <option value="">All</option>
+                    <option value="active">Active</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+                <button onclick="addNewProperty()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New Property</button>
+            </div>
+        `;
+        // Organize properties by routes
+        routesData.forEach(route => {
+            const routeProperties = propertiesData.filter(p => route.propertyIds.includes(p.id));
+            if (routeProperties.length > 0) {
+                html += `<h4 class="text-md font-medium mt-4">${route.name}</h4>`;
+                html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">';
+                routeProperties.forEach(prop => {
+                    const reports = reportsData.filter(r => r.property === prop.id);
+                    html += `
+                        <div class="bg-gray-700 p-3 rounded shadow" id="property-${prop.id}">
+                            <p><strong>${prop.propertyName}</strong></p>
+                            <p><strong>Address:</strong> ${prop.address}${prop.apt ? ', ' + prop.apt : ''}</p>
+                            <p><strong>Min Hits:</strong> ${prop.minHits}</p>
+                            <p><strong>Notes:</strong> ${prop.notes || 'N/A'}</p>
+                            <p><strong>Reports:</strong> ${reports.length}</p>
+                            <p><strong>Status:</strong> ${prop.suspended ? 'Suspended' : 'Active'}</p>
+                            <div class="flex space-x-2 mt-2">
+                                <button onclick="editProperty('${prop.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
+                                <button onclick="confirmDeleteProperty('${prop.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+        });
+        // Unassigned properties
+        const unassigned = propertiesData.filter(p => !routesData.some(r => r.propertyIds.includes(p.id)));
+        if (unassigned.length > 0) {
+            html += `<h4 class="text-md font-medium mt-4">Unassigned Properties</h4>`;
+            html += '<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">';
+            unassigned.forEach(prop => {
+                const reports = reportsData.filter(r => r.property === prop.id);
+                html += `
+                    <div class="bg-gray-700 p-3 rounded shadow" id="property-${prop.id}">
+                        <p><strong>${prop.propertyName}</strong></p>
+                        <p><strong>Address:</strong> ${prop.address}${prop.apt ? ', ' + prop.apt : ''}</p>
+                        <p><strong>Min Hits:</strong> ${prop.minHits}</p>
+                        <p><strong>Notes:</strong> ${prop.notes || 'N/A'}</p>
+                        <p><strong>Reports:</strong> ${reports.length}</p>
+                        <p><strong>Status:</strong> ${prop.suspended ? 'Suspended' : 'Active'}</p>
+                        <div class="flex space-x-2 mt-2">
+                            <button onclick="editProperty('${prop.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
+                            <button onclick="confirmDeleteProperty('${prop.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
+        managerContent.innerHTML = html;
+    } else if (tab === 'routes') {
         html += '<h3 class="text-lg font-semibold mb-2">Manage Routes</h3>';
         html += `
             <div class="mb-4 flex space-x-4">
@@ -1281,107 +1388,7 @@ function showManagerTab(tab) {
         managerContent.innerHTML = html;
         filterRoutes();
     }
-    // Other tabs (users, employees, properties) remain unchanged
 }
-
-function addNewRoute() {
-    const newId = `Route-${(routesData.length + 1).toString().padStart(2, '0')}`;
-    const managerContent = document.getElementById('managerContent');
-    managerContent.innerHTML = `
-        <h3 class="text-lg font-semibold mb-2">Add New Route</h3>
-        <form id="addRouteForm" class="edit-form">
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="routeName">Route Name</label>
-                <input type="text" id="routeName" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter route name">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1">Properties</label>
-                <div class="flex flex-wrap gap-4">
-                    ${propertiesData.map(p => `<label><input type="checkbox" value="${p.id}"> ${p.propertyName}</label>`).join('')}
-                </div>
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add Route</button>
-                <button type="button" onclick="showManagerTab('routes')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
-            </div>
-        </form>
-    `;
-
-    document.getElementById('addRouteForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const routeName = document.getElementById('routeName').value;
-        const selectedProperties = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value);
-        const newRoute = { id: newId, name: routeName, propertyIds: selectedProperties };
-        addRoute(newRoute);
-        showAlert('Route added successfully', 'bg-green-600');
-        showManagerTab('routes');
-    });
-}
-
-function filterRoutes() {
-    const search = document.getElementById('routeSearch')?.value.toLowerCase() || '';
-    const routes = routesData.filter(r => r.name.toLowerCase().includes(search));
-    let html = '';
-    routes.forEach(route => {
-        const properties = route.propertyIds.map(id => propertiesData.find(p => p.id === id)?.propertyName || 'Unknown').join(', ');
-        html += `
-            <div class="bg-gray-700 p-3 rounded shadow">
-                <p><strong>Route Name:</strong> ${route.name}</p>
-                <p><strong>Properties:</strong> ${properties}</p>
-                <div class="flex space-x-2 mt-2">
-                    <button onclick="editRoute('${route.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
-                    <button onclick="confirmDeleteRoute('${route.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
-                </div>
-            </div>
-        `;
-    });
-    document.getElementById('routeList').innerHTML = html || '<p class="text-center">No routes found.</p>';
-}
-
-function editRoute(id) {
-    const route = routesData.find(r => r.id === id);
-    if (!route) return;
-
-    const managerContent = document.getElementById('managerContent');
-    managerContent.innerHTML = `
-        <h3 class="text-lg font-semibold mb-2">Edit Route</h3>
-        <form id="editRouteForm" class="edit-form">
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1" for="routeName">Route Name</label>
-                <input type="text" id="routeName" value="${route.name}" class="bg-gray-700 text-white p-2 rounded w-full">
-            </div>
-            <div class="mb-4">
-                <label class="block text-sm font-medium mb-1">Properties</label>
-                <div class="flex flex-wrap gap-4">
-                    ${propertiesData.map(p => `<label><input type="checkbox" value="${p.id}" ${route.propertyIds.includes(p.id) ? 'checked' : ''}> ${p.propertyName}</label>`).join('')}
-                </div>
-            </div>
-            <div class="flex space-x-2">
-                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Save</button>
-                <button type="button" onclick="showManagerTab('routes')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
-            </div>
-        </form>
-    `;
-
-    document.getElementById('editRouteForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const updatedName = document.getElementById('routeName').value;
-        const selectedProperties = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value);
-        updateRoute(id, { name: updatedName, propertyIds: selectedProperties });
-        showAlert('Route updated successfully', 'bg-green-600');
-        showManagerTab('routes');
-    });
-}
-
-function confirmDeleteRoute(id) {
-    if (confirm('Are you sure you want to delete this route?')) {
-        deleteRoute(id);
-        showAlert('Route deleted successfully', 'bg-green-600');
-        filterRoutes();
-    }
-}
-
-// Existing showAlert and other functions remain unchanged
 
 function addNewUser() {
     const mainContent = document.getElementById('managerContent');
@@ -1508,8 +1515,25 @@ function addNewEmployee() {
                 <input type="text" id="name" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter name">
             </div>
             <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="type">Officer Type</label>
+                <select id="type" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="Patrol">Patrol Officer</option>
+                    <option value="Static">Static Officer</option>
+                </select>
+            </div>
+            <div class="mb-4" id="routeField">
                 <label class="block text-sm font-medium mb-1" for="route">Route</label>
-                <input type="text" id="route" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter route">
+                <select id="route" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="">Select Route</option>
+                    ${routesData.map(route => `<option value="${route.id}">${route.name}</option>`).join('')}
+                </select>
+            </div>
+            <div class="mb-4 hidden" id="propertyField">
+                <label class="block text-sm font-medium mb-1" for="assignedProperty">Assigned Property</label>
+                <select id="assignedProperty" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="">Select Property</option>
+                    ${propertiesData.map(prop => `<option value="${prop.id}">${prop.propertyName}</option>`).join('')}
+                </select>
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="start">Schedule Start</label>
@@ -1546,12 +1570,27 @@ function addNewEmployee() {
         </form>
     `;
 
+    const typeSelect = document.getElementById('type');
+    const routeField = document.getElementById('routeField');
+    const propertyField = document.getElementById('propertyField');
+    typeSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'Patrol') {
+            routeField.classList.remove('hidden');
+            propertyField.classList.add('hidden');
+        } else {
+            routeField.classList.add('hidden');
+            propertyField.classList.remove('hidden');
+        }
+    });
+
     const form = document.getElementById('addEmployeeForm');
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const newEmployee = {
             name: document.getElementById('name').value,
-            route: document.getElementById('route').value,
+            type: document.getElementById('type').value,
+            route: document.getElementById('type').value === 'Patrol' ? document.getElementById('route').value : '',
+            assignedProperty: document.getElementById('type').value === 'Static' ? document.getElementById('assignedProperty').value : '',
             schedule: {
                 start: new Date(document.getElementById('start').value).toISOString(),
                 end: new Date(document.getElementById('end').value).toISOString()
@@ -1574,7 +1613,9 @@ function filterEmployees() {
         html += `
             <div class="bg-gray-700 p-3 rounded shadow" id="employee-${emp.name}">
                 <p><strong>Name:</strong> ${emp.name}</p>
-                <p><strong>Route:</strong> ${emp.route}</p>
+                <p><strong>Type:</strong> ${emp.type}</p>
+                <p><strong>Route:</strong> ${emp.route || 'N/A'}</p>
+                <p><strong>Assigned Property:</strong> ${emp.assignedProperty ? propertiesData.find(p => p.id === emp.assignedProperty)?.propertyName || 'N/A' : 'N/A'}</p>
                 <p><strong>Schedule:</strong> ${new Date(emp.schedule.start).toLocaleString()} - ${new Date(emp.schedule.end).toLocaleString()}</p>
                 <p><strong>Location:</strong> ${emp.location}</p>
                 <p><strong>Department:</strong> ${emp.department}</p>
@@ -1612,8 +1653,25 @@ function editEmployee(name) {
                 <input type="text" id="name-${name}" value="${emp.name}" class="bg-gray-700 text-white p-2 rounded w-full" readonly>
             </div>
             <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="type-${name}">Officer Type</label>
+                <select id="type-${name}" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="Patrol" ${emp.type === 'Patrol' ? 'selected' : ''}>Patrol Officer</option>
+                    <option value="Static" ${emp.type === 'Static' ? 'selected' : ''}>Static Officer</option>
+                </select>
+            </div>
+            <div class="mb-4 ${emp.type === 'Patrol' ? '' : 'hidden'}" id="routeField-${name}">
                 <label class="block text-sm font-medium mb-1" for="route-${name}">Route</label>
-                <input type="text" id="route-${name}" value="${emp.route}" class="bg-gray-700 text-white p-2 rounded w-full">
+                <select id="route-${name}" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="">Select Route</option>
+                    ${routesData.map(route => `<option value="${route.id}" ${emp.route === route.id ? 'selected' : ''}>${route.name}</option>`).join('')}
+                </select>
+            </div>
+            <div class="mb-4 ${emp.type === 'Static' ? '' : 'hidden'}" id="propertyField-${name}">
+                <label class="block text-sm font-medium mb-1" for="assignedProperty-${name}">Assigned Property</label>
+                <select id="assignedProperty-${name}" class="bg-gray-700 text-white p-2 rounded w-full">
+                    <option value="">Select Property</option>
+                    ${propertiesData.map(prop => `<option value="${prop.id}" ${emp.assignedProperty === prop.id ? 'selected' : ''}>${prop.propertyName}</option>`).join('')}
+                </select>
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium mb-1" for="start-${name}">Schedule Start</label>
@@ -1650,11 +1708,26 @@ function editEmployee(name) {
         </form>
     `;
 
+    const typeSelect = document.getElementById(`type-${name}`);
+    const routeField = document.getElementById(`routeField-${name}`);
+    const propertyField = document.getElementById(`propertyField-${name}`);
+    typeSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'Patrol') {
+            routeField.classList.remove('hidden');
+            propertyField.classList.add('hidden');
+        } else {
+            routeField.classList.add('hidden');
+            propertyField.classList.remove('hidden');
+        }
+    });
+
     const form = document.getElementById(`editEmployeeForm-${name}`);
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const updates = {
-            route: document.getElementById(`route-${name}`).value,
+            type: document.getElementById(`type-${name}`).value,
+            route: document.getElementById(`type-${name}`).value === 'Patrol' ? document.getElementById(`route-${name}`).value : '',
+            assignedProperty: document.getElementById(`type-${name}`).value === 'Static' ? document.getElementById(`assignedProperty-${name}`).value : '',
             schedule: {
                 start: new Date(document.getElementById(`start-${name}`).value).toISOString(),
                 end: new Date(document.getElementById(`end-${name}`).value).toISOString()
@@ -1669,4 +1742,104 @@ function editEmployee(name) {
     });
 }
 
+function addNewRoute() {
+    const newId = `Route-${(routesData.length + 1).toString().padStart(2, '0')}`;
+    const managerContent = document.getElementById('managerContent');
+    managerContent.innerHTML = `
+        <h3 class="text-lg font-semibold mb-2">Add New Route</h3>
+        <form id="addRouteForm" class="edit-form">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="routeName">Route Name</label>
+                <input type="text" id="routeName" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Enter route name">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Properties</label>
+                <div class="flex flex-wrap gap-4">
+                    ${propertiesData.map(p => `<label><input type="checkbox" value="${p.id}"> ${p.propertyName}</label>`).join('')}
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add Route</button>
+                <button type="button" onclick="showManagerTab('routes')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
+            </div>
+        </form>
+    `;
 
+    const form = document.getElementById('addRouteForm');
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const routeName = document.getElementById('routeName').value;
+        const selectedProperties = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value);
+        const newRoute = { id: newId, name: routeName, propertyIds: selectedProperties };
+        addRoute(newRoute);
+        showAlert('Route added successfully', 'bg-green-600');
+        showManagerTab('routes');
+    });
+}
+
+function filterRoutes() {
+    const search = document.getElementById('routeSearch')?.value.toLowerCase() || '';
+    const routes = routesData.filter(r => r.name.toLowerCase().includes(search));
+    let html = '';
+    routes.forEach(route => {
+        const properties = route.propertyIds.map(id => propertiesData.find(p => p.id === id)?.propertyName || 'Unknown').join(', ');
+        html += `
+            <div class="bg-gray-700 p-3 rounded shadow" id="route-${route.id}">
+                <p><strong>Route Name:</strong> ${route.name}</p>
+                <p><strong>Properties:</strong> ${properties}</p>
+                <div class="flex space-x-2 mt-2">
+                    <button onclick="editRoute('${route.id}')" class="bg-yellow-600 hover:bg-yellow-700 p-1 rounded text-sm shadow">Edit</button>
+                    <button onclick="confirmDeleteRoute('${route.id}')" class="bg-red-600 hover:bg-red-700 p-1 rounded text-sm shadow">Delete</button>
+                </div>
+            </div>
+        `;
+    });
+    const routeList = document.getElementById('routeList');
+    if (routeList) {
+        routeList.innerHTML = html || '<p class="text-center">No routes found.</p>';
+    }
+}
+
+function editRoute(id) {
+    const route = routesData.find(r => r.id === id);
+    if (!route) return;
+
+    const managerContent = document.getElementById('managerContent');
+    managerContent.innerHTML = `
+        <h3 class="text-lg font-semibold mb-2">Edit Route</h3>
+        <form id="editRouteForm-${id}" class="edit-form">
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1" for="routeName-${id}">Route Name</label>
+                <input type="text" id="routeName-${id}" value="${route.name}" class="bg-gray-700 text-white p-2 rounded w-full">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-1">Properties</label>
+                <div class="flex flex-wrap gap-4">
+                    ${propertiesData.map(p => `<label><input type="checkbox" value="${p.id}" ${route.propertyIds.includes(p.id) ? 'checked' : ''}> ${p.propertyName}</label>`).join('')}
+                </div>
+            </div>
+            <div class="flex space-x-2">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Save</button>
+                <button type="button" onclick="showManagerTab('routes')" class="bg-gray-600 hover:bg-gray-700 p-2 rounded shadow">Cancel</button>
+            </div>
+        </form>
+    `;
+
+    const form = document.getElementById(`editRouteForm-${id}`);
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const updatedName = document.getElementById(`routeName-${id}`).value;
+        const selectedProperties = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(input => input.value);
+        updateRoute(id, { name: updatedName, propertyIds: selectedProperties });
+        showAlert('Route updated successfully', 'bg-green-600');
+        showManagerTab('routes');
+    });
+}
+
+function confirmDeleteRoute(id) {
+    if (confirm('Are you sure you want to delete this route? This action cannot be undone.')) {
+        deleteRoute(id);
+        showAlert('Route deleted successfully', 'bg-green-600');
+        filterRoutes();
+    }
+}
