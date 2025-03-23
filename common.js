@@ -1,4 +1,5 @@
-// common.js
+// common.js - Shared utility functions
+
 import { saveDataToLocalStorage } from './data.js';
 
 function showAlert(message, bgColor) {
