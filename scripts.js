@@ -2,7 +2,19 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded');
-    checkAuthentication();
+    // Check for service worker registrations
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            console.log('Service Workers registered:', registrations);
+        }).catch(error => {
+            console.error('Error checking service worker registrations:', error);
+        });
+    }
+    // Load data and check authentication
+    loadData(() => {
+        console.log('Data loaded from localStorage');
+        checkAuthentication();
+    });
 });
 
 function checkAuthentication() {
