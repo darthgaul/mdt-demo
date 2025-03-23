@@ -2,7 +2,9 @@
 
 import { saveDataToLocalStorage } from './data.js';
 
-function showAlert(message, bgColor) {
+// common.js - Shared utility functions
+
+export function showAlert(message, bgColor) {
     const alert = document.getElementById('alert');
     if (alert) {
         alert.textContent = message;
