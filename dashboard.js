@@ -1,10 +1,19 @@
 // js/dashboard.js
 
+import { employeesData, dispatchData, propertiesData, reportsData, routesData, addReport } from './data.js';
+
 // Initialize Dashboard-specific logic
 function initializeDashboard() {
     console.log('Dashboard initialized');
-    // Add any initial setup here if needed (e.g., event listeners, WebSocket connections)
-    // For now, this is a minimal implementation to prevent the ReferenceError
+    startPolling(); // Start polling for real-time updates
+}
+
+// Start polling for updates
+function startPolling() {
+    setInterval(() => {
+        updateUnitsList();
+        updateDispatchList();
+    }, 30000); // Update every 30 seconds
 }
 
 // Update the Active Units sidebar
@@ -100,9 +109,14 @@ function arrive(propertyId) {
     showDashboardTab('route');
 }
 
-// Existing showDashboardTab function (handles Patrol and Static officers)
+// Show dashboard tab content (handles Patrol and Static officers)
 function showDashboardTab(tab) {
     const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) {
+        showAlert('You must be logged in', 'bg-red-600');
+        return;
+    }
+
     const employee = employeesData.find(e => e.name === user.username);
     let html = '';
 
@@ -148,7 +162,10 @@ function showDashboardTab(tab) {
                 html += '<p class="text-center">No property assigned.</p>';
             }
         }
-        document.getElementById('dashboardContent').innerHTML = html;
+        const dashboardContent = document.getElementById('dashboardContent');
+        if (dashboardContent) {
+            dashboardContent.innerHTML = html;
+        }
     }
     // Other tabs (like 'overview') are handled in router.js
 }
