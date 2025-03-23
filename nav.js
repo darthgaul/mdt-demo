@@ -68,25 +68,8 @@ function initializeNav(page) {
         });
     }
 
-    // Dark mode toggle with modern design
-    const toggleBtn = document.getElementById('darkModeToggle');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', () => {
-            document.body.classList.toggle('light-mode');
-            const isLightMode = document.body.classList.contains('light-mode');
-            toggleBtn.querySelector('.theme-icon').textContent = isLightMode ? '🌙' : '☀️';
-            const nav = document.querySelector('.sticky-nav');
-            if (nav) nav.classList.toggle('light-mode', isLightMode);
-            localStorage.setItem('lightMode', isLightMode);
-        });
-
-        if (localStorage.getItem('lightMode') === 'true') {
-            document.body.classList.add('light-mode');
-            toggleBtn.querySelector('.theme-icon').textContent = '🌙';
-            const nav = document.querySelector('.sticky-nav');
-            if (nav) nav.classList.add('light-mode');
-        }
-    }
+    // Initialize theme (dark mode toggle)
+    initializeTheme();
 
     // Tab navigation (only for index.html)
     if (page === 'index') {
