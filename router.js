@@ -122,8 +122,12 @@ function showDashboard() {
         </div>
         <div id="alert" class="hidden"></div>
     `;
-    // Reinitialize dashboard-specific logic
-    initializeDashboard();
+    // Reinitialize dashboard-specific logic with safety check
+    if (typeof initializeDashboard === 'function') {
+        initializeDashboard();
+    } else {
+        console.warn('initializeDashboard is not defined');
+    }
     // Load initial tab content
     showDashboardTab('overview');
     // Update units and dispatch lists after DOM is rendered
@@ -704,6 +708,7 @@ function filterProperties() {
     let html = '';
 
     // Organize properties by routes
+    // Organize properties by routes
     routesData.forEach(route => {
         const routeProperties = properties.filter(p => route.propertyIds.includes(p.id));
         if (routeProperties.length > 0) {
@@ -868,8 +873,7 @@ function editProperty(id) {
     const form = document.getElementById(`editPropertyForm-${id}`);
     form.addEventListener('submit', (e) => {
         e.preventDefault();
-        const updatedProperty = {
-            id: prop.id,
+        const updates = {
             propertyName: document.getElementById(`propertyName-${id}`).value,
             address: document.getElementById(`address-${id}`).value,
             apt: document.getElementById(`apt-${id}`).value,
@@ -877,7 +881,7 @@ function editProperty(id) {
             notes: document.getElementById(`notes-${id}`).value,
             suspended: document.getElementById(`suspended-${id}`).value === 'true'
         };
-        updateProperty(prop.id, updatedProperty);
+        updateProperty(id, updates);
         showAlert('Property updated successfully', 'bg-green-600');
         filterProperties();
     });
@@ -899,34 +903,27 @@ function showPeople() {
         <h2 class="text-2xl font-bold mb-4">People</h2>
         <div class="tips">
             <h4 class="text-lg font-semibold">Tips</h4>
-            <p>Search: Filter people by name, property, or CTN status. Managers can add/edit/delete people.</p>
+            <p>Search: Filter people by name or property. Managers can add/edit/delete people.</p>
         </div>
         <div class="mb-4 flex space-x-4">
             <input type="text" id="peopleSearch" class="bg-gray-700 text-white p-2 rounded w-full" placeholder="Search people..." onkeyup="filterPeople()">
-            <select id="peopleCtnFilter" class="bg-gray-700 text-white p-2 rounded" onchange="filterPeople()">
-                <option value="">All</option>
-                <option value="CTN Issued">CTN Issued</option>
-                <option value="N/A">No CTN</option>
-            </select>
             ${isManager ? `<button onclick="addNewPerson()" class="bg-green-600 hover:bg-green-700 p-2 rounded shadow">Add New Person</button>` : ''}
         </div>
         <div id="peopleList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         <div id="alert" class="hidden"></div>
     `;
-    // Populate people
     filterPeople();
 }
 
 function filterPeople() {
     const search = document.getElementById('peopleSearch')?.value.toLowerCase() || '';
-    const ctnFilter = document.getElementById('peopleCtnFilter')?.value || '';
-    let people = peopleData.filter(p => 
-        (p.name.toLowerCase().includes(search) || p.property.toLowerCase().includes(search)) &&
-        (ctnFilter === '' || p.ctnStatus === ctnFilter)
+    const people = peopleData.filter(p => 
+        p.name.toLowerCase().includes(search) || 
+        p.property.toLowerCase().includes(search)
     );
-    let html = '';
     const user = JSON.parse(localStorage.getItem('user'));
     const isManager = user && user.group === 'Managers';
+    let html = '';
 
     people.forEach(person => {
         const behaviorClass = {
@@ -934,15 +931,14 @@ function filterPeople() {
             Cautious: 'cautious-text',
             Hostile: 'hostile-text',
             Unknown: 'unknown-text'
-        }[person.behavior] || 'unknown-text';
-        const ctnClass = person.ctnStatus === 'CTN Issued' ? 'ctn-active' : '';
+        }[person.behavior];
         html += `
-            <div class="bg-gray-700 p-3 rounded shadow ${ctnClass}" id="person-${person.id}">
-                <p><strong class="name">${person.name}</strong></p>
+            <div class="bg-gray-700 p-3 rounded shadow ${person.ctnStatus === 'CTN Issued' ? 'ctn-active' : ''}" id="person-${person.id}">
+                <p><strong>Name:</strong> <span class="name ${behaviorClass}">${person.name}</span></p>
                 <p><strong>DOB:</strong> ${person.dob}</p>
                 <p><strong>Status:</strong> ${person.status}</p>
                 <p><strong>Property:</strong> ${person.property}</p>
-                <p><strong>Behavior:</strong> <span class="${behaviorClass}">${person.behavior}</span></p>
+                <p><strong>Behavior:</strong> <span class="behavior ${behaviorClass}">${person.behavior}</span></p>
                 <p><strong>CTN Status:</strong> ${person.ctnStatus}</p>
                 ${isManager ? `
                 <div class="flex space-x-2 mt-2">
