@@ -7,8 +7,8 @@ let reportsData = [];
 let peopleData = [];
 let routesData = [];
 
-// Seed default data if localStorage is empty
-function seedData() {
+function loadData(callback) {
+    // Seed default data if localStorage is empty
     if (!localStorage.getItem('users')) {
         const defaultUsers = [
             { username: 'JohnSmith', password: 'john123', group: 'Managers' },
@@ -25,12 +25,6 @@ function seedData() {
         ];
         localStorage.setItem('employees', JSON.stringify(defaultEmployees));
     }
-    // Add more seeding for propertiesData, routesData, etc., as needed
-}
-
-// Load data from localStorage
-function loadData(callback) {
-    seedData();
     usersData = JSON.parse(localStorage.getItem('users')) || [];
     employeesData = JSON.parse(localStorage.getItem('employees')) || [];
     dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [];
@@ -41,9 +35,23 @@ function loadData(callback) {
     if (callback) callback();
 }
 
-// Expose globals for non-module scripts
+function saveDataToLocalStorage() {
+    localStorage.setItem('users', JSON.stringify(usersData));
+    localStorage.setItem('employees', JSON.stringify(employeesData));
+    localStorage.setItem('dispatches', JSON.stringify(dispatchData));
+    localStorage.setItem('properties', JSON.stringify(propertiesData));
+    localStorage.setItem('reports', JSON.stringify(reportsData));
+    localStorage.setItem('people', JSON.stringify(peopleData));
+    localStorage.setItem('routes', JSON.stringify(routesData));
+}
+
+// Expose globals for all scripts
 window.usersData = usersData;
 window.employeesData = employeesData;
+window.dispatchData = dispatchData;
+window.propertiesData = propertiesData;
+window.reportsData = reportsData;
+window.peopleData = peopleData;
+window.routesData = routesData;
 window.loadData = loadData;
-
-export { usersData, employeesData, loadData }; // For module scripts
+window.saveDataToLocalStorage = saveDataToLocalStorage;
