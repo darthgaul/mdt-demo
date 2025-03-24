@@ -216,3 +216,22 @@ export {
     updateRoute,
     deleteRoute
 };
+
+function checkDispatchTimeouts() {
+    const now = new Date();
+    dispatchData.forEach(disp => {
+        if (disp.status !== 'Completed') {
+            const elapsed = (now - new Date(disp.dateTime)) / 1000 / 60; // Time in minutes
+            if (elapsed >= 15) {
+                console.log(`Dispatch ${disp.id} is overdue by ${elapsed.toFixed(0)} minutes.`);
+                // Add any custom logic here, like highlighting overdue items
+            }
+        }
+    });
+}
+
+// Make it available globally for router.js
+window.checkDispatchTimeouts = checkDispatchTimeouts;
+
+// Update the export (if data.js uses modules)
+export { checkDispatchTimeouts }; // Add this to your existing export list if it exists
