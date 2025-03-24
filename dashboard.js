@@ -8,15 +8,18 @@ function initializeDashboard() {
 function updateUnitsList() {
     const unitFilter = document.getElementById('unitFilter')?.value || '';
     const unitsList = document.getElementById('unitsList');
-    if (!unitsList) return;
+    if (!unitsList) {
+        console.error('unitsList element not found');
+        return;
+    }
 
     let html = '';
-    const filteredEmployees = employeesData.filter(emp => 
+    const filteredEmployees = window.employeesData.filter(emp => 
         unitFilter === '' || emp.department === unitFilter
     );
 
     filteredEmployees.forEach(emp => {
-        const isOnline = usersData.some(u => u.username === emp.name);
+        const isOnline = window.usersData.some(u => u.username === emp.name);
         const statusColor = isOnline ? 'text-green-500' : 'text-red-500';
         html += `
             <div class="bg-gray-700 p-3 rounded shadow mb-2">
@@ -33,9 +36,12 @@ function updateUnitsList() {
 
 function updateDispatchList() {
     const dispatchList = document.getElementById('dispatchList');
-    if (!dispatchList) return;
+    if (!dispatchList) {
+        console.error('dispatchList element not found');
+        return;
+    }
 
-    const activeDispatches = dispatchData.filter(d => d.status !== 'Completed');
+    const activeDispatches = window.dispatchData.filter(d => d.status !== 'Completed');
     let html = '';
 
     if (activeDispatches.length) {
