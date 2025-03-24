@@ -21,6 +21,10 @@ function checkAuthentication() {
         window.location.href = 'login.html';
     } else if (user) {
         console.log('User authenticated:', user.username);
+        // Ensure dashboard initializes
+        if (window.initializeDashboard) {
+            window.initializeDashboard();
+        }
     }
 }
 
