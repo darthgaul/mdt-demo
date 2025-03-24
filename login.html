@@ -49,9 +49,9 @@
 
     <div id="alert" class="hidden"></div>
 
-    <!-- Load scripts in order, no modules -->
     <script src="data.js"></script>
     <script src="common.js"></script>
+    <script src="scripts.js"></script>
     <script>
         let isLoaded = false;
 
@@ -76,7 +76,7 @@
             loadData(() => {
                 console.log('Login: Data loaded, usersData:', usersData);
                 if (usersData.length === 0) {
-                    showAlert('No users found. Please contact an administrator to create a user account.', 'bg-red-600');
+                    showAlert('No users found. Please contact an administrator.', 'bg-red-600');
                     return;
                 }
 
@@ -90,16 +90,6 @@
                     showAlert('Invalid username or password', 'bg-red-600');
                 }
             });
-        }
-
-        function showAlert(message, color = 'bg-green-600') {
-            const alert = document.getElementById('alert');
-            if (alert) {
-                alert.textContent = message;
-                alert.className = `fixed bottom-4 right-4 ${color} text-white p-4 rounded shadow z-[1000]`;
-                alert.classList.remove('hidden');
-                setTimeout(() => alert.classList.add('hidden'), 3000);
-            }
         }
     </script>
 </body>
