@@ -31,7 +31,7 @@
         <h2 class="text-2xl font-semibold mb-4 text-center">MDT Login</h2>
         <input type="text" id="username" placeholder="Username" class="bg-gray-700 text-white p-2 rounded w-full mb-2">
         <input type="password" id="password" placeholder="Password" class="bg-gray-700 text-white p-2 rounded w-full mb-4">
-        <button onclick="login()" class="bg-blue-600 hover:bg-blue-700 p-2 rounded w-full shadow">Login</button>
+        <button id="loginButton" class="bg-blue-600 hover:bg-blue-700 p-2 rounded w-full shadow">Login</button>
     </div>
     <div class="tips mt-4 w-full max-w-md">
         <h4 class="text-lg font-semibold">Tips</h4>
@@ -53,7 +53,8 @@
     <script type="module" src="common.js"></script>
     <script type="module" src="scripts.js"></script>
     <script type="module">
-        import { loadData, usersData, showAlert } from './data.js';
+        import { loadData, usersData } from './data.js';
+        import { showAlert } from './common.js';
 
         let isLoaded = false;
 
@@ -68,6 +69,7 @@
             document.getElementById('password').addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') login();
             });
+            document.getElementById('loginButton').addEventListener('click', login);
         });
 
         function login() {
