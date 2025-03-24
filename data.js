@@ -45,7 +45,7 @@ function saveDataToLocalStorage() {
     localStorage.setItem('routes', JSON.stringify(routesData));
 }
 
-// Expose globals for all scripts
+// Expose globals
 window.usersData = usersData;
 window.employeesData = employeesData;
 window.dispatchData = dispatchData;
