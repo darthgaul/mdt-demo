@@ -27,7 +27,7 @@
         </div>
     </div>
 
-    <!-- Load scripts in order, no modules -->
+    <!-- Scripts loaded in order -->
     <script src="data.js"></script>
     <script src="common.js"></script>
     <script src="header.js"></script>
@@ -37,32 +37,37 @@
     <script src="router.js"></script>
     <script src="scripts.js"></script>
     <script>
-        // Toggle FAB dropdown with animation
+        // Toggle FAB dropdown
         const fabButton = document.getElementById('statusFabButton');
         const dropdownContainer = document.getElementById('statusDropdownContainer');
-        fabButton.addEventListener('click', () => {
-            const isHidden = dropdownContainer.classList.contains('hidden');
-            dropdownContainer.classList.toggle('hidden');
-            if (isHidden) {
-                dropdownContainer.classList.remove('scale-95', 'opacity-0');
-                dropdownContainer.classList.add('scale-100', 'opacity-100');
-            } else {
-                dropdownContainer.classList.remove('scale-100', 'opacity-100');
-                dropdownContainer.classList.add('scale-95', 'opacity-0');
-            }
-        });
-
-        // Update status dropdown visibility based on user group
-        const user = JSON.parse(localStorage.getItem('user'));
-        const statusFab = document.getElementById('statusFab');
-        if (user && ['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
-            statusFab.classList.remove('hidden');
-            const statusDropdown = document.getElementById('statusDropdown');
-            const employee = employeesData.find(e => e.name === user.username);
-            statusDropdown.value = employee?.status || '10-8';
-        } else {
-            statusFab.classList.add('hidden');
+        if (fabButton && dropdownContainer) {
+            fabButton.addEventListener('click', () => {
+                const isHidden = dropdownContainer.classList.contains('hidden');
+                dropdownContainer.classList.toggle('hidden');
+                if (isHidden) {
+                    dropdownContainer.classList.remove('scale-95', 'opacity-0');
+                    dropdownContainer.classList.add('scale-100', 'opacity-100');
+                } else {
+                    dropdownContainer.classList.remove('scale-100', 'opacity-100');
+                    dropdownContainer.classList.add('scale-95', 'opacity-0');
+                }
+            });
         }
+
+        // Update FAB visibility based on user group
+        loadData(() => {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const statusFab = document.getElementById('statusFab');
+            if (user && ['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
+                statusFab.classList.remove('hidden');
+                const statusDropdown = document.getElementById('statusDropdown');
+                const employee = employeesData.find(e => e.name === user.username);
+                statusDropdown.value = employee?.status || '10-8';
+            } else {
+                statusFab.classList.add('hidden');
+            }
+            checkAuthentication(); // Ensure this runs after data is loaded
+        });
     </script>
 </body>
 </html>
