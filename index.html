@@ -27,15 +27,15 @@
         </div>
     </div>
 
-    <!-- Updated script order with module support -->
-    <script type="module" src="data.js"></script>
-    <script type="module" src="common.js"></script>
+    <!-- Load scripts in order -->
+    <script src="data.js"></script>
+    <script src="common.js"></script>
     <script src="header.js"></script>
     <script src="theme.js"></script>
     <script src="nav.js"></script>
-    <script type="module" src="dashboard.js"></script>
+    <script src="dashboard.js"></script>
     <script src="router.js"></script>
-    <script type="module" src="scripts.js"></script>
+    <script src="scripts.js"></script>
     <script>
         // Toggle FAB dropdown with animation
         const fabButton = document.getElementById('statusFabButton');
@@ -58,8 +58,7 @@
         if (user && ['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
             statusFab.classList.remove('hidden');
             const statusDropdown = document.getElementById('statusDropdown');
-            // Note: employeesData is in a module, so this needs adjustment (see below)
-            const employee = employeesData ? employeesData.find(e => e.name === user.username) : null;
+            const employee = employeesData.find(e => e.name === user.username);
             statusDropdown.value = employee?.status || '10-8';
         } else {
             statusFab.classList.add('hidden');
