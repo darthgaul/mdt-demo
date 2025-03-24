@@ -45,14 +45,14 @@ function updateDispatchList() {
                 Assigned: 'text-blue-500',
                 'In Progress': 'text-orange-500',
                 Completed: 'text-green-500'
-            }[disp.status];
+            }[disp.status] || 'text-gray-500';
             html += `
                 <div class="bg-gray-700 p-3 rounded shadow mb-2">
-                    <p><strong>Issue:</strong> ${disp.issue}</p>
-                    <p><strong>Property:</strong> ${disp.property}</p>
-                    <p><strong>Priority:</strong> ${disp.priority}</p>
+                    <p><strong>Issue:</strong> ${disp.issue || 'N/A'}</p>
+                    <p><strong>Property:</strong> ${disp.property || 'N/A'}</p>
+                    <p><strong>Priority:</strong> ${disp.priority || 'N/A'}</p>
                     <p><strong>Officer:</strong> ${disp.assignedOfficer || 'Unassigned'}</p>
-                    <p><strong>Status:</strong> <span class="${statusColor}">${disp.status}</span></p>
+                    <p><strong>Status:</strong> <span class="${statusColor}">${disp.status || 'Unknown'}</span></p>
                     <p><strong>Call Time:</strong> ${new Date(disp.dateTime).toLocaleString()}</p>
                 </div>
             `;
