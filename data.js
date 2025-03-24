@@ -25,7 +25,7 @@ function loadData(callback) {
         ];
         localStorage.setItem('employees', JSON.stringify(defaultEmployees));
     }
-    if (!localStorage.getItem('dispatchData')) {
+    if (!localStorage.getItem('dispatches')) {
         const defaultDispatches = [
             { id: 'D001', issue: 'Suspicious Activity', property: 'Sunset Plaza', priority: 'High', status: 'Pending', dateTime: '2025-03-24T10:00:00' }
         ];
