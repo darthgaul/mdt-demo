@@ -25,6 +25,12 @@ function loadData(callback) {
         ];
         localStorage.setItem('employees', JSON.stringify(defaultEmployees));
     }
+    if (!localStorage.getItem('dispatchData')) {
+        const defaultDispatches = [
+            { id: 'D001', issue: 'Suspicious Activity', property: 'Sunset Plaza', priority: 'High', status: 'Pending', dateTime: '2025-03-24T10:00:00' }
+        ];
+        localStorage.setItem('dispatches', JSON.stringify(defaultDispatches));
+    }
     usersData = JSON.parse(localStorage.getItem('users')) || [];
     employeesData = JSON.parse(localStorage.getItem('employees')) || [];
     dispatchData = JSON.parse(localStorage.getItem('dispatches')) || [];
@@ -32,6 +38,13 @@ function loadData(callback) {
     reportsData = JSON.parse(localStorage.getItem('reports')) || [];
     peopleData = JSON.parse(localStorage.getItem('people')) || [];
     routesData = JSON.parse(localStorage.getItem('routes')) || [];
+    window.usersData = usersData;
+    window.employeesData = employeesData;
+    window.dispatchData = dispatchData;
+    window.propertiesData = propertiesData;
+    window.reportsData = reportsData;
+    window.peopleData = peopleData;
+    window.routesData = routesData;
     if (callback) callback();
 }
 
@@ -45,13 +58,5 @@ function saveDataToLocalStorage() {
     localStorage.setItem('routes', JSON.stringify(routesData));
 }
 
-// Expose globals
-window.usersData = usersData;
-window.employeesData = employeesData;
-window.dispatchData = dispatchData;
-window.propertiesData = propertiesData;
-window.reportsData = reportsData;
-window.peopleData = peopleData;
-window.routesData = routesData;
 window.loadData = loadData;
 window.saveDataToLocalStorage = saveDataToLocalStorage;
