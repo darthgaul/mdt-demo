@@ -1,7 +1,7 @@
-import { loadData } from './data.js';
-
+// scripts.js - Application initialization
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM fully loaded');
+    // Check for service worker registrations
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.getRegistrations().then(registrations => {
             console.log('Service Workers registered:', registrations);
@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Error checking service worker registrations:', error);
         });
     }
+    // Load data and check authentication
     loadData(() => {
         console.log('Data loaded from localStorage');
         checkAuthentication();
@@ -22,3 +23,5 @@ function checkAuthentication() {
         window.location.href = 'login.html';
     }
 }
+
+window.checkAuthentication = checkAuthentication;
