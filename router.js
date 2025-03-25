@@ -56,6 +56,12 @@ window.addEventListener('popstate', (event) => {
     });
 });
 
+function toggleSidebar(sidebarId) {
+    const sidebar = document.getElementById(sidebarId);
+    if (sidebar) sidebar.classList.toggle('hidden');
+}
+window.toggleSidebar = toggleSidebar;
+
 function showDashboard() {
     const mainContent = document.getElementById('main-content');
     const user = JSON.parse(localStorage.getItem('user'));
@@ -122,19 +128,16 @@ function showDashboard() {
         </div>
         <div id="alert" class="hidden"></div>
     `;
-    // Reinitialize dashboard-specific logic with safety check
-    if (typeof initializeDashboard === 'function') {
-        initializeDashboard();
+
+    // Call initializeDashboard after HTML is set
+    if (window.initializeDashboard) {
+        window.initializeDashboard();
     } else {
         console.warn('initializeDashboard is not defined');
     }
+
     // Load initial tab content
     showDashboardTab('overview');
-    // Update units and dispatch lists after DOM is rendered
-    setTimeout(() => {
-        updateUnitsList();
-        updateDispatchList();
-    }, 0);
 }
 
 function showDashboardTab(tab) {
