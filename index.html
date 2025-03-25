@@ -6,6 +6,19 @@
     <title>MDT Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            display: none;
+        }
+    </style>
+    <script>
+        const user = localStorage.getItem('user');
+        if (user) {
+            document.body.style.display = 'block';
+        } else {
+            window.location.href = 'login.html';
+        }
+    </script>
 </head>
 <body class="min-h-screen p-6">
     <div id="header"></div>
