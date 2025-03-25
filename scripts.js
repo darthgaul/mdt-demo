@@ -21,14 +21,7 @@ function checkAuthentication() {
         window.location.href = 'login.html';
     } else if (user) {
         console.log('User authenticated:', user.username);
-        // Defer dashboard initialization until DOM is ready
-        if (window.initializeDashboard && document.getElementById('main-content')) {
-            window.initializeDashboard();
-        }
     }
 }
 
 window.checkAuthentication = checkAuthentication;
-
-// Run checkAuthentication immediately on load
-checkAuthentication();
