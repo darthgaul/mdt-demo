@@ -6,19 +6,6 @@
     <title>MDT Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        body {
-            display: none;
-        }
-    </style>
-    <script>
-        const user = localStorage.getItem('user');
-        if (user) {
-            document.body.style.display = 'block';
-        } else {
-            window.location.href = 'login.html';
-        }
-    </script>
 </head>
 <body class="min-h-screen p-6">
     <div id="header"></div>
@@ -67,18 +54,25 @@
             });
         }
 
-        // Update FAB visibility based on user group
-        loadData(() => {
-            const user = JSON.parse(localStorage.getItem('user'));
-            const statusFab = document.getElementById('statusFab');
-            if (user && ['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
-                statusFab.classList.remove('hidden');
-                const statusDropdown = document.getElementById('statusDropdown');
-                const employee = employeesData.find(e => e.name === user.username);
-                statusDropdown.value = employee?.status || '10-8';
-            } else {
-                statusFab.classList.add('hidden');
-            }
+        // Update FAB visibility and check authentication
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData(() => {
+                const user = JSON.parse(localStorage.getItem('user'));
+                if (!user && window.location.pathname.includes('index.html')) {
+                    console.log('No user logged in, redirecting to login.html');
+                    window.location.href = 'login.html';
+                    return;
+                }
+                const statusFab = document.getElementById('statusFab');
+                if (user && ['Supervisors', 'Officers', 'Dispatchers'].includes(user.group)) {
+                    statusFab.classList.remove('hidden');
+                    const statusDropdown = document.getElementById('statusDropdown');
+                    const employee = employeesData.find(e => e.name === user.username);
+                    statusDropdown.value = employee?.status || '10-8';
+                } else {
+                    statusFab.classList.add('hidden');
+                }
+            });
         });
     </script>
 </body>
