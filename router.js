@@ -129,15 +129,15 @@ function showDashboard() {
         <div id="alert" class="hidden"></div>
     `;
 
-    // Call initializeDashboard after HTML is set
+    // Load initial tab content first
+    showDashboardTab('overview');
+
+    // Then initialize dashboard after HTML is rendered
     if (window.initializeDashboard) {
         window.initializeDashboard();
     } else {
         console.warn('initializeDashboard is not defined');
     }
-
-    // Load initial tab content
-    showDashboardTab('overview');
 }
 
 function showDashboardTab(tab) {
